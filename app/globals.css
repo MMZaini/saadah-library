@@ -331,6 +331,38 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* Library title gradient hover effect */
+  .library-title-gradient {
+    position: relative;
+    color: var(--text-primary);
+    background: linear-gradient(90deg, 
+      #065f46 0%,
+      #047857 10%,
+      #059669 20%,
+      #10b981 30%,
+      #34d399 40%,
+      #6ee7b7 50%,
+      var(--text-primary) 50%,
+      var(--text-primary) 100%
+    );
+    background-size: 200% 100%;
+    background-position: 100% 0; /* Start with white text visible */
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* Remove transition for manual animations */
+  }
+
+  /* Slide in gradient on hover */
+  .library-title-gradient:hover {
+    animation: slideIn 0.4s ease-in-out forwards;
+  }
+
+  /* Slide out gradient to left when hover off */
+  .library-title-gradient:not(:hover) {
+    animation: slideOutLeft 0.4s ease-in-out forwards;
+  }
 }
 
 /* Mobile-specific media queries */
@@ -362,16 +394,19 @@
 }
 
 @keyframes slideIn {
-  0% { clip-path: inset(0 100% 0 100%); } /* Start fully hidden */
-  1% { clip-path: inset(0 100% 0 0); }    /* Jump to left edge */
-  100% { clip-path: inset(0 0 0 0); }     /* Slide in from left */
+  from { background-position: 100% 0; }
+  to   { background-position: 0% 0; }
 }
 
 @keyframes slideOut {
   0% { clip-path: inset(0 0 0 0); }      /* Start fully visible */
   100% { clip-path: inset(0 0 0 100%); } /* Slide out to right */
 }
-/* On hover out, it slides off to the right naturally via the reverse of clip-path */
+
+@keyframes slideOutLeft {
+  from { background-position: 0% 0; }
+  to   { background-position: -100% 0; }
+}
 
 /* Subtle focus ring for keyboard users */
 :focus-visible {

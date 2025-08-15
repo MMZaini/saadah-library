@@ -92,8 +92,12 @@ export default function TopBar() {
               </button>
             )}
 
-            <Link href="/" onClick={handleTitleClick} className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0">
-              <h1 className="text-lg sm:text-xl font-bold text-primary">مكتبة السعادة</h1>
+            <Link href="/" onClick={handleTitleClick} className="flex items-center gap-2 flex-shrink-0 group">
+                <h1 className="text-xl sm:text-2xl font-bold relative overflow-hidden cursor-pointer font-sans">
+                <span className="library-title-gradient">
+                  مكتبة السعادة
+                </span>
+              </h1>
             </Link>
             
             {/* Breadcrumb - Hidden on small screens, optimized for medium+ */}
