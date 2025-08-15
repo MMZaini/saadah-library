@@ -93,8 +93,8 @@ export default function TopBar() {
             )}
 
             <Link href="/" onClick={handleTitleClick} className="flex items-center gap-2 flex-shrink-0 group">
-                <h1 className="text-xl sm:text-2xl font-bold relative overflow-hidden cursor-pointer font-sans">
-                <span className="library-title-gradient font-sans">
+                <h1 className="text-xl sm:text-2xl font-bold relative overflow-hidden cursor-pointer font-arabic">
+                <span className="library-title-gradient">
                   مكتبة السعادة
                 </span>
               </h1>
