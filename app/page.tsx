@@ -167,7 +167,7 @@ export default function Page() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">
-                  Al-Kāfi (<span className="font-arabic">الكافي</span>)
+                  Al-Kāfi (<span className="font-sans">الكافي</span>)
                   <span className="hidden sm:inline"> - Featured Collection</span>
                 </h2>
                 <p className="text-sm sm:text-base text-amber-700 dark:text-amber-300">
