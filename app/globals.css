@@ -108,7 +108,7 @@
   }
   
   .font-arabic {
-    font-family: 'Amiri', 'Noto Sans Arabic', serif;
+    font-family: 'Amiri', 'Noto Sans Arabic', 'Inter', serif;
   }
 
   /* Hadith text font size utilities */

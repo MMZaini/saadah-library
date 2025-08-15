@@ -26,7 +26,7 @@ export default {
       },
       fontFamily: {
         sans: ['var(--font-inter)'],
-        arabic: ['Amiri', 'Noto Sans Arabic', 'serif'],
+        arabic: ['Amiri', 'Noto Sans Arabic', 'serif', 'Inter'],
       }
     }
   },
