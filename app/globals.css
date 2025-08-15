@@ -1,26 +1,397 @@
-@import "tailwindcss";
+/* Google fonts via CSS fallback (Next/font is used in layout for best perf) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Mobile-first responsive optimizations */
+@layer base {
+  * {
+    /* Improved touch targets on mobile */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  html {
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+    /* Better font rendering on mobile */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  body {
+    /* Better scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent bounce scrolling */
+    overscroll-behavior-y: none;
+  }
+  
+  /* Better button touch targets */
+  button, [role="button"] {
+    min-height: 44px; /* iOS recommended touch target */
+    min-width: 44px;
+  }
+  
+  /* Better input touch targets */
+  input[type="text"], input[type="search"], textarea {
+    min-height: 44px;
+  }
+  
+  /* Improve select dropdown on mobile */
+  select {
+    min-height: 44px;
+    -webkit-appearance: none;
+    appearance: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+
+@layer utilities {
+  .bg-color {
+    background-color: var(--bg-color);
+  }
+  
+  .text-primary {
+    color: var(--text-primary);
+  }
+  
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+  
+  .text-muted {
+    color: var(--text-muted);
+  }
+  
+  .bg-card {
+    background-color: var(--card-bg);
+  }
+  
+  .hover\:bg-card-hover:hover {
+    background-color: var(--card-hover);
+  }
+  
+  .border-theme {
+    border-color: var(--border-color);
+  }
+  
+  .bg-input {
+    background-color: var(--input-bg);
+  }
+
+  .text-brand {
+    color: var(--text-brand);
+  }
+
+  .bg-accent-primary {
+    background-color: var(--accent-primary);
+  }
+
+  .bg-accent-secondary {
+    background-color: var(--accent-secondary);
+  }
+
+  .text-accent-primary {
+    color: var(--accent-primary);
+  }
+
+  .text-accent-secondary {
+    color: var(--accent-secondary);
+  }
+
+  .hover\:bg-hover-color:hover {
+    background-color: var(--hover-color);
+  }
+  
+  .font-arabic {
+    font-family: 'Amiri', 'Noto Sans Arabic', serif;
+  }
+
+  /* Hadith text font size utilities */
+  .hadith-arabic-text {
+    font-size: var(--hadith-arabic-font-size, 100%);
+  }
+
+  .hadith-english-text {
+    font-size: var(--hadith-english-font-size, 100%);
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  /* Tooltip container that allows overflow */
+  .tooltip-container {
+    position: static !important;
+  }
+
+  .tooltip-container > .tooltip {
+    position: fixed !important;
+    z-index: 999999 !important;
+  }
+
+  /* Modern shadow system for both themes */
+  .shadow-soft {
+    box-shadow: 
+      0 1px 3px 0 var(--shadow-color),
+      0 1px 2px -1px var(--shadow-color);
+  }
+  
+  .shadow-medium {
+    box-shadow: 
+      0 4px 6px -1px var(--shadow-color),
+      0 2px 4px -2px var(--shadow-color);
+  }
+
+  /* Light theme specific enhancements */
+  [data-theme="light"] .shadow-soft {
+    box-shadow: 
+      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  [data-theme="light"] .shadow-medium {
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Improved card styling for light mode */
+  [data-theme="light"] .bg-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(26, 26, 26, 0.08);
+  }
+
+  [data-theme="light"] .hover\:bg-card-hover:hover {
+    background-color: #fafafa;
+    border-color: rgba(26, 26, 26, 0.12);
+  }
 }
+
+@layer base {
+    /* Dark theme */
+  :root, [data-theme="dark"] {
+    --bg-gradient: radial-gradient(1200px 600px at 50% -10%, var(--gradient-color), transparent);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.45);
+    --text-brand: #18181b;
+    --bg-color: #0b0b0b;
+    --card-bg: #101012;
+    --topbar-bg: #000000;
+    --card-hover: #151517;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --hover-color: rgba(255, 255, 255, 0.05);
+    --gradient-color: rgba(255, 255, 255, 0.04);
+    --shadow-color: rgba(0, 0, 0, 0.45);
+    --accent-primary: #ad9636;
+    --accent-secondary: #f59e0b;
+    --input-bg: rgba(0, 0, 0, 0.3);
+    color-scheme: dark;
+  }
+
+  /* Light theme */
+  [data-theme="light"] {
+    --bg-gradient: radial-gradient(1200px 600px at 50% -10%, var(--gradient-color), transparent);
+    --text-primary: #1a1a1a;
+    --text-secondary: rgba(26, 26, 26, 0.8);
+    --text-muted: rgba(26, 26, 26, 0.6);
+    --text-brand: #1a1a1a;
+    --bg-color: #fafafa;
+    --card-bg: #ffffff;
+    --topbar-bg: #ffffff;
+    --card-hover: #f5f5f5;
+    --border-color: rgba(26, 26, 26, 0.12);
+    --hover-color: rgba(26, 26, 26, 0.06);
+    --gradient-color: rgba(26, 26, 26, 0.04);
+    --shadow-color: rgba(26, 26, 26, 0.15);
+    --accent-primary: #f59e0b;
+    --accent-secondary: #d97706;
+    --input-bg: rgba(26, 26, 26, 0.04);
+    color-scheme: light;
+  }
+}
+
+/* Apply theme colors */
+.settings-theme {
+  color: var(--text-primary);
+  background: var(--bg-gradient), var(--bg-color);
+}
+
+/* Font size utilities */
+.arabic-text {
+  font-size: var(--arabic-font-size, 16px);
+}
+
+.english-text {
+  font-size: var(--english-font-size, 16px);
+}
+
+/* --- Fancy gold swipe for logo text --- */
+.gold-swipe {
+  position: relative;
+  display: inline-block;
+  line-height: 1.2;
+  padding-bottom: 0.1em;
+  direction: rtl;
+}
+.gold-swipe .base {
+  color: #e5e7eb;
+  transition: opacity .25s ease;
+  font-weight: 600;
+}
+:root[data-theme="dark"] .gold-swipe .base {
+  color: #27272a;  /* zinc-800 */
+}
+
+.gold-swipe .gold {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: -0.1em;
+  background: linear-gradient(90deg, 
+    #15803d 0%,
+    #22c55e 15%,
+    #16a34a 30%,
+    #059669 60%,
+    #10b981 85%,
+    #15803d 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  pointer-events: none;
+  height: 120%; /* Ensure full coverage of descenders */
+  will-change: clip-path;
+  clip-path: inset(0 100% 0 0);
+}
+
+/* Hover animation - slide in from left */
+.gold-swipe:hover .gold {
+  animation: 
+    slideIn 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards,
+    shine 3s linear infinite;
+}
+
+/* Exit animation - slide out to right */
+.gold-swipe:not(:hover) .gold {
+  animation: slideOut 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+/* Responsive utility classes */
+@layer utilities {
+  /* Line clamping for mobile text truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  
+  /* Touch-friendly active states */
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+  
+  /* Better mobile spacing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Mobile-specific media queries */
+@media (max-width: 640px) {
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .transition-all,
+    .transition-transform,
+    .transition-colors {
+      transition: none !important;
+    }
+    
+    .animate-spin,
+    .animate-pulse {
+      animation: none !important;
+    }
+  }
+  
+  /* Better button spacing on mobile */
+  .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem;
+  }
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes slideIn {
+  0% { clip-path: inset(0 100% 0 100%); } /* Start fully hidden */
+  1% { clip-path: inset(0 100% 0 0); }    /* Jump to left edge */
+  100% { clip-path: inset(0 0 0 0); }     /* Slide in from left */
+}
+
+@keyframes slideOut {
+  0% { clip-path: inset(0 0 0 0); }      /* Start fully visible */
+  100% { clip-path: inset(0 0 0 100%); } /* Slide out to right */
+}
+/* On hover out, it slides off to the right naturally via the reverse of clip-path */
+
+/* Subtle focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* Card outline on hover (soft gold glow) */
+.card-outline {
+  transition: box-shadow .35s cubic-bezier(.22,.8,.25,1), transform .35s cubic-bezier(.22,.8,.25,1), border-color .35s;
+}
+
+/* Fake caret blink in search input */
+.input-caret::after {
+  content: '';
+  width: 1px;
+  height: 1.2em;
+  background: #ffffff66;
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
