@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import ClientProviders from '@/components/ClientProviders'
 import TopBar from '@/components/TopBar'
 import SettingsSidebar from '@/components/SettingsSidebar'
+import favicon from './favicon.ico'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable}`} data-theme="dark">
       <head>
+        <link rel="icon" href={favicon.src} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.thaqalayn-api.net" />
