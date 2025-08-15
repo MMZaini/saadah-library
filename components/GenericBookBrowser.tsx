@@ -342,7 +342,7 @@ export default function GenericBookBrowser({ bookId, bookConfig = null, classNam
                       </p>
                       <div className="flex items-center gap-3 text-sm">
                         <span className="bg-amber-200/80 dark:bg-amber-800/80 text-amber-900 dark:text-amber-100 px-3 py-1.5 rounded-full font-medium shadow-soft">
-                          {selectedVolume === 'all' ? 'All Volumes' : getVolumeLabelForValue(selectedVolume)}
+                          {selectedVolume === 'all' ? 'All Volumes' : getVolumeLabelForValue(volumesList, selectedVolume)}
                         </span>
                         <span className="bg-amber-200/80 dark:bg-amber-800/80 text-amber-900 dark:text-amber-100 px-3 py-1.5 rounded-full font-medium shadow-soft">
                           {chapterHadiths.length} {chapterHadiths.length === 1 ? 'Hadith' : 'Hadiths'}
