@@ -37,7 +37,7 @@ export default function AlKafiVolumeExplorer({ className }: AlKafiVolumeExplorer
       setRandomHadith(hadith)
     } catch (err) {
       setError('Failed to load hadith from this volume')
-      console.error('Error loading hadith:', err)
+      // Error logging removed
     } finally {
       setLoading(false)
     }

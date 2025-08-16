@@ -7,9 +7,8 @@ import { getBookConfig } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import HadithCard from '@/components/HadithCard'
 import SearchInterface from '@/components/SearchInterface'
-import { IconSearch } from '@/components/Icons'
+import { IconSearch, IconMenu } from '@/components/Icons'
 import { useSettings } from '@/lib/settings-context'
-import SettingsSidebar from '@/components/SettingsSidebar'
 import { debounce } from '@/lib/performance'
 import clsx from 'clsx'
 
@@ -60,7 +59,7 @@ export default function BookPage() {
         
   // Optional: persist search state if navigation-context implemented
       } catch (error) {
-        console.error('Error searching book:', error)
+        // Search failed
         setSearchResults([])
       } finally {
         setIsSearching(false)
@@ -144,7 +143,7 @@ export default function BookPage() {
           loading: false
         }))
       } catch (error) {
-        console.error('Error loading book data:', error)
+        // Failed to load book data
         setState(prev => ({
           ...prev,
           error: 'Failed to load book data',
@@ -226,9 +225,6 @@ export default function BookPage() {
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
-      {/* Settings Sidebar */}
-      <SettingsSidebar />
-
       {/* Top bar */}
       <header 
         style={{ background: 'var(--topbar-bg)' }}
@@ -253,8 +249,14 @@ export default function BookPage() {
           </div>
 
           {/* Right actions */}
-          <div className="ml-auto flex items-center gap-3">
-
+          <div className="flex items-center gap-3 ml-auto">
+            <button 
+              onClick={toggleSettings}
+              className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-amber-500/50 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              title="Settings"
+            >
+              <IconMenu className="h-5 w-5 sm:h-6 sm:w-6 text-primary/80 hover:text-primary" />
+            </button>
           </div>
         </div>
       </header>

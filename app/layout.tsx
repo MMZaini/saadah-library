@@ -39,25 +39,37 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable}`} data-theme="dark">
+    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" href={favicon.src} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.thaqalayn-api.net" />
         <link rel="dns-prefetch" href="https://thaqalayn.net" />
-        {/*
-          Inline sanitizer script: remove known dev/preview injected classes that may be
-          added by editor preview tools or extensions (for example: vsc-domain-localhost,
-          vsc-initialized). Running this before React hydration prevents hydration
-          mismatch errors caused by external tooling injecting classes onto <body> or <html>.
-
-          This intentionally only strips classes matching the /^vsc-/ prefix or the
-          exact 'vsc-initialized' token to avoid removing legitimate classes.
-        */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var strip=/^vsc-/;var also='vsc-initialized';var elm=document.documentElement;var body=document.body;function clean(node){if(!node||!node.className) return;var list=Array.from(node.className.split(/\s+/));for(var i=0;i<list.length;i++){var c=list[i];if(!c) continue;if(strip.test(c)||c===also){node.classList.remove(c)}}}clean(elm);clean(body);}catch(e){} })();` }} />
       </head>
-      <body>
+      <body suppressHydrationWarning>
+        {/* Clean up VS Code injected classes immediately */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            try {
+              function cleanVSCodeClasses() {
+                var body = document.body;
+                var html = document.documentElement;
+                if (body && body.className) {
+                  body.className = body.className.replace(/\\bvsc-[^\\s]*\\b/g, '').replace(/\\bvsc-initialized\\b/g, '').trim();
+                }
+                if (html && html.className) {
+                  html.className = html.className.replace(/\\bvsc-[^\\s]*\\b/g, '').replace(/\\bvsc-initialized\\b/g, '').trim();
+                }
+              }
+              // Clean immediately
+              cleanVSCodeClasses();
+              // Clean after a short delay in case classes are added asynchronously
+              setTimeout(cleanVSCodeClasses, 0);
+              setTimeout(cleanVSCodeClasses, 100);
+            } catch(e) {}
+          })();
+        ` }} />
         <ClientProviders>
           <div className="antialiased duration-200 min-h-screen flex flex-col bg-color">
             <SettingsSidebar />

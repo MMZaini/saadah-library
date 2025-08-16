@@ -65,15 +65,16 @@ export default function BookCard({ book }: { book: Book }) {
       <Image
         src={book.image}
         alt={`${book.title} cover`}
-        width={120}
-        height={160}
+        width={180}
+        height={240}
         className={clsx(
           'rounded-lg shadow-book transition-transform duration-300 object-contain shrink-0',
           'sm:w-36 sm:h-48', // Larger on desktop
           hovered ? 'translate-x-[-4px] sm:translate-x-[-8px] scale-105' : 'translate-x-0 scale-100'
         )}
         priority={book.highlighted}
-        sizes="(max-width: 640px) 120px, 144px"
+        quality={95}
+        sizes="(max-width: 640px) 120px, (max-width: 1024px) 144px, 180px"
       />
 
       <div className="min-w-0 flex-1">

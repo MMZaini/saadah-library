@@ -35,7 +35,7 @@ export default function AlKafiPage() {
         const alKafiInfo = allBooks.find(book => book.bookId === 'Al-Kafi-Volume-1-Kulayni')
         setBookInfo(alKafiInfo || null)
       } catch (error) {
-        console.error('Error loading initial data:', error)
+        // Error logging removed
       }
     }
 
@@ -103,7 +103,7 @@ export default function AlKafiPage() {
           }
         })
       } catch (error) {
-        console.error('Error searching Al-Kafi:', error)
+        // Error logging removed
         setSearchResults([])
         navigation.saveSearchState(null)
       } finally {

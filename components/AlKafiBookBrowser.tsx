@@ -116,7 +116,7 @@ export default function AlKafiBookBrowser({ initialVolume = 1, className }: AlKa
         setVolumeSummary(summary)
       } catch (err) {
         setError(`Failed to load structure for Volume ${selectedVolume}`)
-        console.error('Error loading volume summary:', err)
+        // Error logging removed
       } finally {
         setLoading(false)
       }
@@ -149,7 +149,7 @@ export default function AlKafiBookBrowser({ initialVolume = 1, className }: AlKa
       
       setChapterHadiths(chapterHadiths)
     } catch (err) {
-      console.error('Error loading chapter hadiths:', err)
+      // Error logging removed
       setChapterHadiths([])
     } finally {
       setLoadingChapter(false)

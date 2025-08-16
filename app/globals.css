@@ -363,6 +363,15 @@
   .library-title-gradient:not(:hover) {
     animation: slideOutLeft 0.4s ease-in-out forwards;
   }
+
+  /* Filter animations */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out forwards;
+  }
+
+  .animate-stagger-fade-in {
+    animation: staggerFadeIn 0.4s ease-out forwards;
+  }
 }
 
 /* Mobile-specific media queries */
@@ -406,6 +415,28 @@
 @keyframes slideOutLeft {
   from { background-position: 0% 0; }
   to   { background-position: -100% 0; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Subtle focus ring for keyboard users */

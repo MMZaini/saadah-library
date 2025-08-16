@@ -5,7 +5,7 @@ export const measurePerformance = (name: string, fn: () => void) => {
     const start = performance.now()
     fn()
     const end = performance.now()
-    console.log(`${name} took ${end - start} milliseconds`)
+    // Performance logging removed for production
   } else {
     fn()
   }
@@ -16,7 +16,7 @@ export const measureAsyncPerformance = async (name: string, fn: () => Promise<an
     const start = performance.now()
     const result = await fn()
     const end = performance.now()
-    console.log(`${name} took ${end - start} milliseconds`)
+    // Performance logging removed for production
     return result
   } else {
     return await fn()

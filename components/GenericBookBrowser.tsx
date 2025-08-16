@@ -108,7 +108,7 @@ export default function GenericBookBrowser({ bookId, bookConfig = null, classNam
 
         setVolumeSummary(summary)
       } catch (err) {
-        console.error('Error loading volume summary:', err)
+        // Error logging removed
         setError('Failed to load book structure')
       } finally {
         setLoading(false)
@@ -148,7 +148,7 @@ export default function GenericBookBrowser({ bookId, bookConfig = null, classNam
       const sorted = hadiths.sort((a, b) => a.id - b.id)
       setChapterHadiths(sorted)
     } catch (err) {
-      console.error('Error loading chapter hadiths:', err)
+      // Error logging removed
       setChapterHadiths([])
     } finally {
       setLoadingChapter(false)

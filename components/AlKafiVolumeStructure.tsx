@@ -115,7 +115,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
         setVolumeSummary(summary)
       } catch (err) {
         setError(`Failed to load structure for selected volume(s)`)
-        console.error('Error loading volume summary:', err)
+        // Error logging removed
       } finally {
         setLoading(false)
       }

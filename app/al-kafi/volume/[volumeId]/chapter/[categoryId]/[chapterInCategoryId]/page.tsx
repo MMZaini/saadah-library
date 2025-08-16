@@ -74,7 +74,7 @@ export default function ChapterDetailPage() {
         
       } catch (err) {
         setError('Failed to load chapter hadiths')
-        console.error('Error loading chapter hadiths:', err)
+        // Error handled silently
       } finally {
         setLoading(false)
       }

@@ -46,7 +46,7 @@ export default function GenericChapterDetailPage() {
         chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(chapterHadiths)
       } catch (err) {
-        console.error('Error loading chapter hadiths (generic):', err)
+        // Failed to load chapter content
         setError('Failed to load chapter content')
       } finally {
         setLoading(false)

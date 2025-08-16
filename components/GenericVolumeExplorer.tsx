@@ -41,7 +41,7 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
 
       setRandomHadith(hadith)
     } catch (err) {
-      console.error('Failed to load random hadith:', err)
+      // Error logging removed
       setError('Failed to load hadith from this volume')
     } finally {
       setLoading(false)

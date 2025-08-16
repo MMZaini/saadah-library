@@ -241,7 +241,7 @@ export const alKafiApi = {
         total: combinedResults.length
       };
     } catch (error) {
-      console.error('Error searching Al-Kafi:', error);
+      // Error occurred during search
       return { results: [], total: 0 };
     }
   },
@@ -304,7 +304,7 @@ export const alKafiApi = {
       
       return structure;
     } catch (error) {
-      console.error(`Error getting volume ${volume} structure:`, error);
+      // Error logging removed for production;
       throw new Error(`Failed to load volume ${volume} structure`);
     }
   },
@@ -325,7 +325,7 @@ export const alKafiApi = {
         hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterId
       );
     } catch (error) {
-      console.error(`Error getting chapter hadiths:`, error);
+      // Error logging removed for production;
       throw new Error(`Failed to load chapter hadiths`);
     }
   }
@@ -371,7 +371,7 @@ export const uyunApi = {
         total: combinedResults.length
       };
     } catch (error) {
-      console.error('Error searching ʿUyūn akhbār al-Riḍā:', error);
+      // Error logging removed for production;
       return { results: [], total: 0 };
     }
   },
@@ -434,7 +434,7 @@ export const uyunApi = {
       
       return structure;
     } catch (error) {
-      console.error(`Error getting volume ${volume} structure:`, error);
+      // Error logging removed for production;
       throw new Error(`Failed to load volume ${volume} structure`);
     }
   },
@@ -455,7 +455,7 @@ export const uyunApi = {
         hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterId
       );
     } catch (error) {
-      console.error(`Error getting chapter hadiths:`, error);
+      // Error logging removed for production;
       throw new Error(`Failed to load chapter hadiths`);
     }
   }

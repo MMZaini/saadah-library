@@ -60,6 +60,11 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
   
+  // Update expanded state when settings change
+  useEffect(() => {
+    setExpanded(settings.alwaysShowFullHadith)
+  }, [settings.alwaysShowFullHadith])
+  
   // Tooltip states
   const [tooltipStates, setTooltipStates] = useState({
     majlisi: false,

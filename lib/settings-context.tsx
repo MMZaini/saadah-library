@@ -30,6 +30,7 @@ type SettingsContextType = {
   resetFontSizes: () => void
   resetArabicFontSize: () => void
   resetEnglishFontSize: () => void
+  isHydrated: boolean
 }
 
 const defaultSettings: Settings = {
@@ -52,7 +53,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     
     // Check if localStorage is available
     if (!isLocalStorageAvailable()) {
-      console.warn('localStorage is not available, using default settings')
       setSettings(defaultSettings)
       return
     }
@@ -61,7 +61,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const savedSettings = localStorage.getItem('siteSettings')
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
-        console.log('Loaded settings from localStorage:', parsed)
         
         // Merge with defaults to handle new settings that might not be in saved data
         const mergedSettings = {
@@ -72,11 +71,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         
         setSettings(mergedSettings)
       } else {
-        console.log('No saved settings found, using defaults')
         setSettings(defaultSettings)
       }
     } catch (error) {
-      console.warn('Failed to load settings from localStorage:', error)
       setSettings(defaultSettings)
     }
   }, [])
@@ -90,15 +87,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Set font size CSS custom properties
       root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize}%`)
       root.style.setProperty('--hadith-english-font-size', `${settings.englishFontSize}%`)
+    } else {
+      // Set initial theme immediately on load to prevent flash
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+      }
     }
   }, [settings.theme, settings.arabicFontSize, settings.englishFontSize, settings.alwaysShowFullHadith, isHydrated])
 
   const updateSettings = useCallback((newSettings: Partial<Settings>) => {
     // If called before hydration, allow the state update to proceed so UI sliders are responsive.
     // Persistence to localStorage will only be attempted when hydrated to avoid DOM/storage races.
-    if (!isHydrated) {
-      console.warn('Updating settings before hydration — applying locally and will persist after hydration')
-    }
 
     setSettings(prev => {
       const updated = { ...prev, ...newSettings }
@@ -118,32 +117,24 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         // Fail silently — not critical
-        console.debug('Could not apply CSS variables immediately:', e)
       }
 
       // Persist only when hydrated and localStorage is available
       if (isHydrated && isLocalStorageAvailable()) {
         try {
           localStorage.setItem('siteSettings', JSON.stringify(updated))
-          console.log('Settings saved to localStorage:', updated)
         } catch (error) {
-          console.error('Failed to save settings to localStorage:', error)
 
           // Try to clear localStorage if it's full
           if (error instanceof Error && error.message.includes('QuotaExceededError')) {
             try {
               localStorage.clear()
               localStorage.setItem('siteSettings', JSON.stringify(updated))
-              console.log('Cleared localStorage and saved settings')
             } catch (clearError) {
-              console.error('Failed to save settings even after clearing localStorage:', clearError)
+              // Silent fail
             }
           }
         }
-      } else if (!isHydrated) {
-        // Do not attempt to persist before hydration; will persist on next update after hydration
-      } else {
-        console.warn('localStorage not available, settings will not persist')
       }
 
       return updated
@@ -174,8 +165,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     toggleSettings,
     resetFontSizes,
     resetArabicFontSize,
-    resetEnglishFontSize
-  }), [settings, updateSettings, isSettingsOpen, toggleSettings, resetFontSizes, resetArabicFontSize, resetEnglishFontSize])
+    resetEnglishFontSize,
+    isHydrated // Expose hydration state
+  }), [settings, updateSettings, isSettingsOpen, toggleSettings, resetFontSizes, resetArabicFontSize, resetEnglishFontSize, isHydrated])
 
   return (
     <SettingsContext.Provider value={contextValue}>

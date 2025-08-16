@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useMemo, useEffect } from 'react'
 import { books } from '@/lib/books'
@@ -94,7 +93,7 @@ export default function Page() {
           }
         })
       } catch (error) {
-        console.error('Error searching:', error)
+        // Search failed, show empty results
         setSearchResults([])
         navigation.saveSearchState(null)
       } finally {

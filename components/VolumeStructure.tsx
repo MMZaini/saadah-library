@@ -134,7 +134,7 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
         setVolumeSummary(summary)
       } catch (err) {
         setError(`Failed to load structure for selected volume(s)`)
-        console.error('Error loading volume summary:', err)
+        // Error logging removed
       } finally {
         setLoading(false)
       }
