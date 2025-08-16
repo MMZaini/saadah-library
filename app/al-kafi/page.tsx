@@ -175,7 +175,7 @@ export default function AlKafiPage() {
               <img
                 src={bookInfo.bookCover}
                 alt="Al-Kāfi"
-                className="w-48 object-cover rounded-lg shadow-medium shrink-0"
+                className="hidden md:block w-48 object-cover rounded-lg shadow-medium shrink-0"
               />
             ) : null}
             
@@ -226,7 +226,7 @@ export default function AlKafiPage() {
         <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
           {/* View Mode Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-            <div>
+            <div className="hidden sm:block">
               <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2">
                 Explore Al-Kāfi
               </h2>
@@ -235,11 +235,11 @@ export default function AlKafiPage() {
               </p>
             </div>
             
-            <div className="bg-card border border-theme rounded-lg p-1 shadow-soft">
+            <div className="bg-card border border-theme rounded-lg p-1 shadow-soft mx-auto sm:mx-0">
               <button
                 onClick={() => setViewMode('structure')}
                 className={clsx(
-                  'px-3 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-all active:scale-95',
+                  'px-4 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-all active:scale-95',
                   viewMode === 'structure'
                     ? 'bg-accent-primary text-white shadow-soft'
                     : 'text-secondary hover:text-primary hover:bg-hover-color'
@@ -251,7 +251,7 @@ export default function AlKafiPage() {
               <button
                 onClick={() => setViewMode('chapters')}
                 className={clsx(
-                  'px-3 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-all active:scale-95',
+                  'px-5 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-all active:scale-95',
                   viewMode === 'chapters'
                     ? 'bg-accent-primary text-white shadow-soft'
                     : 'text-secondary hover:text-primary hover:bg-hover-color'
@@ -263,7 +263,7 @@ export default function AlKafiPage() {
               <button
                 onClick={() => setViewMode('explorer')}
                 className={clsx(
-                  'px-2 sm:px-3 py-2 rounded text-xs font-medium transition-all active:scale-95',
+                  'px-4 sm:px-3 py-2 rounded text-xs font-medium transition-all active:scale-95',
                   viewMode === 'explorer'
                     ? 'bg-accent-primary text-white shadow-soft'
                     : 'text-secondary hover:text-primary hover:bg-hover-color'
