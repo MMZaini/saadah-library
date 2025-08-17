@@ -105,6 +105,7 @@ export default function SettingsSidebar() {
     }
   }, [isSettingsOpen, toggleSettings])
 
+
   return (
     <>
       {/* Backdrop */}
@@ -114,24 +115,24 @@ export default function SettingsSidebar() {
         onClick={toggleSettings}
         aria-hidden="true"
       />
-      
+
       {/* Sidebar */}
-      <div 
+      <div
         ref={sidebarRef}
-        className={`fixed right-0 top-0 h-full w-full sm:w-80 max-w-sm bg-card border-l border-theme shadow-2xl z-[60] p-4 sm:p-6
+        className={`fixed right-0 top-0 h-full w-full sm:w-80 max-w-sm bg-card border-l border-theme shadow-2xl z-[60] p-0 flex flex-col
           transition-transform duration-300 ease-out will-change-transform
           ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Swipe handle (mobile only) */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-16 bg-theme/20 rounded-r-full sm:hidden" />
-        
-        <div 
-          className={`transition-opacity duration-300 delay-100 ease-out
+
+        <div
+          className={`transition-opacity duration-300 delay-100 ease-out flex-1 flex flex-col p-4 sm:p-6 overflow-hidden
             ${isSettingsOpen ? 'opacity-100' : 'opacity-0'}`}
         >
           <div className="flex items-center justify-between mb-6 sm:mb-8">
             <h2 className="text-lg font-semibold text-primary">Settings</h2>
-            <button 
+            <button
               onClick={toggleSettings}
               className="p-2 rounded-lg transition-colors hover:bg-card-hover active:bg-card-hover active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
@@ -139,8 +140,8 @@ export default function SettingsSidebar() {
             </button>
           </div>
 
-          <div 
-            className={`space-y-4 sm:space-y-6 transition-all duration-300 delay-150 ease-out max-h-[calc(100vh-120px)] overflow-y-auto
+          <div
+            className={`space-y-4 sm:space-y-6 transition-all duration-300 delay-150 ease-out flex-1 min-h-0 overflow-y-auto
               ${isSettingsOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
           >
             {/* Theme Selection */}
@@ -171,8 +172,8 @@ export default function SettingsSidebar() {
                   onClick={() => updateSettings({ alwaysShowFullHadith: !settings.alwaysShowFullHadith })}
                   className={clsx(
                     "relative inline-flex w-16 h-8 items-center rounded-full px-1 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 active:scale-95 flex-shrink-0 min-h-[44px] min-w-[64px]",
-                    settings.alwaysShowFullHadith 
-                      ? "bg-accent-primary" 
+                    settings.alwaysShowFullHadith
+                      ? "bg-accent-primary"
                       : "bg-input"
                   )}
                 >
@@ -191,7 +192,7 @@ export default function SettingsSidebar() {
               <div className="mb-2">
                 <h3 className="text-sm font-semibold text-primary">Hadith Text Size</h3>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-secondary">
@@ -250,6 +251,12 @@ export default function SettingsSidebar() {
             </div>
           </div>
         </div>
+        {/* Sidebar Footer */}
+        <footer className="w-full border-t border-gray-200 dark:border-gray-700 py-4 flex justify-center items-center bg-white/70 dark:bg-black/30">
+          <p className="text-xs text-gray-700 dark:text-gray-300 text-center">
+            Found a bug or have a feature request? Contact <span className="font-semibold">@deleteooom</span> on Discord.
+          </p>
+        </footer>
       </div>
     </>
   )

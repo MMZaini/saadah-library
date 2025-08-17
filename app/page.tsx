@@ -229,7 +229,13 @@ export default function Page() {
           </div>
         </section>
       )}
-    </div>
+    {/* Footer - Home page only */}
+    <footer className="w-full mt-12 border-t border-gray-200 dark:border-gray-700 py-6 flex justify-center items-center bg-white/70 dark:bg-black/30">
+      <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
+        Found a bug or have a feature request? Contact <span className="font-semibold">@deleteooom</span> on Discord.
+      </p>
+    </footer>
+  </div>
   )
 }
 
