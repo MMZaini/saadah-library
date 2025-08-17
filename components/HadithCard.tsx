@@ -628,11 +628,11 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
 
         {/* Source Link and Actions */}
         <div className="flex items-center justify-between text-xs text-muted">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full">
             {/* Copy Link Button */}
             <button
               onClick={handleCopyLink}
-              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
               title="Copy link to this hadith"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -644,7 +644,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
             {/* Copy Source Button */}
             <button
               onClick={handleCopySource}
-              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
               title="Copy source citation (book, chapter, hadith number)"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,7 +656,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
             {/* Copy Link & Source Button */}
             <button
               onClick={handleCopyLinkAndSource}
-              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
               title="Copy both source citation and link"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -670,7 +670,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
               <button
                 onClick={onToggleNotes}
                 className={clsx(
-                  "flex items-center gap-1 transition-colors font-medium",
+                  "flex items-center gap-1 transition-colors font-medium rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center",
                   notesVisible 
                     ? "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                     : "text-primary/70 hover:text-primary hover:underline"
@@ -702,7 +702,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
               href={getChapterUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline flex items-center gap-1 transition-colors"
+              className="text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
               tabIndex={0}
             >
               View Chapter
