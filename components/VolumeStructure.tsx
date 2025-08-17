@@ -131,7 +131,33 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
           category.chapters = sortedChapters
         })
 
-        setVolumeSummary(summary)
+        // Sort categories to ensure Introduction comes before Content
+        const sortedSummary: VolumeSummary = {}
+        const categoryEntries = Object.entries(summary)
+        
+        // Custom sort function for categories
+        const sortCategories = ([keyA]: [string, CategorySummary], [keyB]: [string, CategorySummary]) => {
+          const normalizeKey = (key: string) => key.toLowerCase().trim()
+          const normalizedA = normalizeKey(keyA)
+          const normalizedB = normalizeKey(keyB)
+          
+          // Introduction should come first
+          if (normalizedA.includes('introduction') && !normalizedB.includes('introduction')) return -1
+          if (!normalizedA.includes('introduction') && normalizedB.includes('introduction')) return 1
+          
+          // Content should come after Introduction but before other categories
+          if (normalizedA.includes('content') && !normalizedB.includes('content') && !normalizedB.includes('introduction')) return -1
+          if (!normalizedA.includes('content') && normalizedB.includes('content') && !normalizedA.includes('introduction')) return 1
+          
+          // Default alphabetical sort for other categories
+          return normalizedA.localeCompare(normalizedB)
+        }
+        
+        categoryEntries.sort(sortCategories).forEach(([key, value]) => {
+          sortedSummary[key] = value
+        })
+
+        setVolumeSummary(sortedSummary)
       } catch (err) {
         setError(`Failed to load structure for selected volume(s)`)
         // Error logging removed

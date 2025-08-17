@@ -63,15 +63,17 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
     <div className={clsx('space-y-6', className)}>
       {/* Volume Selector */}
       <div className="bg-gradient-to-r from-white to-slate-50/80 dark:from-slate-800/50 dark:to-slate-900/30 border border-slate-200/60 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
+        {/* Introduction text at the top */}
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">{displayTitle} consists of {volumesCount} volume{volumesCount === 1 ? '' : 's'}. Select a specific volume or "All Volumes" to explore random hadiths.</p>
+        
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
             <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">{displayTitle} Volume Explorer</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{displayTitle} consists of {volumesCount} volume{volumesCount === 1 ? '' : 's'}. Select a specific volume or "All Volumes" to explore random hadiths.</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 break-words">{displayTitle} Volume Explorer</h3>
           </div>
         </div>
 

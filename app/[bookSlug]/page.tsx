@@ -1,9 +1,9 @@
- 'use client'
+'use client'
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { thaqalaynApi, Hadith, BookInfo } from '@/lib/api'
-import { getBookConfig } from '@/lib/books-config'
+import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import HadithCard from '@/components/HadithCard'
 import SearchInterface from '@/components/SearchInterface'
@@ -27,7 +27,8 @@ export default function BookPage() {
   const params = useParams()
   const router = useRouter()
   const { settings, toggleSettings } = useSettings()
-  const bookId = params?.bookId as string
+  const urlSlug = params?.bookSlug as string
+  const bookId = getBookIdFromUrlSlug(urlSlug)
 
   const [state, setState] = useState<BookPageState>({
     bookInfo: null,
@@ -372,7 +373,7 @@ export default function BookPage() {
                   bookId={bookInfo.bookId}
                   bookName={bookInfo.englishName}
                   volumes={bookConfig?.volumes ?? [bookInfo.bookId]}
-                  baseRoute={`/book/${bookInfo.bookId}`}
+                  baseRoute={`/${urlSlug}`}
                 />
               ) : viewMode === 'chapters' ? (
                 <GenericBookBrowser bookId={bookId} bookConfig={bookConfig} />

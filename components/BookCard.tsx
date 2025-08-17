@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import clsx from 'clsx'
+import { getBookUrlSlug } from '@/lib/books-config'
 
 type Book = {
   id: number
@@ -43,9 +44,9 @@ export default function BookCard({ book }: { book: Book }) {
   const [hovered, setHovered] = useState<boolean>(!!book.highlighted)
   const bookId = book.bookId || bookIdMap[book.id]
   
-  // Special routing for Al-Kafi; route others (including Uyun) to generic book pages
+  // Special routing for Al-Kafi; route others to clean URL slugs
   const href = book.id === 1 ? '/al-kafi' : 
-               bookId ? `/book/${bookId}` : '#'
+               bookId ? `/${getBookUrlSlug(bookId)}` : '#'
 
   const cardContent = (
     <div
@@ -68,7 +69,7 @@ export default function BookCard({ book }: { book: Book }) {
         width={180}
         height={240}
         className={clsx(
-          'rounded-lg shadow-book transition-transform duration-300 object-contain shrink-0',
+          'rounded-lg shadow-book transition-transform duration-300 object-contain shrink-0 select-none',
           'sm:w-36 sm:h-48', // Larger on desktop
           hovered ? 'translate-x-[-4px] sm:translate-x-[-8px] scale-105' : 'translate-x-0 scale-100'
         )}
@@ -77,17 +78,17 @@ export default function BookCard({ book }: { book: Book }) {
         sizes="(max-width: 640px) 120px, (max-width: 1024px) 144px, 180px"
       />
 
-      <div className="min-w-0 flex-1">
-        <h3 className="text-lg sm:text-xl font-semibold tracking-tight line-clamp-2">{book.title}</h3>
-        {book.subtitle && <p className="text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none">{book.subtitle}</p>}
+      <div className="min-w-0 flex-1 select-none">
+        <h3 className="text-lg sm:text-xl font-semibold tracking-tight line-clamp-2 select-none">{book.title}</h3>
+        {book.subtitle && <p className="text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">{book.subtitle}</p>}
         {book.author && (
-          <p className="text-xs sm:text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none">
+          <p className="text-xs sm:text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">
             {book.author}
           </p>
         )}
         {book.highlighted && (
           <div className="mt-2">
-            <span className="text-xs px-2 py-1 rounded-full shadow-soft bg-amber-100 text-gray dark:bg-amber-900/30 dark:text-amber-300">
+            <span className="text-xs px-2 py-1 rounded-full shadow-soft bg-amber-100 text-gray dark:bg-amber-900/30 dark:text-amber-300 select-none">
               Featured
             </span>
           </div>

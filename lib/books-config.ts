@@ -65,6 +65,47 @@ export const SINGLE_VOLUME_BOOKS: string[] = [
   'Mujam-al-Ahadith-al-Mutabara-Muhsini'
 ]
 
+// URL slug to full book ID mapping for cleaner URLs
+export const URL_TO_BOOK_ID_MAP: Record<string, string> = {
+  // Multi-volume books - map short URL to primary volume
+  'Uyun-akhbar-al-Rida': 'Uyun-akhbar-al-Rida-Volume-1-Saduq',
+  'Man-La-Yahduruh-al-Faqih': 'Man-La-Yahduruh-al-Faqih-Volume-1-Saduq',
+
+  // Single-volume books - remove author names
+  'Al-Amali-Mufid': 'Al-Amali-Mufid',
+  'Al-Amali-Saduq': 'Al-Amali-Saduq',
+  'Al-Tawhid': 'Al-Tawhid-Saduq',
+  'Kitab-al-Ghayba-Numani': 'Kitab-al-Ghayba-Numani',
+  'Kitab-al-Ghayba-Tusi': 'Kitab-al-Ghayba-Tusi',
+  'Nahj-al-Balagha': 'Nahj-al-Balagha-Radi',
+  'Sifat-al-Shia': 'Sifat-al-Shia-Saduq',
+  'Fadail-al-Shia': 'Fadail-al-Shia-Saduq',
+  'Kitab-al-Mumin': 'Kitab-al-Mumin-Ahwazi',
+  'Kitab-al-Zuhd': 'Kitab-al-Zuhd-Ahwazi',
+  'Risalat-al-Huquq': 'Risalat-al-Huquq-Abidin',
+  'Thawab-al-Amal-wa-iqab-al-Amal': 'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
+  'Al-Khisal': 'Al-Khisal-Saduq',
+  'Kamil-al-Ziyarat': 'Kamil-al-Ziyarat-Qummi',
+  'Kitab-al-Duafa': 'Kitab-al-Duafa-Ghadairi',
+  'Maani-al-Akhbar': 'Maani-al-Akhbar-Saduq',
+  'Mujam-al-Ahadith-al-Mutabara': 'Mujam-al-Ahadith-al-Mutabara-Muhsini'
+}
+
+// Reverse mapping for generating URLs from book IDs
+export const BOOK_ID_TO_URL_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(URL_TO_BOOK_ID_MAP).map(([url, bookId]) => [bookId, url])
+)
+
+// Helper function to get clean URL from book ID
+export const getBookUrlSlug = (bookId: string): string => {
+  return BOOK_ID_TO_URL_MAP[bookId] || bookId
+}
+
+// Helper function to get full book ID from URL slug
+export const getBookIdFromUrlSlug = (urlSlug: string): string => {
+  return URL_TO_BOOK_ID_MAP[urlSlug] || urlSlug
+}
+
 export const isMultiVolumeBook = (bookId: string): boolean => {
   return Object.keys(MULTI_VOLUME_BOOKS).some(key => bookId.startsWith(key))
 }

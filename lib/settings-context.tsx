@@ -35,8 +35,8 @@ type SettingsContextType = {
 
 const defaultSettings: Settings = {
   theme: 'dark',
-  arabicFontSize: 100, // 100%
-  englishFontSize: 100, // 100%
+  arabicFontSize: 135,
+  englishFontSize: 100,
   alwaysShowFullHadith: false // false = collapsed by default (current behavior)
 }
 

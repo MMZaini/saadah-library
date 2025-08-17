@@ -177,9 +177,9 @@ export default function Page() {
               
               <Link
                 href="/al-kafi"
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-center text-sm sm:text-base"
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-center text-sm sm:text-base select-none"
               >
-                  Explore <span className="font-arabic">الكافي</span>
+                  Explore <span className="font-arabic select-none">الكافي</span>
               </Link>
             </div>
             

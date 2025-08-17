@@ -7,6 +7,8 @@ interface ChapterInfo {
   category: string
   chapter: string
   hadithCount: number
+  categoryId?: string
+  chapterInCategoryId?: number
 }
 
 interface ChapterContextType {

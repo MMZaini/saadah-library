@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Hadith } from '@/lib/api'
 import { useSettings } from '@/lib/settings-context'
 import { useNavigation } from '@/lib/navigation-context'
+import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
 import clsx from 'clsx'
 
 interface HadithCardProps {
@@ -77,17 +78,81 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
   const mohseniRef = useRef<HTMLSpanElement>(null)
   const behbudiRef = useRef<HTMLSpanElement>(null)
 
+  // Function to clean duplicate chain from matn
+  const removeChainFromMatn = useCallback((matn: string, chain: string): string => {
+    if (!matn || !chain) return matn
+
+    const cleanMatn = matn.trim()
+    const cleanChain = chain.trim()
+    
+    // Case 1: Exact match at the beginning
+    if (cleanMatn.startsWith(cleanChain)) {
+      let result = cleanMatn.slice(cleanChain.length).trim()
+      // Remove leading colons, semicolons, and quotes
+      result = result.replace(/^[:\s;"']+/, '').trim()
+      return result
+    }
+    
+    // Case 2: Chain might have slight variations (punctuation, spacing)
+    // Normalize both texts for comparison
+    const normalizeText = (text: string) => 
+      text.replace(/[^\w\s]/g, ' ')  // Replace punctuation with spaces
+          .replace(/\s+/g, ' ')      // Normalize whitespace
+          .toLowerCase()
+          .trim()
+    
+    const normalizedMatn = normalizeText(cleanMatn)
+    const normalizedChain = normalizeText(cleanChain)
+    
+    if (normalizedMatn.startsWith(normalizedChain)) {
+      // Find where the chain ends in the original text
+      const words = cleanChain.split(/\s+/)
+      let endIndex = 0
+      let wordCount = 0
+      
+      for (let i = 0; i < cleanMatn.length && wordCount < words.length; i++) {
+        if (/\w/.test(cleanMatn[i])) { // If it's a word character
+          // Find the end of this word
+          let wordEnd = i
+          while (wordEnd < cleanMatn.length && /\w/.test(cleanMatn[wordEnd])) {
+            wordEnd++
+          }
+          wordCount++
+          endIndex = wordEnd
+          i = wordEnd - 1 // Skip to end of word
+        }
+      }
+      
+      if (wordCount === words.length) {
+        let result = cleanMatn.slice(endIndex).trim()
+        // Remove leading punctuation that might separate chain from actual hadith
+        result = result.replace(/^[:\s;"']+/, '').trim()
+        return result
+      }
+    }
+    
+    return cleanMatn
+  }, [])
+
   // Memoize expensive calculations
   const { englishText, arabicText, isLongText, isArabicLongText } = useMemo(() => {
-    const english = hadith.englishText || hadith.thaqalaynMatn
+    const rawEnglish = hadith.englishText || hadith.thaqalaynMatn
     const arabic = hadith.arabicText
-    return {
-      englishText: english,
-      arabicText: arabic,
-      isLongText: (english?.length || 0) > 300,
-      isArabicLongText: (arabic?.length || 0) > 300
+    const chain = hadith.thaqalaynSanad
+    
+    // Remove duplicate chain from the beginning of the matn if both exist
+    let processedEnglish = rawEnglish
+    if (chain && rawEnglish) {
+      processedEnglish = removeChainFromMatn(rawEnglish, chain)
     }
-  }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText])
+    
+    return {
+      englishText: processedEnglish,
+      arabicText: arabic,
+      isLongText: (processedEnglish?.length || 0) > 600,
+      isArabicLongText: (arabic?.length || 0) > 600
+    }
+  }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad, removeChainFromMatn])
 
   // Memoize grading data
   const gradingData = useMemo(() => ({
@@ -111,30 +176,168 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
     
     // Determine the correct path based on the book/collection
     let basePath = '/al-kafi' // Default to Al-Kafi
+    let isAlKafi = true // Track if this is Al-Kafi to determine URL structure
 
     try {
-      const { getBookConfig } = await import('@/lib/books-config')
       const bookId = hadith.bookId || ''
       const cfg = getBookConfig(bookId)
       if (cfg) {
-        if (cfg.bookId === 'Al-Kafi') basePath = '/al-kafi'
-        else if (cfg.bookId === 'Uyun-akhbar-al-Rida') basePath = '/uyun-akhbar-al-rida'
-        else basePath = `/book/${cfg.bookId}`
+        if (cfg.bookId === 'Al-Kafi') {
+          basePath = '/al-kafi'
+          isAlKafi = true
+        } else {
+          basePath = `/${getBookUrlSlug(cfg.bookId)}`
+          isAlKafi = false
+        }
       } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
-        basePath = '/uyun-akhbar-al-rida'
+        basePath = '/Uyun-akhbar-al-Rida'
+        isAlKafi = false
       } else if (bookId) {
-        basePath = `/book/${bookId}`
+        basePath = `/${getBookUrlSlug(bookId)}`
+        isAlKafi = false
       }
     } catch (e) {
-      // fallback heuristics
+      // fallback heuristics  
       if ((hadith.book && hadith.book.includes('Uyun')) || (hadith.bookId && hadith.bookId.includes('Uyun'))) {
-        basePath = '/uyun-akhbar-al-rida'
+        basePath = '/Uyun-akhbar-al-Rida'
+        isAlKafi = false
+      } else if (hadith.bookId) {
+        basePath = `/${getBookUrlSlug(hadith.bookId)}`
+        isAlKafi = false
       }
     }
 
     // Navigate to the chapter view for this hadith
-    router.push(`${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+    // Al-Kafi uses volume structure, others don't
+    if (isAlKafi) {
+      router.push(`${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+    } else {
+      router.push(`${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+    }
   }, [navigation, router, hadith.volume, hadith.categoryId, hadith.chapterInCategoryId, hadith.book, hadith.bookId])
+
+  const handleCopyLink = useCallback(async () => {
+    try {
+      const bookId = hadith.bookId || ''
+      let hadithUrl = ''
+      
+      console.log('Copy link - hadith:', { id: hadith.id, bookId, book: hadith.book })
+      
+      // Determine the correct path based on the book/collection
+      const cfg = getBookConfig(bookId)
+      console.log('Book config:', cfg)
+      
+      if (cfg) {
+        if (cfg.bookId === 'Al-Kafi') {
+          hadithUrl = `/al-kafi/hadith/${hadith.id}`
+        } else {
+          hadithUrl = `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
+        }
+      } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
+        hadithUrl = `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
+      } else if (bookId) {
+        hadithUrl = `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
+      } else {
+        hadithUrl = `/al-kafi/hadith/${hadith.id}` // fallback
+      }
+      
+      console.log('Generated hadith URL:', hadithUrl)
+      
+      const fullUrl = `${window.location.origin}${hadithUrl}`
+      console.log('Full URL to copy:', fullUrl)
+      
+      await navigator.clipboard.writeText(fullUrl)
+      
+      // Could add a toast notification here if you have a toast system
+      // For now, we'll just provide visual feedback through the title change
+      
+    } catch (err) {
+      console.error('Failed to copy link:', err)
+    }
+  }, [hadith.id, hadith.bookId, hadith.book])
+
+  const handleCopySource = useCallback(async () => {
+    try {
+      // Format the source information
+      let sourceText = ''
+      
+      // Book name
+      const bookName = hadith.book || 'Unknown Book'
+      
+      // Chapter information
+      const chapterInfo = hadith.chapter || 'Unknown Chapter'
+      
+      // Volume information (if available)
+      const volumeInfo = hadith.volume ? `Volume ${hadith.volume}` : ''
+      
+      // Hadith number
+      const hadithNumber = `Hadith ${hadith.id}`
+      
+      // Combine all parts
+      if (volumeInfo) {
+        sourceText = `${bookName}, ${volumeInfo}, ${chapterInfo}, ${hadithNumber}`
+      } else {
+        sourceText = `${bookName}, ${chapterInfo}, ${hadithNumber}`
+      }
+      
+      await navigator.clipboard.writeText(sourceText)
+      
+      console.log('Copied source:', sourceText)
+      
+    } catch (err) {
+      console.error('Failed to copy source:', err)
+    }
+  }, [hadith.book, hadith.chapter, hadith.volume, hadith.id])
+
+  const handleCopyLinkAndSource = useCallback(async () => {
+    try {
+      // Get the link URL
+      const bookId = hadith.bookId || ''
+      let hadithUrl = ''
+      
+      // Determine the correct path based on the book/collection
+      const cfg = getBookConfig(bookId)
+      
+      if (cfg) {
+        if (cfg.bookId === 'Al-Kafi') {
+          hadithUrl = `/al-kafi/hadith/${hadith.id}`
+        } else {
+          hadithUrl = `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
+        }
+      } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
+        hadithUrl = `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
+      } else if (bookId) {
+        hadithUrl = `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
+      } else {
+        hadithUrl = `/al-kafi/hadith/${hadith.id}` // fallback
+      }
+      
+      const fullUrl = `${window.location.origin}${hadithUrl}`
+      
+      // Format the source information
+      const bookName = hadith.book || 'Unknown Book'
+      const chapterInfo = hadith.chapter || 'Unknown Chapter'
+      const volumeInfo = hadith.volume ? `Volume ${hadith.volume}` : ''
+      const hadithNumber = `Hadith ${hadith.id}`
+      
+      let sourceText = ''
+      if (volumeInfo) {
+        sourceText = `${bookName}, ${volumeInfo}, ${chapterInfo}, ${hadithNumber}`
+      } else {
+        sourceText = `${bookName}, ${chapterInfo}, ${hadithNumber}`
+      }
+      
+      // Combine link and source
+      const combinedText = `${sourceText}\n${fullUrl}`
+      
+      await navigator.clipboard.writeText(combinedText)
+      
+      console.log('Copied link and source:', combinedText)
+      
+    } catch (err) {
+      console.error('Failed to copy link and source:', err)
+    }
+  }, [hadith.id, hadith.bookId, hadith.book, hadith.chapter, hadith.volume])
 
   return (
     <div className={clsx(
@@ -189,7 +392,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
             >
               {isArabicLongText && !arabicExpanded ? (
                 <>
-                  {arabicText.slice(0, 250)}...
+                  {arabicText.slice(0, 750)}...
                   <button
                     onClick={() => setArabicExpanded(true)}
                     className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline ml-2 font-medium transition-colors active:scale-95"
@@ -226,7 +429,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
             <div className="text-sm sm:text-base hadith-english-text font-mono" style={{ fontSize: `${settings.englishFontSize}%`, fontFamily: '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace' }}>
               {isLongText && !expanded ? (
                 <>
-                  {englishText.slice(0, 250)}...
+                  {englishText.slice(0, 750)}...
                   <button
                     onClick={() => setExpanded(true)}
                     className="text-accent-primary hover:text-accent-secondary hover:underline ml-2 font-medium transition-colors active:scale-95"
@@ -395,8 +598,47 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
           </div>
         )}
 
-        {/* Source Link */}
-        <div className="flex items-center justify-end text-xs text-muted">
+        {/* Source Link and Actions */}
+        <div className="flex items-center justify-between text-xs text-muted">
+          <div className="flex items-center gap-3">
+            {/* Copy Link Button */}
+            <button
+              onClick={handleCopyLink}
+              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+              title="Copy link to this hadith"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy Link
+            </button>
+            
+            {/* Copy Source Button */}
+            <button
+              onClick={handleCopySource}
+              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+              title="Copy source citation (book, chapter, hadith number)"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Copy Source
+            </button>
+            
+            {/* Copy Link & Source Button */}
+            <button
+              onClick={handleCopyLinkAndSource}
+              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+              title="Copy both source citation and link"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Copy Both
+            </button>
+          </div>
+          
+          {/* View Chapter Button */}
           {showViewChapter && hadith.volume && hadith.categoryId && (hadith.chapterInCategoryId !== null && hadith.chapterInCategoryId !== undefined) ? (
             <button
               onClick={handleNavigateToChapter}

@@ -175,7 +175,7 @@ export default function AlKafiPage() {
               <img
                 src={bookInfo.bookCover}
                 alt="Al-Kāfi"
-                className="hidden md:block w-48 object-cover rounded-lg shadow-medium shrink-0"
+                className="hidden md:block w-48 object-cover rounded-lg shadow-medium shrink-0 select-none"
               />
             ) : null}
             

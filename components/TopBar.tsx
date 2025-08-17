@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
 import { IconMenu, IconArrowLeft, IconBook } from './Icons'
-import { getBookConfig } from '@/lib/books-config'
+import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
@@ -18,7 +18,10 @@ export default function TopBar() {
   const router = useRouter()
 
   // derive bookId when on generic book routes
-  const currentBookId = pathname.startsWith('/book/') ? params.bookId as string | null : null
+  const currentBookSlug = pathname.startsWith('/book/') ? params.bookId as string | null : 
+                         pathname !== '/' && pathname !== '/al-kafi' && !pathname.startsWith('/al-kafi/') && !pathname.includes('/Uyun-akhbar-al-Rida') ? 
+                         (params.bookSlug as string | null) : null
+  const currentBookId = currentBookSlug ? getBookIdFromUrlSlug(currentBookSlug) : null
 
   const humanizeBookId = (id?: string | null) => {
     if (!id) return ''
@@ -46,9 +49,16 @@ export default function TopBar() {
 
   // Parse chapter page parameters for both Al-Kafi and ʿUyūn
   const isAlKafiChapterPage = pathname.includes('/al-kafi/volume/') && pathname.includes('/chapter/')
-  const isUyunChapterPage = pathname.includes('/uyun-akhbar-al-rida/volume/') && pathname.includes('/chapter/')
-  const isGenericChapterPage = pathname.startsWith('/book/') && pathname.includes('/chapter/')
+  const isUyunChapterPage = false // ʿUyūn now uses generic routes
+  const isGenericChapterPage = (pathname.startsWith('/book/') || (pathname !== '/' && pathname !== '/al-kafi' && !pathname.startsWith('/al-kafi/'))) && pathname.includes('/chapter/')
   const isChapterPage = isAlKafiChapterPage || isUyunChapterPage || isGenericChapterPage
+  
+  // Parse hadith page parameters for all book types
+  const isAlKafiHadithPage = pathname.includes('/al-kafi/hadith/')
+  const isUyunHadithPage = false // ʿUyūn now uses generic routes
+  const isGenericHadithPage = (pathname !== '/' && pathname !== '/al-kafi' && !pathname.startsWith('/al-kafi/')) && pathname.includes('/hadith/')
+  const isHadithPage = isAlKafiHadithPage || isUyunHadithPage || isGenericHadithPage
+  
   const volumeId = isChapterPage ? params.volumeId : null
 
   const displayBookTitle = currentBookId
@@ -78,12 +88,10 @@ export default function TopBar() {
             {isChapterPage && (
               <button
                 onClick={() => {
-                  if (isUyunChapterPage) {
-                    router.push('/uyun-akhbar-al-rida')
-                  } else if (isAlKafiChapterPage) {
+                  if (isAlKafiChapterPage) {
                     router.push('/al-kafi')
-                  } else if (isGenericChapterPage && currentBookId) {
-                    router.push(`/book/${currentBookId}`)
+                  } else if (isGenericChapterPage && currentBookSlug) {
+                    router.push(`/${currentBookSlug}`)
                   }
                 }}
                 className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus-visible:outline-2 flex-shrink-0"
@@ -93,8 +101,8 @@ export default function TopBar() {
             )}
 
             <Link href="/" onClick={handleTitleClick} className="flex items-center gap-2 flex-shrink-0 group">
-                <h1 className="text-xl sm:text-2xl font-bold relative overflow-hidden cursor-pointer font-arabic">
-                <span className="library-title-gradient">
+                <h1 className="text-xl sm:text-2xl font-bold relative overflow-hidden cursor-pointer font-arabic select-none">
+                <span className="library-title-gradient select-none">
                   مكتبة السعادة
                 </span>
               </h1>
@@ -109,10 +117,10 @@ export default function TopBar() {
                 {pathname === '/al-kafi' && (
                   <span className="font-medium text-primary truncate">Al-Kāfi Explorer</span>
                 )}
-                {pathname === '/uyun-akhbar-al-rida' && (
+                {pathname === '/Uyun-akhbar-al-Rida' && (
                   <span className="font-medium text-primary truncate">ʿUyūn akhbār al-Riḍā Explorer</span>
                 )}
-                {pathname.startsWith('/book/') && !isGenericChapterPage && (
+                {(pathname.startsWith('/book/') || (currentBookSlug && pathname !== '/' && pathname !== '/al-kafi' && !pathname.startsWith('/al-kafi/') && !pathname.includes('/Uyun-akhbar-al-Rida'))) && !isGenericChapterPage && (
                   <span className="font-medium text-primary truncate">
                     {currentBookId
                       ? (findTitleFromBooksList(currentBookId) || getBookConfig(currentBookId)?.englishName || humanizeBookId(currentBookId))
@@ -123,7 +131,7 @@ export default function TopBar() {
                 {pathname.startsWith('/al-kafi/volume/') && !isAlKafiChapterPage && (
                   <span className="font-medium text-primary truncate">Al-Kāfi Volume</span>
                 )}
-                {pathname.startsWith('/uyun-akhbar-al-rida/volume/') && !isUyunChapterPage && (
+                {pathname.startsWith('/Uyun-akhbar-al-Rida/volume/') && !isUyunChapterPage && (
                   <span className="font-medium text-primary truncate">ʿUyūn akhbār al-Riḍā Volume</span>
                 )}
                 {isAlKafiChapterPage && chapterInfo && (
@@ -131,21 +139,18 @@ export default function TopBar() {
                     <IconBook className="h-4 w-4 text-amber-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="font-medium text-primary truncate">
-                        <span className="hidden md:inline">Al-Kāfi Volume {chapterInfo.volumeId} • </span>
-                        <span className="truncate">{chapterInfo.chapter}</span>
-                      </div>
-                      <div className="text-xs text-secondary truncate md:block hidden">
-                        {chapterInfo.category} • {chapterInfo.hadithCount} Hadiths
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {isUyunChapterPage && chapterInfo && (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <IconBook className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-medium text-primary truncate">
-                        <span className="hidden md:inline">ʿUyūn Volume {chapterInfo.volumeId} • </span>
+                        <span className="hidden md:inline">
+                          <span className="group hover:text-amber-400 transition-colors">
+                            <Link href="/al-kafi" className="group-hover:text-amber-400 transition-colors">
+                              Al-Kāfi
+                            </Link>
+                            {' '}
+                            <Link href="/al-kafi" className="group-hover:text-amber-400 transition-colors">
+                              Volume {chapterInfo.volumeId}
+                            </Link>
+                          </span>
+                          {' • '}
+                        </span>
                         <span className="truncate">{chapterInfo.chapter}</span>
                       </div>
                       <div className="text-xs text-secondary truncate md:block hidden">
@@ -159,7 +164,26 @@ export default function TopBar() {
                     <IconBook className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="font-medium text-primary truncate">
-                        <span className="hidden md:inline">{displayBookTitle} Volume {chapterInfo.volumeId} • </span>
+                        <span className="hidden md:inline">
+                          <span className="group hover:text-emerald-400 transition-colors">
+                            {currentBookSlug ? (
+                              <Link href={`/${currentBookSlug}`} className="group-hover:text-emerald-400 transition-colors">
+                                {displayBookTitle}
+                              </Link>
+                            ) : (
+                              displayBookTitle
+                            )}
+                            {' '}
+                            {currentBookSlug ? (
+                              <Link href={`/${currentBookSlug}`} className="group-hover:text-emerald-400 transition-colors">
+                                Volume {chapterInfo.volumeId}
+                              </Link>
+                            ) : (
+                              `Volume ${chapterInfo.volumeId}`
+                            )}
+                          </span>
+                          {' • '}
+                        </span>
                         <span className="truncate">{chapterInfo.chapter}</span>
                       </div>
                       <div className="text-xs text-secondary truncate md:block hidden">
@@ -168,19 +192,77 @@ export default function TopBar() {
                     </div>
                   </div>
                 )}
+                {isAlKafiHadithPage && chapterInfo && (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <IconBook className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-primary truncate">
+                        <span className="hidden md:inline">
+                          <span className="group hover:text-amber-400 transition-colors">
+                            <Link href="/al-kafi" className="group-hover:text-amber-400 transition-colors">
+                              Al-Kāfi
+                            </Link>
+                            {' '}
+                            <Link href="/al-kafi" className="group-hover:text-amber-400 transition-colors">
+                              Volume {chapterInfo.volumeId}
+                            </Link>
+                          </span>
+                          {' • '}
+                        </span>
+                        <span className="truncate">{chapterInfo.chapter}</span>
+                      </div>
+                      <div className="text-xs text-secondary truncate md:block hidden">
+                        {chapterInfo.category} • Hadith
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {isGenericHadithPage && chapterInfo && (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <IconBook className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-primary truncate">
+                        <span className="hidden md:inline">
+                          <span className="group hover:text-emerald-400 transition-colors">
+                            {currentBookSlug ? (
+                              <Link href={`/${currentBookSlug}`} className="group-hover:text-emerald-400 transition-colors">
+                                {displayBookTitle}
+                              </Link>
+                            ) : (
+                              displayBookTitle
+                            )}
+                            {' '}
+                            {currentBookSlug ? (
+                              <Link href={`/${currentBookSlug}`} className="group-hover:text-emerald-400 transition-colors">
+                                Volume {chapterInfo.volumeId}
+                              </Link>
+                            ) : (
+                              `Volume ${chapterInfo.volumeId}`
+                            )}
+                          </span>
+                          {' • '}
+                        </span>
+                        <span className="truncate">{chapterInfo.chapter}</span>
+                      </div>
+                      <div className="text-xs text-secondary truncate md:block hidden">
+                        {chapterInfo.category} • Hadith
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {isAlKafiChapterPage && !chapterInfo && (
                   <div className="flex items-center gap-2">
                     <IconBook className="h-4 w-4 text-amber-400 flex-shrink-0" />
                     <span className="font-medium text-primary truncate">
-                      Al-Kāfi Volume {volumeId}
-                    </span>
-                  </div>
-                )}
-                {isUyunChapterPage && !chapterInfo && (
-                  <div className="flex items-center gap-2">
-                    <IconBook className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-                    <span className="font-medium text-primary truncate">
-                      ʿUyūn Volume {volumeId}
+                      <span className="group hover:text-amber-400 transition-colors">
+                        <Link href="/al-kafi" className="group-hover:text-amber-400 transition-colors">
+                          Al-Kāfi
+                        </Link>
+                        {' '}
+                        <Link href="/al-kafi" className="group-hover:text-amber-400 transition-colors">
+                          Volume {volumeId}
+                        </Link>
+                      </span>
                     </span>
                   </div>
                 )}
