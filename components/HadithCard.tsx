@@ -6,13 +6,18 @@ import { useRouter } from 'next/navigation'
 import { Hadith } from '@/lib/api'
 import { useSettings } from '@/lib/settings-context'
 import { useNavigation } from '@/lib/navigation-context'
+import { useBookmarks } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
+import { IconBookmark, IconBookmarkFilled } from '@/components/Icons'
 import clsx from 'clsx'
 
 interface HadithCardProps {
   hadith: Hadith
   className?: string
   showViewChapter?: boolean // Only show "View Chapter" button in search contexts
+  showNotesToggle?: boolean // Show notes toggle button
+  notesVisible?: boolean // Control notes visibility
+  onToggleNotes?: () => void // Callback when notes toggle is clicked
 }
 
 // Tooltip component using React Portal
@@ -52,14 +57,18 @@ const Tooltip = ({ children, content, isVisible, triggerRef }: {
   )
 }
 
-const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardProps) => {
+const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggle = false, notesVisible = false, onToggleNotes }: HadithCardProps) => {
   const { settings } = useSettings()
   const router = useRouter()
   const navigation = useNavigation()
+  const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
   
   const [showArabic, setShowArabic] = useState(false)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
+  
+  // Check if this hadith is bookmarked
+  const bookmarked = isBookmarked(hadith.bookId, hadith.id)
   
   // Update expanded state when settings change
   useEffect(() => {
@@ -170,51 +179,49 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
     setTooltipStates(prev => ({ ...prev, [type]: false }))
   }, [])
 
-  const handleNavigateToChapter = useCallback(async () => {
-    // Save current scroll position before navigation
-    navigation.saveScrollPosition(window.scrollY)
-    
-    // Determine the correct path based on the book/collection
-    let basePath = '/al-kafi' // Default to Al-Kafi
-    let isAlKafi = true // Track if this is Al-Kafi to determine URL structure
-
+  // Returns the chapter URL for the hadith (for use in both navigation and anchor href)
+  const getChapterUrl = useCallback(() => {
+    let basePath = '/al-kafi';
+    let isAlKafi = true;
     try {
-      const bookId = hadith.bookId || ''
-      const cfg = getBookConfig(bookId)
+      const bookId = hadith.bookId || '';
+      const cfg = getBookConfig(bookId);
       if (cfg) {
         if (cfg.bookId === 'Al-Kafi') {
-          basePath = '/al-kafi'
-          isAlKafi = true
+          basePath = '/al-kafi';
+          isAlKafi = true;
         } else {
-          basePath = `/${getBookUrlSlug(cfg.bookId)}`
-          isAlKafi = false
+          basePath = `/${getBookUrlSlug(cfg.bookId)}`;
+          isAlKafi = false;
         }
       } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
-        basePath = '/Uyun-akhbar-al-Rida'
-        isAlKafi = false
+        basePath = '/Uyun-akhbar-al-Rida';
+        isAlKafi = false;
       } else if (bookId) {
-        basePath = `/${getBookUrlSlug(bookId)}`
-        isAlKafi = false
+        basePath = `/${getBookUrlSlug(bookId)}`;
+        isAlKafi = false;
       }
     } catch (e) {
-      // fallback heuristics  
       if ((hadith.book && hadith.book.includes('Uyun')) || (hadith.bookId && hadith.bookId.includes('Uyun'))) {
-        basePath = '/Uyun-akhbar-al-Rida'
-        isAlKafi = false
+        basePath = '/Uyun-akhbar-al-Rida';
+        isAlKafi = false;
       } else if (hadith.bookId) {
-        basePath = `/${getBookUrlSlug(hadith.bookId)}`
-        isAlKafi = false
+        basePath = `/${getBookUrlSlug(hadith.bookId)}`;
+        isAlKafi = false;
       }
     }
-
-    // Navigate to the chapter view for this hadith
-    // Al-Kafi uses volume structure, others don't
     if (isAlKafi) {
-      router.push(`${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+      return `${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`;
     } else {
-      router.push(`${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+      return `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`;
     }
-  }, [navigation, router, hadith.volume, hadith.categoryId, hadith.chapterInCategoryId, hadith.book, hadith.bookId])
+  }, [hadith.volume, hadith.categoryId, hadith.chapterInCategoryId, hadith.book, hadith.bookId]);
+
+  // For backward compatibility, keep the handler (if needed elsewhere)
+  const handleNavigateToChapter = useCallback(async () => {
+    navigation.saveScrollPosition(window.scrollY);
+    router.push(getChapterUrl());
+  }, [navigation, router, getChapterUrl]);
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -365,6 +372,27 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
         </div>
 
         <div className="flex items-center gap-2 ml-3 sm:ml-4 flex-shrink-0">
+          {/* Bookmark Button */}
+          <button
+            onClick={e => {
+              e.preventDefault();
+              bookmarked ? removeBookmark(hadith.bookId, hadith.id) : addBookmark(hadith);
+            }}
+            className={clsx(
+              'px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-all shadow-soft min-w-[28px] sm:min-w-[32px] flex items-center justify-center',
+              bookmarked 
+                ? 'bg-yellow-500 text-white shadow-medium hover:bg-yellow-600' 
+                : 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 active:scale-95 dark:text-yellow-500'
+            )}
+            title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          >
+            {bookmarked ? (
+              <IconBookmarkFilled className="w-3 h-3 sm:w-4 sm:h-4" />
+            ) : (
+              <IconBookmark className="w-3 h-3 sm:w-4 sm:h-4" />
+            )}
+          </button>
+          
           {arabicText && (
             <button
               onClick={() => setShowArabic(!showArabic)}
@@ -636,19 +664,52 @@ const HadithCard = ({ hadith, className, showViewChapter = false }: HadithCardPr
               </svg>
               Copy Both
             </button>
+
+            {/* Notes Toggle Button (only shown in bookmark context) */}
+            {showNotesToggle && onToggleNotes && (
+              <button
+                onClick={onToggleNotes}
+                className={clsx(
+                  "flex items-center gap-1 transition-colors font-medium",
+                  notesVisible 
+                    ? "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    : "text-primary/70 hover:text-primary hover:underline"
+                )}
+                title={notesVisible ? "Hide notes" : "Show notes"}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Notes
+                <svg 
+                  className={clsx(
+                    "w-3 h-3 transition-transform duration-200",
+                    notesVisible ? "rotate-180" : ""
+                  )} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
           </div>
           
           {/* View Chapter Button */}
           {showViewChapter && hadith.volume && hadith.categoryId && (hadith.chapterInCategoryId !== null && hadith.chapterInCategoryId !== undefined) ? (
-            <button
-              onClick={handleNavigateToChapter}
+            <a
+              href={getChapterUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-primary hover:underline flex items-center gap-1 transition-colors"
+              tabIndex={0}
             >
               View Chapter
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </a>
           ) : showViewChapter ? (
             <span className="text-xs text-gray-400">
               [Debug: vol={hadith.volume} cat={hadith.categoryId} ch={hadith.chapterInCategoryId}]

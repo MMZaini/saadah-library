@@ -2,16 +2,18 @@
 
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
-import { IconMenu, IconArrowLeft, IconBook } from './Icons'
+import { IconMenu, IconArrowLeft, IconBook, IconBookmark } from './Icons'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
 import { useNavigation } from '@/lib/navigation-context'
+import { useBookmarks } from '@/lib/bookmarks-context'
 
 export default function TopBar() {
   const { toggleSettings } = useSettings()
   const { chapterInfo } = useChapter()
+  const { bookmarkCount } = useBookmarks()
   const navigation = useNavigation()
   const pathname = usePathname()
   const params = useParams()
@@ -116,6 +118,9 @@ export default function TopBar() {
                 </svg>
                 {pathname === '/al-kafi' && (
                   <span className="font-medium text-primary truncate">Al-Kāfi Explorer</span>
+                )}
+                {pathname === '/bookmarks' && (
+                  <span className="font-medium text-primary truncate">Bookmarks</span>
                 )}
                 {pathname === '/Uyun-akhbar-al-Rida' && (
                   <span className="font-medium text-primary truncate">ʿUyūn akhbār al-Riḍā Explorer</span>
@@ -272,6 +277,20 @@ export default function TopBar() {
 
           {/* Right side - Actions */}
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Bookmarks Button */}
+            <Link
+              href="/bookmarks"
+              className="relative p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-amber-500/50"
+              title={`Bookmarks (${bookmarkCount})`}
+            >
+              <IconBookmark className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 dark:text-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400" />
+              {bookmarkCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-yellow-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-center">
+                  {bookmarkCount > 99 ? '99+' : bookmarkCount}
+                </span>
+              )}
+            </Link>
+            
             <button 
               onClick={toggleSettings}
               className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-amber-500/50"

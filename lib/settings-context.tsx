@@ -151,7 +151,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [updateSettings])
 
   const resetArabicFontSize = useCallback(() => {
-    updateSettings({ arabicFontSize: 100 })
+    updateSettings({ arabicFontSize: 135 })
   }, [updateSettings])
 
   const resetEnglishFontSize = useCallback(() => {
