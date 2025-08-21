@@ -12,6 +12,7 @@ interface ChapterSummary {
   chapter: string;
   chapterInCategoryId: number;
   hadithCount: number;
+  volume: number;
 }
 
 interface CategorySummary {
@@ -42,6 +43,12 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     () => new Set(savedState?.expandedCategories || [])
   )
+  const [selectedChapter, setSelectedChapter] = useState<{
+    category: string
+    chapter: string
+    categoryId: string
+    chapterId: number
+  } | null>(savedState?.selectedChapter || null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -101,7 +108,8 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
             summary[categoryKey].chapters[chapterKey] = {
               chapter: chapterKey,
               chapterInCategoryId: hadith.chapterInCategoryId || 0,
-              hadithCount: 0
+              hadithCount: 0,
+              volume: hadith.volume || (Number(selectedVolume) || 1)
             }
           }
           
@@ -149,9 +157,10 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   useEffect(() => {
     navigation.saveExplorerState({
       selectedVolume,
-      expandedCategories: Array.from(expandedCategories)
+      expandedCategories: Array.from(expandedCategories),
+      selectedChapter,
     })
-  }, [selectedVolume, expandedCategories])
+  }, [selectedVolume, expandedCategories, selectedChapter])
 
   const toggleCategory = (categoryKey: string) => {
     const newExpanded = new Set(expandedCategories)
@@ -163,17 +172,21 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     setExpandedCategories(newExpanded)
   }
 
-  const handleChapterClick = (categoryId: string, chapterInCategoryId: number) => {
-    // Save current state before navigation
+  const handleChapterClick = (category: CategorySummary, chapter: ChapterSummary) => {
     navigation.saveScrollPosition(window.scrollY)
     navigation.saveExplorerState({
       selectedVolume,
-      expandedCategories: Array.from(expandedCategories)
+      expandedCategories: Array.from(expandedCategories),
+      selectedChapter: {
+        category: category.category,
+        chapter: chapter.chapter,
+        categoryId: category.categoryId,
+        chapterId: chapter.chapterInCategoryId,
+      },
     })
 
-    // For Al-Kafi navigation, we'll use the first available volume or selectedVolume if it's a number
-    const volumeForUrl = selectedVolume === 'all' ? 1 : selectedVolume
-    router.push(`/al-kafi/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`)
+    const volumeForUrl = selectedVolume === 'all' ? chapter.volume : selectedVolume
+    router.push(`/al-kafi/volume/${volumeForUrl}/chapter/${category.categoryId}/${chapter.chapterInCategoryId}`)
   }
 
   const getTotalHadithsCount = () => {
@@ -331,8 +344,13 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                     {Object.entries(category.chapters).map(([chapterKey, chapter]) => (
                       <button
                         key={chapterKey}
-                        onClick={() => handleChapterClick(category.categoryId, chapter.chapterInCategoryId)}
-                        className="group relative bg-card rounded-xl p-4 sm:p-5 shadow-soft hover:shadow-medium transition-all duration-200 border border-theme hover:border-accent-primary/30 hover:scale-[1.02] text-left"
+                        onClick={() => handleChapterClick(category, chapter)}
+                        className={clsx(
+                          'group relative bg-card rounded-xl p-4 sm:p-5 shadow-soft transition-all duration-200 border border-theme text-left',
+                          selectedChapter?.categoryId === category.categoryId && selectedChapter?.chapterId === chapter.chapterInCategoryId
+                            ? 'border-primary/20 bg-primary/10'
+                            : 'hover:shadow-medium hover:border-accent-primary/30 hover:scale-[1.02]'
+                        )}
                       >
                         {/* Chapter number indicator */}
                         <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-accent-primary to-accent-secondary rounded-full flex items-center justify-center text-white text-xs font-bold shadow-medium">
