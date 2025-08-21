@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="antialiased duration-200 min-h-screen flex flex-col bg-color">
             <SettingsSidebar />
             <TopBar />
-            <main className="flex-1">
+            <main className="flex-1 pt-14 sm:pt-16">
               {children}
             </main>
           </div>

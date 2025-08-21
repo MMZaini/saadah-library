@@ -6,12 +6,13 @@ import { IconMenu, IconArrowLeft, IconBook, IconBookmark } from './Icons'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
+import clsx from 'clsx'
 import { useChapter } from '@/lib/chapter-context'
 import { useNavigation } from '@/lib/navigation-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
 
 export default function TopBar() {
-  const { toggleSettings } = useSettings()
+  const { toggleSettings, isSettingsOpen } = useSettings()
   const { chapterInfo } = useChapter()
   const { bookmarkCount } = useBookmarks()
   const navigation = useNavigation()
@@ -81,7 +82,13 @@ export default function TopBar() {
   }
 
   return (
-    <div className="sticky top-0 z-50 backdrop-blur-sm border-b border-theme shadow-soft" style={{ background: 'var(--topbar-bg)' }}>
+    <div
+      className={clsx(
+        'fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b border-theme shadow-soft',
+        isSettingsOpen && 'blur-sm'
+      )}
+      style={{ background: 'var(--topbar-bg)' }}
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Left side - Logo/Title and Breadcrumb */}
