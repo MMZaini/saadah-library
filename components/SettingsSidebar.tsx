@@ -8,25 +8,23 @@ import { useEffect, useRef } from 'react'
 export default function SettingsSidebar() {
   const { settings, updateSettings, isSettingsOpen, toggleSettings, resetArabicFontSize, resetEnglishFontSize } = useSettings()
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const scrollYRef = useRef(0)
 
   // Prevent body scroll when sidebar is open (mobile optimization)
   useEffect(() => {
     const body = document.body
     if (isSettingsOpen) {
-      const scrollY = window.scrollY
-      body.style.top = `-${scrollY}px`
+      scrollYRef.current = window.scrollY
+      body.style.top = `-${scrollYRef.current}px`
       body.style.position = 'fixed'
       body.style.width = '100%'
       body.style.touchAction = 'none'
     } else {
-      const scrollY = body.style.top
       body.style.position = ''
       body.style.top = ''
       body.style.width = ''
       body.style.touchAction = ''
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY) * -1)
-      }
+      window.scrollTo(0, scrollYRef.current)
     }
 
     // Cleanup on unmount
