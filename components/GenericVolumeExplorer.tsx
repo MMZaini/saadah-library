@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
-import { IconBook } from './Icons'
 import clsx from 'clsx'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 

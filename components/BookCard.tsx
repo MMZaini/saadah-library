@@ -79,8 +79,17 @@ export default function BookCard({ book }: { book: Book }) {
       />
 
       <div className="min-w-0 flex-1 select-none">
-        <h3 className="text-lg sm:text-xl font-semibold tracking-tight line-clamp-2 select-none">{book.title}</h3>
-        {book.subtitle && <p className="text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">{book.subtitle}</p>}
+        <h3
+          className="text-lg sm:text-xl font-semibold tracking-tight break-words select-none"
+          title={book.title}
+        >
+          {book.title}
+        </h3>
+        {book.subtitle && (
+          <p className="text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">
+            {book.subtitle}
+          </p>
+        )}
         {book.author && (
           <p className="text-xs sm:text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">
             {book.author}

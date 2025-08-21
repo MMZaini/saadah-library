@@ -288,7 +288,9 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-purple-500 dark:bg-purple-400 shadow-soft"></div>
                 <span className="text-sm font-semibold text-primary">
-                  {selectedVolume === 'all' ? (bookId.includes('Al-Kafi') ? 'All Al-Kāfi Volumes' : `All Volumes`) : `Volume ${String(selectedVolume).match(/-Volume-(\d+)-/)?.[1] || selectedVolume}`}
+                  {selectedVolume === 'all'
+                    ? (bookId.includes('Al-Kafi') ? 'All Al-Kāfi Volumes' : `All Volumes`)
+                    : getVolumeLabelForValue(volumes, selectedVolume)}
                 </span>
               </div>
             </div>

@@ -231,7 +231,11 @@ export default function GenericBookBrowser({ bookId, bookConfig = null, classNam
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-purple-500 shadow-soft"></div>
-                <span className="text-sm font-semibold text-primary">{selectedVolume === 'all' ? 'All Volumes' : `Volume ${String(selectedVolume).match(/-Volume-(\d+)-/)?.[1] || selectedVolume}`}</span>
+                <span className="text-sm font-semibold text-primary">
+                  {selectedVolume === 'all'
+                    ? 'All Volumes'
+                    : getVolumeLabelForValue(volumesList, selectedVolume)}
+                </span>
               </div>
             </div>
           )}
