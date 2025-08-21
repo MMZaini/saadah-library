@@ -11,18 +11,30 @@ export default function SettingsSidebar() {
 
   // Prevent body scroll when sidebar is open (mobile optimization)
   useEffect(() => {
+    const body = document.body
     if (isSettingsOpen) {
-      document.body.style.overflow = 'hidden'
-      document.body.style.touchAction = 'none'
+      const scrollY = window.scrollY
+      body.style.top = `-${scrollY}px`
+      body.style.position = 'fixed'
+      body.style.width = '100%'
+      body.style.touchAction = 'none'
     } else {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
+      const scrollY = body.style.top
+      body.style.position = ''
+      body.style.top = ''
+      body.style.width = ''
+      body.style.touchAction = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY) * -1)
+      }
     }
 
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
+      body.style.position = ''
+      body.style.top = ''
+      body.style.width = ''
+      body.style.touchAction = ''
     }
   }, [isSettingsOpen])
 
@@ -110,7 +122,7 @@ export default function SettingsSidebar() {
     <>
       {/* Backdrop */}
       <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[60] transition-opacity duration-300 ease-in-out
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 ease-in-out
           ${isSettingsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={toggleSettings}
         aria-hidden="true"
