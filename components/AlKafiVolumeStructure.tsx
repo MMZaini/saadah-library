@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi, ChapterInfo, BookInfo } from '@/lib/api'
 import HadithCard from './HadithCard'
@@ -32,12 +32,20 @@ interface BookStructureExplorerProps {
 export default function BookStructureExplorer({ className }: BookStructureExplorerProps) {
   const router = useRouter()
   const navigation = useNavigation()
-  
-  const [selectedVolume, setSelectedVolume] = useState<string | number | 'all'>(1)
+
+  const savedState = navigation.getExplorerState()
+
+  const [selectedVolume, setSelectedVolume] = useState<string | number | 'all'>(
+    savedState?.selectedVolume !== undefined ? savedState.selectedVolume : 1
+  )
   const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({})
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    () => new Set(savedState?.expandedCategories || [])
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const initialLoad = useRef(true)
 
   const alKafiVolumes = Array.from({ length: 8 }, (_, i) => i + 1)
   const volumeOptions = [
@@ -47,10 +55,12 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
 
   // Load volume summary (categories and chapter counts)
   useEffect(() => {
-    const loadVolumeSummary = async () => {      
+    const loadVolumeSummary = async () => {
       setLoading(true)
       setError(null)
-      setExpandedCategories(new Set())
+      if (!initialLoad.current) {
+        setExpandedCategories(new Set())
+      }
 
       try {
         let hadiths
@@ -122,7 +132,26 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     }
 
     loadVolumeSummary()
+    initialLoad.current = false
   }, [selectedVolume])
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const pos = navigation.restoreScrollPosition()
+    if (pos > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, pos)
+      })
+    }
+  }, [])
+
+  // Persist explorer state when values change
+  useEffect(() => {
+    navigation.saveExplorerState({
+      selectedVolume,
+      expandedCategories: Array.from(expandedCategories)
+    })
+  }, [selectedVolume, expandedCategories])
 
   const toggleCategory = (categoryKey: string) => {
     const newExpanded = new Set(expandedCategories)
@@ -135,9 +164,13 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   }
 
   const handleChapterClick = (categoryId: string, chapterInCategoryId: number) => {
-    // Save current scroll position before navigation
+    // Save current state before navigation
     navigation.saveScrollPosition(window.scrollY)
-    
+    navigation.saveExplorerState({
+      selectedVolume,
+      expandedCategories: Array.from(expandedCategories)
+    })
+
     // For Al-Kafi navigation, we'll use the first available volume or selectedVolume if it's a number
     const volumeForUrl = selectedVolume === 'all' ? 1 : selectedVolume
     router.push(`/al-kafi/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`)

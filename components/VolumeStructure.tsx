@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
 import { IconBook, IconChevronDown, IconChevronRight } from '@/components/Icons'
@@ -37,24 +37,33 @@ interface VolumeStructureProps {
 export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, className }: VolumeStructureProps) {
   const router = useRouter()
   const navigation = useNavigation()
-  
+
+  const savedState = navigation.getExplorerState()
+
   const [selectedVolume, setSelectedVolume] = useState<string | number | 'all'>(() => {
+    if (savedState?.selectedVolume !== undefined) return savedState.selectedVolume
     if (!volumes || volumes.length === 0) return 'all'
     return volumes[0]
   })
   const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({})
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    () => new Set(savedState?.expandedCategories || [])
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const initialLoad = useRef(true)
 
   const volumeOptions = makeVolumeOptions(volumes)
 
   // Load volume summary (categories and chapter counts)
   useEffect(() => {
-    const loadVolumeSummary = async () => {      
+    const loadVolumeSummary = async () => {
       setLoading(true)
       setError(null)
-      setExpandedCategories(new Set())
+      if (!initialLoad.current) {
+        setExpandedCategories(new Set())
+      }
 
       try {
         let hadiths
@@ -167,7 +176,26 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
     }
 
     loadVolumeSummary()
+    initialLoad.current = false
   }, [selectedVolume, bookId, volumes])
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const pos = navigation.restoreScrollPosition()
+    if (pos > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, pos)
+      })
+    }
+  }, [])
+
+  // Persist explorer state when relevant values change
+  useEffect(() => {
+    navigation.saveExplorerState({
+      selectedVolume,
+      expandedCategories: Array.from(expandedCategories)
+    })
+  }, [selectedVolume, expandedCategories])
 
   const toggleCategory = (categoryKey: string) => {
     const newExpanded = new Set(expandedCategories)
@@ -180,8 +208,12 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
   }
 
   const handleChapterClick = (categoryId: string, chapterInCategoryId: number) => {
-    // Save current scroll position before navigation
+    // Save current state before navigation
     navigation.saveScrollPosition(window.scrollY)
+    navigation.saveExplorerState({
+      selectedVolume,
+      expandedCategories: Array.from(expandedCategories)
+    })
 
     // Handle navigation based on book type and baseRoute
     let volumeForUrl: any

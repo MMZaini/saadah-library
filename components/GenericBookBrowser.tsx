@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { bookApi, ChapterStructure, Hadith } from '@/lib/api'
 import HadithCard from '@/components/HadithCard'
 import { IconBook, IconChevronDown, IconChevronRight } from '@/components/Icons'
 import clsx from 'clsx'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import { useNavigation } from '@/lib/navigation-context'
 
 interface GenericBookBrowserProps {
   bookId: string
@@ -14,14 +15,22 @@ interface GenericBookBrowserProps {
 }
 
 export default function GenericBookBrowser({ bookId, bookConfig = null, className }: GenericBookBrowserProps) {
+  const navigation = useNavigation()
+  const savedState = navigation.getExplorerState()
+
   const [selectedVolume, setSelectedVolume] = useState<string | 'all'>(() => {
+    if (savedState?.selectedVolume !== undefined) return savedState.selectedVolume as any
     if (bookConfig?.hasMultipleVolumes) return bookConfig?.volumes?.[0] || 'all'
     return bookId
   })
 
   const [volumeSummary, setVolumeSummary] = useState<Record<string, any>>({})
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
-  const [selectedChapter, setSelectedChapter] = useState<{ category: string; chapter: string; categoryId: string; chapterId: number } | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    () => new Set(savedState?.expandedCategories || [])
+  )
+  const [selectedChapter, setSelectedChapter] = useState<{ category: string; chapter: string; categoryId: string; chapterId: number } | null>(
+    savedState?.selectedChapter || null
+  )
   const [chapterHadiths, setChapterHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingChapter, setLoadingChapter] = useState(false)
@@ -33,12 +42,16 @@ export default function GenericBookBrowser({ bookId, bookConfig = null, classNam
   const displayTitle = bookConfig?.englishName || bookId
   const volumesCount = (Array.isArray(volumesList) && volumesList.length) || 1
 
+  const initialLoad = useRef(true)
+
   useEffect(() => {
     const loadVolumeSummary = async () => {
       setLoading(true)
       setError(null)
-      setExpandedCategories(new Set())
-      setSelectedChapter(null)
+      if (!initialLoad.current) {
+        setExpandedCategories(new Set())
+        setSelectedChapter(null)
+      }
       setChapterHadiths([])
 
       try {
@@ -116,7 +129,46 @@ export default function GenericBookBrowser({ bookId, bookConfig = null, classNam
     }
 
     loadVolumeSummary()
+    initialLoad.current = false
   }, [selectedVolume, bookId, bookConfig])
+
+  // Restore saved state after volume summary loads (once)
+  const restoredRef = useRef(false)
+  useEffect(() => {
+    if (!restoredRef.current && savedState) {
+      if (savedState.expandedCategories) {
+        setExpandedCategories(new Set(savedState.expandedCategories))
+      }
+      if (savedState.selectedChapter) {
+        loadChapterHadiths(
+          savedState.selectedChapter.categoryId,
+          savedState.selectedChapter.chapterId,
+          savedState.selectedChapter.category,
+          savedState.selectedChapter.chapter
+        )
+      }
+      restoredRef.current = true
+    }
+  }, [volumeSummary])
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const pos = navigation.restoreScrollPosition()
+    if (pos > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, pos)
+      })
+    }
+  }, [])
+
+  // Persist explorer state on relevant changes
+  useEffect(() => {
+    navigation.saveExplorerState({
+      selectedVolume,
+      expandedCategories: Array.from(expandedCategories),
+      selectedChapter,
+    })
+  }, [selectedVolume, expandedCategories, selectedChapter])
 
   const toggleCategory = (categoryKey: string) => {
     setExpandedCategories(prev => {

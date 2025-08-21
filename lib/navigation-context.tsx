@@ -14,6 +14,16 @@ interface NavigationState {
       sort: string
     }
   } | null
+  explorerState: {
+    selectedVolume: string | number | 'all'
+    expandedCategories: string[]
+    selectedChapter?: {
+      category: string
+      chapter: string
+      categoryId: string
+      chapterId: number
+    } | null
+  } | null
 }
 
 interface NavigationContextType {
@@ -24,6 +34,8 @@ interface NavigationContextType {
   restoreScrollPosition: () => number
   getSearchState: () => NavigationState['searchState']
   clearNavigationState: () => void
+  saveExplorerState: (state: NavigationState['explorerState']) => void
+  getExplorerState: () => NavigationState['explorerState']
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
@@ -32,7 +44,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const [navigationState, setNavigationState] = useState<NavigationState>({
     scrollPosition: 0,
     lastPath: '/',
-    searchState: null
+    searchState: null,
+    explorerState: null
   })
 
   const saveScrollPosition = (position: number) => {
@@ -55,11 +68,20 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     return navigationState.searchState
   }
 
+  const saveExplorerState = (state: NavigationState['explorerState']) => {
+    setNavigationState(prev => ({ ...prev, explorerState: state }))
+  }
+
+  const getExplorerState = () => {
+    return navigationState.explorerState
+  }
+
   const clearNavigationState = () => {
     setNavigationState({
       scrollPosition: 0,
       lastPath: '/',
-      searchState: null
+      searchState: null,
+      explorerState: null
     })
   }
 
@@ -71,7 +93,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       savePath,
       restoreScrollPosition,
       getSearchState,
-      clearNavigationState
+      clearNavigationState,
+      saveExplorerState,
+      getExplorerState
     }}>
       {children}
     </NavigationContext.Provider>
