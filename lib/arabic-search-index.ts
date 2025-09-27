@@ -161,3 +161,12 @@ export async function searchArabicLocally(query: string): Promise<QueryResponse>
 export function isArabic(text: string): boolean {
   return isArabicQuery(text)
 }
+
+/**
+ * Force rebuild the Arabic index immediately (awaits completion).
+ * Useful for admin/debug endpoints to trigger a rebuild on demand.
+ */
+export async function forceRebuild(): Promise<void> {
+  // call the internal buildIndex which will dedupe concurrent builds
+  await buildIndex()
+}
