@@ -120,7 +120,7 @@ export function stemEnglishWord(word: string): string[] {
   if (!word || word.length < 3) return [word]
   
   const variations = new Set([word])
-  let stem = word.toLowerCase()
+  const stem = word.toLowerCase()
   
   // Handle irregular plurals first
   const irregularPlurals: Record<string, string> = {
