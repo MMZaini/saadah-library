@@ -348,11 +348,11 @@ export default function SearchInterface({
   const shouldShowArabicByDefault = useMemo(() => {
     if (!isArabicSearchQuery) return () => false
     
-    // For Arabic queries, check if the hadith's Arabic text matches the search query
+    // For Arabic queries, show Arabic for all hadiths that have Arabic text
     return (hadith: Hadith) => {
-      return matchesArabicText(hadith.arabicText, searchQuery)
+      return Boolean(hadith.arabicText)
     }
-  }, [isArabicSearchQuery, searchQuery])
+  }, [isArabicSearchQuery])
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedResults.length / RESULTS_PER_PAGE)
