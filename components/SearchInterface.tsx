@@ -5,6 +5,7 @@ import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { IconSearch, IconFilter, IconChevronLeft, IconChevronRight, IconX } from './Icons'
 import { useSettings } from '@/lib/settings-context'
+import { isArabicQuery, matchesArabicText } from '@/lib/search-utils'
 import clsx from 'clsx'
 
 interface SearchInterfaceProps {
@@ -319,6 +320,21 @@ export default function SearchInterface({
 
     return filtered
   }, [searchResults, selectedGradings, searchOptions, searchQuery])
+
+  // Detect if this is an Arabic search query
+  const isArabicSearchQuery = useMemo(() => {
+    return isArabicQuery(searchQuery)
+  }, [searchQuery])
+
+  // Determine which hadiths should show Arabic by default
+  const shouldShowArabicByDefault = useMemo(() => {
+    if (!isArabicSearchQuery) return () => false
+    
+    // For Arabic queries, check if the hadith's Arabic text matches the search query
+    return (hadith: Hadith) => {
+      return matchesArabicText(hadith.arabicText, searchQuery)
+    }
+  }, [isArabicSearchQuery, searchQuery])
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedResults.length / RESULTS_PER_PAGE)
@@ -716,6 +732,7 @@ export default function SearchInterface({
               key={hadith._id ?? `${hadith.bookId ?? 'book'}-${hadith.id ?? idx}`}
               hadith={hadith}
               showViewChapter={true}
+              showArabicByDefault={shouldShowArabicByDefault(hadith)}
             />
           ))
         ) : !isSearching ? (

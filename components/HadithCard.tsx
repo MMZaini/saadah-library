@@ -18,6 +18,7 @@ interface HadithCardProps {
   showNotesToggle?: boolean // Show notes toggle button
   notesVisible?: boolean // Control notes visibility
   onToggleNotes?: () => void // Callback when notes toggle is clicked
+  showArabicByDefault?: boolean // Show Arabic version by default (for Arabic search results)
 }
 
 // Tooltip component using React Portal
@@ -57,13 +58,13 @@ const Tooltip = ({ children, content, isVisible, triggerRef }: {
   )
 }
 
-const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggle = false, notesVisible = false, onToggleNotes }: HadithCardProps) => {
+const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggle = false, notesVisible = false, onToggleNotes, showArabicByDefault = false }: HadithCardProps) => {
   const { settings } = useSettings()
   const router = useRouter()
   const navigation = useNavigation()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
   
-  const [showArabic, setShowArabic] = useState(false)
+  const [showArabic, setShowArabic] = useState(showArabicByDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
   
@@ -74,6 +75,11 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
   useEffect(() => {
     setExpanded(settings.alwaysShowFullHadith)
   }, [settings.alwaysShowFullHadith])
+  
+  // Update showArabic state when showArabicByDefault prop changes
+  useEffect(() => {
+    setShowArabic(showArabicByDefault)
+  }, [showArabicByDefault])
   
   // Tooltip states
   const [tooltipStates, setTooltipStates] = useState({
