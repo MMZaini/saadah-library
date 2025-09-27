@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { thaqalaynApi } from '@/lib/api'
+import { isArabicQuery, normalizeArabic } from '@/lib/search-utils'
+import { searchArabicLocally } from '@/lib/arabic-search-index'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +12,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results: [], total: 0 })
     }
 
-    const response = await thaqalaynApi.searchAllBooks(query)
+  // For Arabic queries: search locally through normalized cached index (diacritic-insensitive).
+  // For non-Arabic queries: pass through to external API.
+  if (isArabicQuery(query)) {
+    const response = await searchArabicLocally(query)
+    return NextResponse.json(response)
+  }
+
+  // Non-Arabic: call external API
+  const response = await thaqalaynApi.searchAllBooks(query)
     return NextResponse.json(response)
   } catch (error) {
     return NextResponse.json(

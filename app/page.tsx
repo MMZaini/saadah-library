@@ -79,7 +79,9 @@ export default function Page() {
       setIsSearching(true)
 
       try {
-        const response = await thaqalaynApi.searchAllBooks(query)
+  // Always use our API route, which handles Arabic locally and English via upstream
+  const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+  const response = await res.json()
         setSearchResults(response.results)
         
         // Save search state for navigation
@@ -100,7 +102,7 @@ export default function Page() {
         setIsSearching(false)
       }
     }, 300),
-    [] // Remove navigation dependency to prevent recreation
+  [] // Remove navigation dependency to prevent recreation
   )
 
   // Handle search input change - update state immediately, debounce API call

@@ -148,23 +148,49 @@ export const thaqalaynApi = {
   },
 
   // Search across all books
-  async searchAllBooks(query: string): Promise<QueryResponse> {
-    const encodedQuery = encodeURIComponent(query);
-    const results = await cachedFetch(`${BASE_URL}/query?q=${encodedQuery}`);
-    return {
-      results: Array.isArray(results) ? results : [],
-      total: Array.isArray(results) ? results.length : 0
-    };
-  },
+    async searchAllBooks(query: string): Promise<QueryResponse> {
+      // Normalize Arabic queries (strip diacritics) so client-side searches behave
+      // consistently with server-side normalization.
+      try {
+        // Import lazy to avoid circular imports at module evaluation time
+        const { isArabicQuery, normalizeArabic } = await import('./search-utils')
+        const outgoing = isArabicQuery(query) ? normalizeArabic(query) : query
+        const encodedQuery = encodeURIComponent(outgoing);
+        const results = await cachedFetch(`${BASE_URL}/query?q=${encodedQuery}`);
+        return {
+          results: Array.isArray(results) ? results : [],
+          total: Array.isArray(results) ? results.length : 0
+        };
+      } catch (err) {
+        // On any error importing/util functions, fall back to raw query
+        const encodedQuery = encodeURIComponent(query);
+        const results = await cachedFetch(`${BASE_URL}/query?q=${encodedQuery}`);
+        return {
+          results: Array.isArray(results) ? results : [],
+          total: Array.isArray(results) ? results.length : 0
+        };
+      }
+    },
 
   // Search within a specific book
   async searchBook(bookId: string, query: string): Promise<QueryResponse> {
-    const encodedQuery = encodeURIComponent(query);
-    const results = await cachedFetch(`${BASE_URL}/query/${bookId}?q=${encodedQuery}`);
-    return {
-      results: Array.isArray(results) ? results : [],
-      total: Array.isArray(results) ? results.length : 0
-    };
+    try {
+      const { isArabicQuery, normalizeArabic } = await import('./search-utils')
+      const outgoing = isArabicQuery(query) ? normalizeArabic(query) : query
+      const encodedQuery = encodeURIComponent(outgoing);
+      const results = await cachedFetch(`${BASE_URL}/query/${bookId}?q=${encodedQuery}`);
+      return {
+        results: Array.isArray(results) ? results : [],
+        total: Array.isArray(results) ? results.length : 0
+      };
+    } catch (err) {
+      const encodedQuery = encodeURIComponent(query);
+      const results = await cachedFetch(`${BASE_URL}/query/${bookId}?q=${encodedQuery}`);
+      return {
+        results: Array.isArray(results) ? results : [],
+        total: Array.isArray(results) ? results.length : 0
+      };
+    }
   },
 
   // Get all hadiths from a specific book
