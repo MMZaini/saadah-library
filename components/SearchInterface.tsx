@@ -5,6 +5,7 @@ import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { IconSearch, IconFilter, IconChevronLeft, IconChevronRight, IconX } from './Icons'
 import { useSettings } from '@/lib/settings-context'
+import { isArabicQuery, matchesArabicText, normalizeArabic } from '@/lib/search-utils'
 import clsx from 'clsx'
 
 interface SearchInterfaceProps {
@@ -178,20 +179,42 @@ export default function SearchInterface({
           return text.toLowerCase()
         }
 
-        const queryText = searchText.toLowerCase()
-        
+        const isArabic = isArabicQuery(searchText)
+        const queryText = isArabic ? normalizeArabic(searchText) : searchText.toLowerCase()
+
         const englishText = getText(hadith.englishText || hadith.thaqalaynMatn)
-        const arabicText = getText(hadith.arabicText)
-        
+        // For Arabic, keep both raw (with diacritics) and normalized (without) versions
+        const arabicRaw = (hadith.arabicText || '').toLowerCase()
+        const arabicText = isArabic && hadith.arabicText ? normalizeArabic(hadith.arabicText) : arabicRaw
+        const queryArabicRaw = searchText.toLowerCase()
+
+        // Arabic-aware helpers
+        const tokenizeArabic = (s: string) => s.split(/\s+/).filter(Boolean)
+        const alVariants = (w: string) => {
+          const vars = [w]
+          if (w.startsWith('ال')) vars.push(w.slice(2))
+          else vars.push('ال' + w)
+          return Array.from(new Set(vars))
+        }
+
         const allText = `${englishText} ${arabicText}`.trim()
 
         if (searchOptions.exactPhrase) {
-          // Exact phrase matching - the entire search query must appear as-is
+          // Exact phrase matching - require exact diacritics in Arabic
+          if (isArabic) {
+            return arabicRaw.includes(queryArabicRaw)
+          }
           return allText.includes(queryText)
         }
         
         if (searchOptions.exactWords) {
           // All words must appear exactly (not as substrings)
+          if (isArabic) {
+            // Require exact diacritics per token
+            const searchWords = queryArabicRaw.split(/\s+/).filter(Boolean)
+            const textWords = new Set(tokenizeArabic(arabicRaw))
+            return searchWords.every(w => textWords.has(w))
+          }
           const searchWords = queryText.split(/\s+/).filter(word => word.length > 0)
           return searchWords.every(searchWord => {
             // Use word boundary regex for exact word matching
@@ -203,43 +226,43 @@ export default function SearchInterface({
         if (searchOptions.flexibleMatching) {
           // Flexible matching - match word stems and variations
           const searchWords = queryText.split(/\s+/).filter(word => word.length > 0)
+          if (isArabic) {
+            // Simple flexible: allow includes on each word, considering article variations
+            return searchWords.every(searchWord => {
+              return alVariants(searchWord).some(v => arabicText.includes(v))
+            })
+          }
           return searchWords.every(searchWord => {
             // First check for exact word match (including the original word)
             if (allText.includes(searchWord)) {
               return true
             }
             
-            // Create flexible patterns for each word
+            // Create flexible patterns for each word (English heuristics)
             let stem = searchWord
-            
-            // Apply suffix removal rules in order of specificity
-            // Handle special cases first
             if (stem.endsWith('ies') && stem.length > 4) {
-              stem = stem.slice(0, -3) + 'y' // flies -> fly, tries -> try
+              stem = stem.slice(0, -3) + 'y'
             } else if (stem.endsWith('ied') && stem.length > 4) {
-              stem = stem.slice(0, -3) + 'y' // tried -> try
+              stem = stem.slice(0, -3) + 'y'
             } else if (stem.endsWith('ing') && stem.length > 4) {
-              // Handle double consonant: running -> run, swimming -> swim
               const beforeIng = stem.slice(0, -3)
               if (beforeIng.length >= 2 && 
                   beforeIng[beforeIng.length - 1] === beforeIng[beforeIng.length - 2] &&
                   'bcdfghjklmnpqrstvwxz'.includes(beforeIng[beforeIng.length - 1])) {
-                stem = beforeIng.slice(0, -1) // running -> run
+                stem = beforeIng.slice(0, -1)
               } else {
-                stem = beforeIng // walking -> walk
+                stem = beforeIng
               }
             } else if (stem.endsWith('ed') && stem.length > 3) {
-              // Handle double consonant: stopped -> stop
               const beforeEd = stem.slice(0, -2)
               if (beforeEd.length >= 2 && 
                   beforeEd[beforeEd.length - 1] === beforeEd[beforeEd.length - 2] &&
                   'bcdfghjklmnpqrstvwxz'.includes(beforeEd[beforeEd.length - 1])) {
-                stem = beforeEd.slice(0, -1) // stopped -> stop
+                stem = beforeEd.slice(0, -1)
               } else {
-                stem = beforeEd // walked -> walk
+                stem = beforeEd
               }
             } else {
-              // Handle other common suffixes
               const suffixes = ['tion', 'sion', 'ness', 'ment', 'able', 'ible', 'ful', 'less', 'ous', 'ious', 'eous', 'ive', 'ative', 'itive', 'er', 'est', 'ly', 'es', 's']
               for (const suffix of suffixes) {
                 if (stem.endsWith(suffix) && stem.length > suffix.length + 2) {
@@ -248,11 +271,7 @@ export default function SearchInterface({
                 }
               }
             }
-            
-            // Only use stem if it's meaningful (3+ chars) and different from original
             const pattern = stem.length >= 3 && stem !== searchWord ? stem : searchWord
-            
-            // Check if the stem appears in the text
             return allText.includes(pattern)
           })
         }
@@ -319,6 +338,21 @@ export default function SearchInterface({
 
     return filtered
   }, [searchResults, selectedGradings, searchOptions, searchQuery])
+
+  // Detect if this is an Arabic search query
+  const isArabicSearchQuery = useMemo(() => {
+    return isArabicQuery(searchQuery)
+  }, [searchQuery])
+
+  // Determine which hadiths should show Arabic by default
+  const shouldShowArabicByDefault = useMemo(() => {
+    if (!isArabicSearchQuery) return () => false
+    
+    // For Arabic queries, check if the hadith's Arabic text matches the search query
+    return (hadith: Hadith) => {
+      return matchesArabicText(hadith.arabicText, searchQuery)
+    }
+  }, [isArabicSearchQuery, searchQuery])
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedResults.length / RESULTS_PER_PAGE)
@@ -716,6 +750,7 @@ export default function SearchInterface({
               key={hadith._id ?? `${hadith.bookId ?? 'book'}-${hadith.id ?? idx}`}
               hadith={hadith}
               showViewChapter={true}
+              showArabicByDefault={shouldShowArabicByDefault(hadith)}
             />
           ))
         ) : !isSearching ? (

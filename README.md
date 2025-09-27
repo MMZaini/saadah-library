@@ -31,6 +31,20 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
+## Reducing Vercel usage (images & edge)
+
+If you're deploying on Vercel and seeing high usage for Image Optimization (transformations / cache writes / reads) or Edge/ISR metrics, try these strategies:
+
+- Disable the Vercel image optimizer when you don't need server-side transformations. Set this environment variable in Vercel: `DISABLE_VERCEL_IMAGE_OPTIMIZATION=1`. That will flip `images.unoptimized` in `next.config.ts` and stop Next.js from generating transformed images on the server (this removes Transformations and Cache Writes/Reads costs but shifts responsibility to the client or a CDN).
+- Prefer using pre-sized, optimized images stored on a CDN (e.g. Cloudflare, S3+CloudFront, or your hosting provider). Serve them via absolute URLs so Next.js doesn't try to transform them.
+- Use responsive images (`<img srcset>` or Next.js `<Image />` with fixed sizes) so you avoid generating many transformer variants at different sizes. Keep `imageSizes` and `deviceSizes` minimal and aligned with your UI breakpoints.
+- Avoid listing wide remotePatterns in `next.config.ts`; host frequently-used images on your own CDN or inlined assets when small.
+- Cache aggressively at CDN level and set long cache TTLs for images that rarely change. This reduces cache reads and origin bandwidth on Vercel.
+- If using many small images (icons/thumbnails), consider inlining them as SVG or using an icon font/sprite to avoid optimizer work.
+- Audit image usage in pages that run on the Edge or via ISR; move non-critical images off-edge rendering paths when possible.
+
+Using the `DISABLE_VERCEL_IMAGE_OPTIMIZATION=1` toggle is the quickest way to avoid the top three usage counters in Vercel (Transformations, Cache Writes, Cache Reads) while keeping the site functional.
+
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
