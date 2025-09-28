@@ -5,7 +5,7 @@ import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { IconSearch, IconFilter, IconChevronLeft, IconChevronRight, IconX } from './Icons'
 import { useSettings } from '@/lib/settings-context'
-import { isArabicQuery, matchesArabicText, normalizeArabic, flexibleArabicWordMatch } from '@/lib/search-utils'
+import { isArabicQuery, matchesArabicText, normalizeArabic, flexibleEnglishMatch, smartSearch, flexibleArabicWordMatch } from '@/lib/search-utils'
 import clsx from 'clsx'
 
 interface SearchInterfaceProps {
@@ -72,21 +72,32 @@ export default function SearchInterface({
   const [searchOptions, setSearchOptions] = useState({
     exactPhrase: false,
     exactWords: false,
-    flexibleMatching: false
+    flexibleMatching: false,
+    smartSearch: false
   })
 
-  // Helper function to handle search option changes (only one at a time)
+  // Helper function to handle search option changes
   const handleSearchOptionChange = (option: keyof typeof searchOptions, checked: boolean) => {
-    if (checked) {
-      // If checking an option, uncheck all others
-      setSearchOptions({
-        exactPhrase: option === 'exactPhrase',
-        exactWords: option === 'exactWords',
-        flexibleMatching: option === 'flexibleMatching'
-      })
+    // Special handling for mutually exclusive primary search modes
+    const primarySearchModes = ['exactPhrase', 'exactWords', 'flexibleMatching', 'smartSearch']
+    
+    if (primarySearchModes.includes(option)) {
+      if (checked) {
+        // If checking a primary mode, uncheck all other primary modes
+        setSearchOptions(prev => ({
+          ...prev,
+          exactPhrase: option === 'exactPhrase',
+          exactWords: option === 'exactWords',
+          flexibleMatching: option === 'flexibleMatching',
+          smartSearch: option === 'smartSearch'
+        }))
+      } else {
+        // If unchecking a primary mode, just uncheck it
+        setSearchOptions(prev => ({ ...prev, [option]: false }))
+      }
     } else {
-      // If unchecking, just uncheck this option
-      setSearchOptions(prev => ({ ...prev, [option]: false }))
+      // For non-primary options (like caseInsensitive), toggle independently
+      setSearchOptions(prev => ({ ...prev, [option]: checked }))
     }
   }
 
@@ -98,7 +109,7 @@ export default function SearchInterface({
   // Helper function to check if any specific grading is selected
   const hasActiveFilters = () => {
     const hasGradingFilters = !selectedGradings.includes('all') && selectedGradings.length > 0
-    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching
+    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching || searchOptions.smartSearch
     return hasGradingFilters || hasSearchOptions
   }
 
@@ -142,7 +153,8 @@ export default function SearchInterface({
     setSearchOptions({
       exactPhrase: false,
       exactWords: false,
-      flexibleMatching: false
+      flexibleMatching: false,
+      smartSearch: false
     })
   }
 
@@ -168,115 +180,91 @@ export default function SearchInterface({
     let filtered = [...searchResults]
 
     // Apply search options filtering first
-    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching
+    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching || searchOptions.smartSearch
     
     if (hasSearchOptions && searchQuery.trim()) {
       filtered = searchResults.filter(hadith => {
         const searchText = searchQuery.trim()
+        const isArabic = isArabicQuery(searchText)
 
-        const getText = (text: string | null | undefined) => {
+        // Get text content with case sensitivity option
+        const getProcessedText = (text: string | null | undefined) => {
           if (!text) return ''
           return text.toLowerCase()
         }
 
-        const isArabic = isArabicQuery(searchText)
-        const queryText = isArabic ? normalizeArabic(searchText) : searchText.toLowerCase()
-
-        const englishText = getText(hadith.englishText || hadith.thaqalaynMatn)
-        // For Arabic, keep both raw (with diacritics) and normalized (without) versions
-        const arabicRaw = (hadith.arabicText || '').toLowerCase()
-        const arabicText = isArabic && hadith.arabicText ? normalizeArabic(hadith.arabicText) : arabicRaw
-        const queryArabicRaw = searchText.toLowerCase()
-
-        // Arabic-aware helpers
-        const tokenizeArabic = (s: string) => s.split(/\s+/).filter(Boolean)
-        const alVariants = (w: string) => {
-          const vars = [w]
-          if (w.startsWith('ال')) vars.push(w.slice(2))
-          else vars.push('ال' + w)
-          return Array.from(new Set(vars))
-        }
-
+        const englishText = getProcessedText(hadith.englishText || hadith.thaqalaynMatn)
+        const arabicText = isArabic && hadith.arabicText ? normalizeArabic(hadith.arabicText) : getProcessedText(hadith.arabicText)
         const allText = `${englishText} ${arabicText}`.trim()
 
+        // Process search query based on language and case sensitivity
+  const processedQuery = isArabic ? normalizeArabic(searchText) : searchText.toLowerCase()
+
         if (searchOptions.exactPhrase) {
-          // Exact phrase matching - require exact diacritics in Arabic
+          // Exact phrase matching
           if (isArabic) {
-            return arabicRaw.includes(queryArabicRaw)
+            return arabicText.includes(processedQuery)
           }
-          return allText.includes(queryText)
+          return allText.includes(processedQuery)
         }
         
         if (searchOptions.exactWords) {
           // All words must appear exactly (not as substrings)
+          const searchWords = processedQuery.split(/\s+/).filter(Boolean)
+          
           if (isArabic) {
-            // Require exact diacritics per token
-            const searchWords = queryArabicRaw.split(/\s+/).filter(Boolean)
-            const textWords = new Set(tokenizeArabic(arabicRaw))
+            const textWords = new Set(arabicText.split(/\s+/).filter(Boolean))
             return searchWords.every(w => textWords.has(w))
           }
-          const searchWords = queryText.split(/\s+/).filter(word => word.length > 0)
+          
           return searchWords.every(searchWord => {
             // Use word boundary regex for exact word matching
-            const wordRegex = new RegExp('\\b' + searchWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i')
+            const flags = ''
+            const escapedWord = searchWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const wordRegex = new RegExp('\\b' + escapedWord + '\\b', flags)
             return wordRegex.test(allText)
           })
         }
 
         if (searchOptions.flexibleMatching) {
-          // Flexible matching - match word stems and variations
-          const searchWords = queryText.split(/\s+/).filter(word => word.length > 0)
+          // Enhanced flexible matching
+          const searchWords = processedQuery.split(/\s+/).filter(Boolean)
+          
           if (isArabic) {
-            // Enhanced flexible Arabic matching with morphological awareness
+            // Arabic flexible matching with article variations
+            const alVariants = (w: string) => {
+              const vars = [w]
+              if (w.startsWith('ال')) vars.push(w.slice(2))
+              else vars.push('ال' + w)
+              return Array.from(new Set(vars))
+            }
+            
+
             return searchWords.every(searchWord => {
               return flexibleArabicWordMatch(arabicText, searchWord)
             })
           }
-          return searchWords.every(searchWord => {
-            // First check for exact word match (including the original word)
-            if (allText.includes(searchWord)) {
-              return true
-            }
-            
-            // Create flexible patterns for each word (English heuristics)
-            let stem = searchWord
-            if (stem.endsWith('ies') && stem.length > 4) {
-              stem = stem.slice(0, -3) + 'y'
-            } else if (stem.endsWith('ied') && stem.length > 4) {
-              stem = stem.slice(0, -3) + 'y'
-            } else if (stem.endsWith('ing') && stem.length > 4) {
-              const beforeIng = stem.slice(0, -3)
-              if (beforeIng.length >= 2 && 
-                  beforeIng[beforeIng.length - 1] === beforeIng[beforeIng.length - 2] &&
-                  'bcdfghjklmnpqrstvwxz'.includes(beforeIng[beforeIng.length - 1])) {
-                stem = beforeIng.slice(0, -1)
-              } else {
-                stem = beforeIng
-              }
-            } else if (stem.endsWith('ed') && stem.length > 3) {
-              const beforeEd = stem.slice(0, -2)
-              if (beforeEd.length >= 2 && 
-                  beforeEd[beforeEd.length - 1] === beforeEd[beforeEd.length - 2] &&
-                  'bcdfghjklmnpqrstvwxz'.includes(beforeEd[beforeEd.length - 1])) {
-                stem = beforeEd.slice(0, -1)
-              } else {
-                stem = beforeEd
-              }
-            } else {
-              const suffixes = ['tion', 'sion', 'ness', 'ment', 'able', 'ible', 'ful', 'less', 'ous', 'ious', 'eous', 'ive', 'ative', 'itive', 'er', 'est', 'ly', 'es', 's']
-              for (const suffix of suffixes) {
-                if (stem.endsWith(suffix) && stem.length > suffix.length + 2) {
-                  stem = stem.slice(0, -suffix.length)
-                  break
-                }
-              }
-            }
-            const pattern = stem.length >= 3 && stem !== searchWord ? stem : searchWord
-            return allText.includes(pattern)
+          
+          // Enhanced English flexible matching with synonyms and stemming
+          return flexibleEnglishMatch(allText, searchWords, {
+            caseInsensitive: true,
+            useSynonyms: true,
+            useStemming: true
           })
         }
 
-        return false // Should not reach here
+        if (searchOptions.smartSearch) {
+          // Smart search that adapts to query type
+          if (isArabic) {
+            return arabicText.includes(processedQuery)
+          }
+          
+          return smartSearch(allText, processedQuery, {
+            caseInsensitive: true
+          })
+        }
+
+        return false
       })
     }
 
@@ -372,7 +360,7 @@ export default function SearchInterface({
   if (!searchQuery) return null
 
   return (
-    <section id="search-results" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
+    <section id="search-results" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
       {/* Search Header */}
       <div className="flex flex-col gap-4 mb-6">
         {/* Title and Clear Button Row */}
@@ -616,7 +604,7 @@ export default function SearchInterface({
               {/* Search Options */}
               <div className="border-t border-theme pt-6 mt-6">
                 <label className="block text-sm font-medium text-primary mb-4 select-none">
-                  Search Options <span className="text-xs text-muted font-normal select-none">(select one)</span>
+                  Search Mode <span className="text-xs text-muted font-normal select-none">(select one)</span>
                 </label>
                 <div className="space-y-3">
                   <label className={clsx(
@@ -625,13 +613,28 @@ export default function SearchInterface({
                   )}>
                     <input
                       type="checkbox"
-                      checked={searchOptions.exactPhrase}
-                      onChange={(e) => handleSearchOptionChange('exactPhrase', e.target.checked)}
+                      checked={searchOptions.smartSearch}
+                      onChange={(e) => handleSearchOptionChange('smartSearch', e.target.checked)}
                       className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
                     />
                     <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Exact Phrase</span>
-                      <p className="text-xs text-muted mt-1 select-none">Search for the exact phrase as written</p>
+                      <span className="text-sm font-medium text-primary select-none">Smart Search <span className="text-xs text-green-600 dark:text-green-400 font-medium">(Recommended)</span></span>
+                      <p className="text-xs text-muted mt-1 select-none">Automatically chooses the best search strategy. Includes synonyms for Islamic terms (e.g., "prayer" finds "salah")</p>
+                    </div>
+                  </label>
+                  <label className={clsx(
+                    "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30 transition-all duration-200 ease-out select-none",
+                    filtersLoaded ? "opacity-100" : "opacity-0"
+                  )}>
+                    <input
+                      type="checkbox"
+                      checked={searchOptions.flexibleMatching}
+                      onChange={(e) => handleSearchOptionChange('flexibleMatching', e.target.checked)}
+                      className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
+                    />
+                    <div className="select-none">
+                      <span className="text-sm font-medium text-primary select-none">Enhanced Flexible Matching</span>
+                      <p className="text-xs text-muted mt-1 select-none">Advanced word variations + Islamic terminology synonyms (e.g., "praying" matches "prayer", "salah", "salat")</p>
                     </div>
                   </label>
                   <label className={clsx(
@@ -655,15 +658,23 @@ export default function SearchInterface({
                   )}>
                     <input
                       type="checkbox"
-                      checked={searchOptions.flexibleMatching}
-                      onChange={(e) => handleSearchOptionChange('flexibleMatching', e.target.checked)}
+                      checked={searchOptions.exactPhrase}
+                      onChange={(e) => handleSearchOptionChange('exactPhrase', e.target.checked)}
                       className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
                     />
                     <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Flexible Word Matching</span>
-                      <p className="text-xs text-muted mt-1 select-none">Find word variations (e.g., "wrestling" matches "wrestle", "wrestled", "wrestler")</p>
+                      <span className="text-sm font-medium text-primary select-none">Exact Phrase</span>
+                      <p className="text-xs text-muted mt-1 select-none">Search for the exact phrase as written</p>
                     </div>
                   </label>
+                </div>
+                
+                {/* Additional Options */}
+                <div className="border-t border-theme/30 pt-4 mt-4">
+                  <label className="block text-sm font-medium text-primary mb-3 select-none">
+                    Additional Options
+                  </label>
+                  {/* Case-insensitive behavior is now fixed and always on; option removed */}
                 </div>
               </div>
 
@@ -691,13 +702,25 @@ export default function SearchInterface({
                           </span>
                         ) : null
                       })}
-                      {searchOptions.exactPhrase && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-blue-150 dark:hover:bg-blue-900/40 transition-all duration-200">
-                          Exact Phrase
+                      {searchOptions.smartSearch && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700/50 text-green-700 dark:text-green-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-green-150 dark:hover:bg-green-900/40 transition-all duration-200">
+                          Smart Search
                           <button
-                            onClick={() => handleSearchOptionChange('exactPhrase', false)}
-                            className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
-                            title="Remove Exact Phrase filter"
+                            onClick={() => handleSearchOptionChange('smartSearch', false)}
+                            className="ml-1 hover:bg-green-200 dark:hover:bg-green-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            title="Remove Smart Search filter"
+                          >
+                            <IconX className="h-3 w-3" />
+                          </button>
+                        </span>
+                      )}
+                      {searchOptions.flexibleMatching && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-purple-150 dark:hover:bg-purple-900/40 transition-all duration-200">
+                          Enhanced Flexible
+                          <button
+                            onClick={() => handleSearchOptionChange('flexibleMatching', false)}
+                            className="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            title="Remove Enhanced Flexible filter"
                           >
                             <IconX className="h-3 w-3" />
                           </button>
@@ -715,18 +738,19 @@ export default function SearchInterface({
                           </button>
                         </span>
                       )}
-                      {searchOptions.flexibleMatching && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-purple-150 dark:hover:bg-purple-900/40 transition-all duration-200">
-                          Flexible Match
+                      {searchOptions.exactPhrase && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-blue-150 dark:hover:bg-blue-900/40 transition-all duration-200">
+                          Exact Phrase
                           <button
-                            onClick={() => handleSearchOptionChange('flexibleMatching', false)}
-                            className="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
-                            title="Remove Flexible Match filter"
+                            onClick={() => handleSearchOptionChange('exactPhrase', false)}
+                            className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            title="Remove Exact Phrase filter"
                           >
                             <IconX className="h-3 w-3" />
                           </button>
                         </span>
                       )}
+                      {/* Case sensitive option removed - search is always case-insensitive */}
                     </div>
                   </div>
                   <button

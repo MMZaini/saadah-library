@@ -98,12 +98,25 @@ export const BOOK_ID_TO_URL_MAP: Record<string, string> = Object.fromEntries(
 
 // Helper function to get clean URL from book ID
 export const getBookUrlSlug = (bookId: string): string => {
-  return BOOK_ID_TO_URL_MAP[bookId] || bookId
+  const slug = BOOK_ID_TO_URL_MAP[bookId] || bookId
+  return slug.toLowerCase()
 }
 
 // Helper function to get full book ID from URL slug
 export const getBookIdFromUrlSlug = (urlSlug: string): string => {
-  return URL_TO_BOOK_ID_MAP[urlSlug] || urlSlug
+  if (!urlSlug) return urlSlug
+
+  // Case-insensitive lookup: prefer exact key, otherwise try lowercase key
+  const exact = URL_TO_BOOK_ID_MAP[urlSlug]
+  if (exact) return exact
+
+  const lowerKey = urlSlug.toLowerCase()
+  // Build a lowercase-keyed lookup for efficient case-insensitive mapping
+  const lowercaseMap: Record<string, string> = Object.fromEntries(
+    Object.entries(URL_TO_BOOK_ID_MAP).map(([k, v]) => [k.toLowerCase(), v])
+  )
+
+  return lowercaseMap[lowerKey] || urlSlug
 }
 
 export const isMultiVolumeBook = (bookId: string): boolean => {

@@ -210,3 +210,209 @@ export function normalizeArabic(input: string | null | undefined): string {
 
   return s
 }
+
+/**
+ * Common Islamic/religious terminology synonyms for enhanced English search
+ */
+const ISLAMIC_SYNONYMS: Record<string, string[]> = {
+  'prayer': ['salah', 'salat', 'namaz', 'worship'],
+  'salah': ['prayer', 'salat', 'namaz', 'worship'],
+  'salat': ['prayer', 'salah', 'namaz', 'worship'],
+  'pilgrimage': ['hajj', 'haj'],
+  'hajj': ['pilgrimage', 'haj'],
+  'fasting': ['sawm', 'saum', 'fast'],
+  'sawm': ['fasting', 'saum', 'fast'],
+  'charity': ['zakat', 'zakah', 'alms'],
+  'zakat': ['charity', 'zakah', 'alms'],
+  'prophet': ['messenger', 'rasul', 'nabi'],
+  'messenger': ['prophet', 'rasul', 'nabi'],
+  'imam': ['leader', 'guide'],
+  'allah': ['god', 'almighty'],
+  'god': ['allah', 'almighty'],
+  'faith': ['iman', 'belief'],
+  'iman': ['faith', 'belief'],
+  'mosque': ['masjid'],
+  'masjid': ['mosque'],
+  'friday': ['jumma', 'jumu\'ah'],
+  'jumma': ['friday', 'jumu\'ah'],
+  'ramadan': ['ramadhan'],
+  'ramadhan': ['ramadan']
+}
+
+/**
+ * Enhanced English word stemming with better pluralization and verb form handling
+ */
+export function stemEnglishWord(word: string): string[] {
+  if (!word || word.length < 3) return [word]
+  
+  const variations = new Set([word])
+  const stem = word.toLowerCase()
+  
+  // Handle irregular plurals first
+  const irregularPlurals: Record<string, string> = {
+    'children': 'child',
+    'men': 'man',
+    'women': 'woman',
+    'feet': 'foot',
+    'teeth': 'tooth',
+    'geese': 'goose',
+    'mice': 'mouse',
+    'people': 'person'
+  }
+  
+  if (irregularPlurals[stem]) {
+    variations.add(irregularPlurals[stem])
+  }
+  
+  // Handle common suffixes with more accuracy
+  const suffixPatterns = [
+    // Plurals
+    { pattern: /ies$/, replacement: 'y', condition: (w: string) => w.length > 4 },
+    { pattern: /ves$/, replacement: 'f', condition: (w: string) => w.length > 4 },
+    { pattern: /oes$/, replacement: 'o', condition: (w: string) => w.length > 4 },
+    { pattern: /ses$/, replacement: 's', condition: (w: string) => w.length > 4 },
+    { pattern: /es$/, replacement: '', condition: (w: string) => w.length > 3 && /[sxz]es$|[^aeiou]es$/.test(w) },
+    { pattern: /s$/, replacement: '', condition: (w: string) => w.length > 3 && !/ss$/.test(w) },
+    
+    // Past tense and past participle
+    { pattern: /ied$/, replacement: 'y', condition: (w: string) => w.length > 4 },
+    { pattern: /ed$/, replacement: '', condition: (w: string) => w.length > 3 },
+    
+    // Present participle and gerund
+    { pattern: /ing$/, replacement: '', condition: (w: string) => w.length > 4 },
+    
+    // Comparative and superlative
+    { pattern: /ier$/, replacement: 'y', condition: (w: string) => w.length > 4 },
+    { pattern: /iest$/, replacement: 'y', condition: (w: string) => w.length > 5 },
+    { pattern: /er$/, replacement: '', condition: (w: string) => w.length > 3 },
+    { pattern: /est$/, replacement: '', condition: (w: string) => w.length > 4 },
+    
+    // Other common suffixes
+    { pattern: /tion$/, replacement: 'te', condition: (w: string) => w.length > 5 },
+    { pattern: /sion$/, replacement: 'de', condition: (w: string) => w.length > 5 },
+    { pattern: /ness$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /ment$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /able$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /ible$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /ful$/, replacement: '', condition: (w: string) => w.length > 4 },
+    { pattern: /less$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /ous$/, replacement: '', condition: (w: string) => w.length > 4 },
+    { pattern: /ious$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /eous$/, replacement: '', condition: (w: string) => w.length > 5 },
+    { pattern: /ive$/, replacement: '', condition: (w: string) => w.length > 4 },
+    { pattern: /ative$/, replacement: '', condition: (w: string) => w.length > 6 },
+    { pattern: /ly$/, replacement: '', condition: (w: string) => w.length > 3 }
+  ]
+  
+  for (const { pattern, replacement, condition } of suffixPatterns) {
+    if (pattern.test(stem) && condition(stem)) {
+      const newStem = stem.replace(pattern, replacement)
+      if (newStem.length >= 2) {
+        variations.add(newStem)
+        
+        // Handle double consonants in stemming (e.g., "running" -> "run")
+        if (replacement === '' && newStem.length > 2) {
+          const lastChar = newStem[newStem.length - 1]
+          const secondLastChar = newStem[newStem.length - 2]
+          if (lastChar === secondLastChar && 'bcdfghjklmnpqrstvwxz'.includes(lastChar)) {
+            variations.add(newStem.slice(0, -1))
+          }
+        }
+      }
+      break // Only apply one transformation
+    }
+  }
+  
+  return Array.from(variations)
+}
+
+/**
+ * Get synonyms for a word including Islamic terminology
+ */
+export function getWordSynonyms(word: string): string[] {
+  const lowerWord = word.toLowerCase()
+  return ISLAMIC_SYNONYMS[lowerWord] || []
+}
+
+/**
+ * Enhanced flexible matching for English text with synonyms and better stemming
+ */
+export function flexibleEnglishMatch(text: string, searchWords: string[], options: {
+  caseInsensitive?: boolean,
+  useSynonyms?: boolean,
+  useStemming?: boolean
+} = {}): boolean {
+  const { caseInsensitive = true, useSynonyms = true, useStemming = true } = options
+  
+  const processText = caseInsensitive ? text.toLowerCase() : text
+  
+  return searchWords.every(searchWord => {
+    const processedSearchWord = caseInsensitive ? searchWord.toLowerCase() : searchWord
+    
+    // Direct match
+    if (processText.includes(processedSearchWord)) {
+      return true
+    }
+    
+    // Synonym matching
+    if (useSynonyms) {
+      const synonyms = getWordSynonyms(processedSearchWord)
+      for (const synonym of synonyms) {
+        const processedSynonym = caseInsensitive ? synonym.toLowerCase() : synonym
+        if (processText.includes(processedSynonym)) {
+          return true
+        }
+      }
+    }
+    
+    // Stemming-based matching
+    if (useStemming) {
+      const stemVariations = stemEnglishWord(processedSearchWord)
+      for (const variation of stemVariations) {
+        const processedVariation = caseInsensitive ? variation.toLowerCase() : variation
+        if (processText.includes(processedVariation)) {
+          return true
+        }
+      }
+    }
+    
+    return false
+  })
+}
+
+/**
+ * Smart search that automatically determines the best search strategy
+ */
+export function smartSearch(text: string, query: string, options: {
+  caseInsensitive?: boolean
+} = {}): boolean {
+  const { caseInsensitive = true } = options
+  
+  const processedText = caseInsensitive ? text.toLowerCase() : text
+  const processedQuery = caseInsensitive ? query.toLowerCase() : query
+  
+  // If query is short (1-2 words), use flexible matching
+  const words = processedQuery.trim().split(/\s+/)
+  
+  if (words.length <= 2) {
+    return flexibleEnglishMatch(processedText, words, {
+      caseInsensitive,
+      useSynonyms: true,
+      useStemming: true
+    })
+  }
+  
+  // For longer queries, use phrase matching with some flexibility
+  if (processedText.includes(processedQuery)) {
+    return true
+  }
+  
+  // Fall back to flexible word matching
+  return flexibleEnglishMatch(processedText, words, {
+    caseInsensitive,
+    useSynonyms: true,
+    useStemming: false // Less aggressive for longer queries
+  })
+}
+
+// (duplicate simple flexibleArabicWordMatch removed — keeping the improved implementation above)

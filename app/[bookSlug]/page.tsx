@@ -30,6 +30,8 @@ export default function BookPage() {
   const urlSlug = params?.bookSlug as string
   const bookId = getBookIdFromUrlSlug(urlSlug)
 
+  // Middleware performs server-side canonicalization to lowercase. No client-side redirect needed.
+
   const [state, setState] = useState<BookPageState>({
     bookInfo: null,
     hadiths: [],
@@ -230,7 +232,7 @@ export default function BookPage() {
       <header 
         style={{ background: 'var(--topbar-bg)' }}
         className="sticky top-0 z-40 backdrop-blur-md border-b border-theme">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center gap-4">
+  <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-4">
           {/* Back button removed: search bar only */}
 
           {/* Search */}
@@ -263,7 +265,7 @@ export default function BookPage() {
       </header>
 
       {/* Book header (Uyun-style hero for visual parity) */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
+  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
         <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200/60 dark:border-emerald-800/30 rounded-2xl p-8 shadow-soft backdrop-blur-sm">
           <div className="flex items-start gap-6">
             {coverSrc ? (
@@ -305,7 +307,7 @@ export default function BookPage() {
       </section>
 
       {/* Results */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
+  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
         {searchQuery ? (
           <SearchInterface
             searchResults={searchResults}

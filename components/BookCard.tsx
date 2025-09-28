@@ -41,7 +41,9 @@ const bookIdMap: Record<number, string> = {
 }
 
 export default function BookCard({ book }: { book: Book }) {
-  const [hovered, setHovered] = useState<boolean>(!!book.highlighted)
+  // Start non-hovered so featured books (e.g., Al-Kāfi) don't appear permanently raised.
+  // The "Featured" badge is still shown when book.highlighted is true.
+  const [hovered, setHovered] = useState<boolean>(false)
   const bookId = book.bookId || bookIdMap[book.id]
   
   // Special routing for Al-Kafi; route others to clean URL slugs
@@ -51,7 +53,7 @@ export default function BookCard({ book }: { book: Book }) {
   const cardContent = (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(!!book.highlighted)}
+      onMouseLeave={() => setHovered(false)}
       className={clsx(
         'rounded-2xl bg-card border border-theme shadow-soft',
         'flex items-center gap-4 sm:gap-6 p-4 sm:p-6 transition-all duration-300',

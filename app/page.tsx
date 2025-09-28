@@ -132,7 +132,7 @@ export default function Page() {
       <header 
         style={{ background: 'var(--topbar-bg)' }}
         className="sticky top-0 z-40 backdrop-blur-md border-b border-theme">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center gap-4">
+  <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-4">
           {/* Search - Mobile first, then desktop */}
           <div className="relative flex-1 max-w-[720px] mx-auto">
             <div className="flex items-center gap-3 rounded-xl border border-theme bg-input px-4 py-2.5 shadow-soft">
@@ -161,55 +161,7 @@ export default function Page() {
         searchContext="all-books"
       />
 
-      {/* Featured Al-Kafi Section - Only show when not searching */}
-      {!searchQuery && (
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800/30 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-soft mb-12">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">
-                  Al-Kāfi (الكافي)
-                  <span className="hidden sm:inline"> - Featured Collection</span>
-                </h2>
-                <p className="text-sm sm:text-base text-amber-700 dark:text-amber-300">
-                  <span className="sm:hidden">Most comprehensive Shīʿī Ḥadīth collection</span>
-                  <span className="hidden sm:inline">Explore the most comprehensive Shīʿī Ḥadīth collection with specialized features</span>
-                </p>
-              </div>
-              
-              <Link
-                href="/al-kafi"
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-center text-sm sm:text-base select-none"
-              >
-                  Explore <span className="font-arabic select-none">الكافي</span>
-              </Link>
-            </div>
-            
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3 sm:p-4">
-                <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1 sm:mb-2 text-sm sm:text-base">8 Volumes</h3>
-                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300">
-                  Browse through all volumes with dedicated volume explorer
-                </p>
-              </div>
-              
-              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3 sm:p-4">
-                <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1 sm:mb-2 text-sm sm:text-base">Advanced Search</h3>
-                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300">
-                  Search across all volumes simultaneously for comprehensive results
-                </p>
-              </div>
-              
-              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3 sm:p-4 sm:col-span-2 md:col-span-1">
-                <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1 sm:mb-2 text-sm sm:text-base">Major Collection</h3>
-                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300">
-                  Explore the major collection of Shīʿī Ḥadīth with in-depth resources
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Featured Al-Kafi section removed per request */}
 
       {/* Books grid - Only show when not searching */}
       {!searchQuery && (

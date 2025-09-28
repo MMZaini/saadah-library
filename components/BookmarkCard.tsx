@@ -102,11 +102,10 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
       {/* Content */}
       <div className="space-y-3 sm:space-y-4">
         {showArabic && bookmark.arabicPreview ? (
-          <div className="bg-amber-50/80 dark:bg-amber-900/20 p-3 sm:p-4 rounded-lg border border-amber-200/60 dark:border-amber-800/30 shadow-soft backdrop-blur-sm">
+          <div className="bg-amber-50/80 dark:bg-amber-900/20 hadith-block rounded-lg border border-amber-200/60 dark:border-amber-800/30 shadow-soft backdrop-blur-sm">
             <div
               className="text-right text-base sm:text-lg leading-relaxed font-arabic text-amber-900 dark:text-amber-100 hadith-arabic-text"
               dir="rtl"
-              style={{ fontSize: `${settings.arabicFontSize}%` }}
             >
               {bookmark.arabicPreview}
             </div>
