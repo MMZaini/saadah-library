@@ -246,7 +246,7 @@ export default function BookmarksPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link 
             href="/"
@@ -269,7 +269,7 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Link 
@@ -539,16 +539,23 @@ export default function BookmarksPage() {
           {filteredFullHadiths.length > 0 && (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-primary">Your Bookmarked Hadiths</h2>
-              {filteredFullHadiths.map((hadith) => {
+              {filteredFullHadiths.map((hadith, idx) => {
                 const bookmark = filteredBookmarks.find(b => b.id === hadith.id && b.bookId === hadith.bookId)
                 return bookmark ? (
-                  <BookmarkedHadithCard
-                    key={hadith.bookId + ':' + hadith.id}
-                    hadith={hadith}
-                    bookmark={bookmark}
-                    showViewChapter={true}
-                    globalNotesVisible={globalNotesVisible}
-                  />
+                  <div key={hadith.bookId + ':' + hadith.id} className="relative">
+                    <div className="absolute -left-4 top-6 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-medium">
+                      {idx + 1}
+                    </div>
+                    <div className="ml-8">
+                      <BookmarkedHadithCard
+                        hadith={hadith}
+                        bookmark={bookmark}
+                        // Align with chapter card style: hide explicit View Chapter button here
+                        showViewChapter={false}
+                        globalNotesVisible={globalNotesVisible}
+                      />
+                    </div>
+                  </div>
                 ) : null
               })}
             </div>

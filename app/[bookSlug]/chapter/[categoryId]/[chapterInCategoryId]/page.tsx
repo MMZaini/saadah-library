@@ -63,7 +63,7 @@ export default function GenericChapterDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-card border border-theme rounded-xl p-12 shadow-soft">
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary" />
@@ -78,7 +78,7 @@ export default function GenericChapterDetailPage() {
   if (error) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50/80 dark:bg-red-900/20 border border-red-200/60 dark:border-red-800/30 rounded-xl p-6 shadow-soft">
             <p className="text-red-800 dark:text-red-300">{error}</p>
           </div>
@@ -89,7 +89,7 @@ export default function GenericChapterDetailPage() {
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {chapterInfo && (
           <div className="bg-card border border-theme rounded-xl p-6 shadow-soft mb-6">
             <h2 className="text-2xl font-bold">{chapterInfo.chapter}</h2>

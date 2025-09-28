@@ -229,7 +229,7 @@ export default function BookPage() {
       <header 
         style={{ background: 'var(--topbar-bg)' }}
         className="sticky top-0 z-40 backdrop-blur-md border-b border-theme">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center gap-4">
+  <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-4">
           {/* Back button removed: search bar only */}
 
           {/* Search */}
@@ -262,7 +262,7 @@ export default function BookPage() {
       </header>
 
       {/* Book header (Uyun-style hero for visual parity) */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
+  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
         <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200/60 dark:border-emerald-800/30 rounded-2xl p-8 shadow-soft backdrop-blur-sm">
           <div className="flex items-start gap-6">
             {coverSrc ? (
@@ -297,6 +297,11 @@ export default function BookPage() {
                 <span className="bg-emerald-200/80 dark:bg-emerald-800/80 text-emerald-900 dark:text-emerald-100 px-3 py-1.5 rounded-full font-medium shadow-soft">
                   {displayTitle}
                 </span>
+                {((bookConfig && bookConfig.bookId === 'Man-La-Yahduruh-al-Faqih') || bookInfo?.bookId?.startsWith('Man-La-Yahduruh-al-Faqih')) && (
+                  <span className="bg-amber-200/80 dark:bg-amber-800/80 text-amber-900 dark:text-amber-100 px-3 py-1.5 rounded-full font-medium shadow-soft">
+                    One of the Four Major Books
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -304,7 +309,7 @@ export default function BookPage() {
       </section>
 
       {/* Results */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
+  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
         {searchQuery ? (
           <SearchInterface
             searchResults={searchResults}

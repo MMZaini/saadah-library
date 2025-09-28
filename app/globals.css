@@ -113,7 +113,24 @@
 
   /* Hadith text font size utilities */
   .hadith-arabic-text {
-    font-size: var(--hadith-arabic-font-size, 100%);
+    font-size: var(--hadith-arabic-font-size, 100%) !important;
+    /* Improve Arabic readability */
+    line-height: 1.95; /* generous line-height for Arabic scripts */
+    word-spacing: 0.15em; /* slight extra space between words */
+    letter-spacing: 0.01em; /* small letter spacing to reduce crowding */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    hyphens: none;
+    white-space: pre-wrap; /* preserve deliberate line breaks */
+    direction: rtl; /* ensure correct direction by default */
+    unicode-bidi: embed;
+  }
+
+  /* Container utility for hadith blocks to provide breathing room */
+  .hadith-block {
+    padding: 0.85rem; /* balanced padding */
+    border-radius: 0.5rem;
   }
 
   .hadith-english-text {
@@ -134,6 +151,14 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     line-clamp: 3;
+  }
+  
+  .line-clamp-6 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
   }
 
   /* Tooltip container that allows overflow */

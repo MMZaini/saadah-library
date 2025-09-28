@@ -67,6 +67,8 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
   const [showArabic, setShowArabic] = useState(showArabicByDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
+  const arabicRef = useRef<HTMLDivElement | null>(null)
+  const [arabicOverflow, setArabicOverflow] = useState(false)
   
   // Check if this hadith is bookmarked
   const bookmarked = isBookmarked(hadith.bookId, hadith.id)
@@ -164,10 +166,52 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
     return {
       englishText: processedEnglish,
       arabicText: arabic,
-      isLongText: (processedEnglish?.length || 0) > 600,
-      isArabicLongText: (arabic?.length || 0) > 600
+      // Use the same cutoff as the slice(0, 750) used for truncation
+      isLongText: (processedEnglish?.length || 0) > 750,
+      isArabicLongText: (arabic?.length || 0) > 750
     }
   }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad, removeChainFromMatn])
+
+  // Measure Arabic overflow to show Read more/less only when necessary
+  useEffect(() => {
+    const el = arabicRef.current
+    if (!el) {
+      setArabicOverflow(false)
+      return
+    }
+
+    const checkOverflow = () => {
+      // Create a temporary clone to measure full content height without changing layout
+      try {
+        const clone = el.cloneNode(true) as HTMLElement
+        clone.style.position = 'absolute'
+        clone.style.visibility = 'hidden'
+        clone.style.width = `${el.offsetWidth}px`
+        clone.style.maxHeight = 'none'
+        clone.style.whiteSpace = 'normal'
+        clone.style.height = 'auto'
+        document.body.appendChild(clone)
+        const fullHeight = clone.scrollHeight
+        document.body.removeChild(clone)
+
+        const visibleHeight = el.clientHeight
+        setArabicOverflow(fullHeight > visibleHeight + 2) // small tolerance
+      } catch (e) {
+        setArabicOverflow(false)
+      }
+    }
+
+    // Initial check
+    checkOverflow()
+
+    // Recompute on resize and when font size setting changes
+    const onResize = () => checkOverflow()
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+    }
+  }, [arabicRef, arabicText, settings.arabicFontSize, arabicExpanded])
 
   // Memoize grading data
   const gradingData = useMemo(() => ({
@@ -377,7 +421,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
           </p>
         </div>
 
-        <div className="flex items-center gap-2 ml-3 sm:ml-4 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2 ml-3 sm:ml-4">
           {/* Bookmark Button */}
           <button
             onClick={e => {
@@ -408,46 +452,94 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   ? 'bg-accent-primary text-white shadow-medium' 
                   : 'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95'
               )}
+              aria-label={showArabic ? 'Hide Arabic' : 'Show Arabic'}
+              title={showArabic ? 'Hide Arabic' : 'Show Arabic'}
             >
               ع
             </button>
           )}
+
+          {/* Open in new tab button - always visible */}
+          <button
+            onClick={() => {
+              try {
+                const bookId = hadith.bookId || ''
+                let hadithUrl = ''
+                const cfg = getBookConfig(bookId)
+
+                if (cfg) {
+                  if (cfg.bookId === 'Al-Kafi') {
+                    hadithUrl = `/al-kafi/hadith/${hadith.id}`
+                  } else {
+                    hadithUrl = `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
+                  }
+                } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
+                  hadithUrl = `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
+                } else if (bookId) {
+                  hadithUrl = `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
+                } else {
+                  hadithUrl = `/al-kafi/hadith/${hadith.id}`
+                }
+
+                const fullUrl = `${window.location.origin}${hadithUrl}`
+                window.open(fullUrl, '_blank', 'noopener')
+              } catch (e) {
+                // ignore
+              }
+            }}
+            className={clsx(
+              'px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-all shadow-soft min-w-[28px] sm:min-w-[32px] flex items-center justify-center gap-1',
+              'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95'
+            )}
+            aria-label="Open hadith in a new tab"
+            title="Open hadith in a new tab"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7v7m0-7L10 14" />
+            </svg>
+            <span className="hidden xs:inline sm:inline">Open</span>
+          </button>
         </div>
       </div>
 
       {/* Content */}
       <div className="space-y-3 sm:space-y-4">
         {showArabic && arabicText ? (
-          <div className="bg-amber-50/80 dark:bg-amber-900/20 p-3 sm:p-4 rounded-lg border border-amber-200/60 dark:border-amber-800/30 shadow-soft backdrop-blur-sm">
+          <div className="bg-amber-50/80 dark:bg-amber-900/20 hadith-block rounded-lg border border-amber-200/60 dark:border-amber-800/30 shadow-soft backdrop-blur-sm">
             <div
+              ref={arabicRef}
               className="text-right text-base sm:text-lg leading-relaxed font-arabic text-amber-900 dark:text-amber-100 hadith-arabic-text"
               dir="rtl"
-              style={{ fontSize: `${settings.arabicFontSize}%` }}
             >
-              {isArabicLongText && !arabicExpanded ? (
-                <>
-                  {arabicText.slice(0, 750)}...
+              {arabicOverflow && !arabicExpanded ? (
+                <>{arabicText.slice(0, 750)}...</>
+              ) : (
+                <>{arabicText}</>
+              )}
+            </div>
+
+            {/* Read control row: bottom-left */}
+            {arabicOverflow && (
+              <div className="mt-2 flex justify-start">
+                {arabicExpanded ? (
+                  <button
+                    onClick={() => setArabicExpanded(false)}
+                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                    aria-label="Show less Arabic"
+                  >
+                    اعرض أقل
+                  </button>
+                ) : (
                   <button
                     onClick={() => setArabicExpanded(true)}
-                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline ml-2 font-medium transition-colors active:scale-95"
+                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                    aria-label="Read more Arabic"
                   >
                     اقرأ المزيد
                   </button>
-                </>
-              ) : (
-                <>
-                  {arabicText}
-                  {isArabicLongText && arabicExpanded && (
-                    <button
-                      onClick={() => setArabicExpanded(false)}
-                      className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline ml-2 font-medium transition-colors active:scale-95"
-                    >
-                      اعرض أقل
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-primary leading-relaxed">
@@ -462,27 +554,32 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
             
             <div className="text-sm sm:text-base hadith-english-text font-mono" style={{ fontSize: `${settings.englishFontSize}%`, fontFamily: '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace' }}>
               {isLongText && !expanded ? (
-                <>
-                  {englishText.slice(0, 750)}...
-                  <button
-                    onClick={() => setExpanded(true)}
-                    className="text-accent-primary hover:text-accent-secondary hover:underline ml-2 font-medium transition-colors active:scale-95"
-                  >
-                    Read more
-                  </button>
-                </>
+                <>{englishText.slice(0, 750)}...</>
               ) : (
-                <>
-                  {englishText}
-                  {isLongText && expanded && (
+                <>{englishText}</>
+              )}
+
+              {/* Read control row for English */}
+              {isLongText && (
+                <div className="mt-2 flex justify-start">
+                  {expanded ? (
                     <button
                       onClick={() => setExpanded(false)}
-                      className="text-accent-primary hover:text-accent-secondary hover:underline ml-2 font-medium transition-colors active:scale-95"
+                      className="text-accent-primary hover:text-accent-secondary hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                      aria-label="Show less English"
                     >
                       Show less
                     </button>
+                  ) : (
+                    <button
+                      onClick={() => setExpanded(true)}
+                      className="text-accent-primary hover:text-accent-secondary hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                      aria-label="Read more English"
+                    >
+                      Read more
+                    </button>
                   )}
-                </>
+                </div>
               )}
             </div>
           </div>

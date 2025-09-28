@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
 import { IconBook, IconChevronDown, IconChevronRight } from '@/components/Icons'
@@ -46,6 +46,16 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Mobile long-press expansion state
+  const [mobileExpandedKey, setMobileExpandedKey] = useState<string | null>(null)
+  const longPressTimeoutRef = useRef<number | null>(null)
+  const mobileCollapseTimeoutRef = useRef<number | null>(null)
+  const ignoreNextClickRef = useRef(false)
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
+  // Desktop hover gradient animation control
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [leavingKey, setLeavingKey] = useState<string | null>(null)
+  const leaveTimeoutRef = useRef<number | null>(null)
 
   const volumeOptions = makeVolumeOptions(volumes)
 
@@ -169,6 +179,15 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
     loadVolumeSummary()
   }, [selectedVolume, bookId, volumes])
 
+  // Cleanup timers on unmount to avoid leaks
+  useEffect(() => {
+    return () => {
+      if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current)
+      if (mobileCollapseTimeoutRef.current) window.clearTimeout(mobileCollapseTimeoutRef.current)
+      if (leaveTimeoutRef.current) window.clearTimeout(leaveTimeoutRef.current)
+    }
+  }, [])
+
   const toggleCategory = (categoryKey: string) => {
     const newExpanded = new Set(expandedCategories)
     if (newExpanded.has(categoryKey)) {
@@ -203,6 +222,70 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
       }
     }
   }
+
+  const getChapterKey = (categoryId: string, chapterInCategoryId: number) => `${categoryId}-${chapterInCategoryId}`
+
+  const clearLongPressTimer = () => {
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
+  }
+
+  const clearMobileCollapseTimer = () => {
+    if (mobileCollapseTimeoutRef.current) {
+      window.clearTimeout(mobileCollapseTimeoutRef.current)
+      mobileCollapseTimeoutRef.current = null
+    }
+  }
+
+  const scheduleCollapseMobileExpansion = () => {
+    clearMobileCollapseTimer()
+    mobileCollapseTimeoutRef.current = window.setTimeout(() => {
+      setMobileExpandedKey(null)
+    }, 1600)
+  }
+
+  const getTouchHandlers = (key: string) => ({
+    onTouchStart: (e: React.TouchEvent) => {
+      // Record start position to detect meaningful movement (scrolls)
+      const t = e.touches && e.touches[0]
+      if (t) touchStartPosRef.current = { x: t.clientX, y: t.clientY }
+      // Immediately preview (uncollapse) on press for mobile; suppress the next click to avoid instant navigation
+      clearLongPressTimer()
+      setMobileExpandedKey(key)
+      ignoreNextClickRef.current = true
+      scheduleCollapseMobileExpansion()
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      // If user moves, treat as potential scroll; only react on significant movement
+      const start = touchStartPosRef.current
+      const t = e.touches && e.touches[0]
+      if (!start || !t) return
+      const dx = Math.abs(t.clientX - start.x)
+      const dy = Math.abs(t.clientY - start.y)
+      if (dx > 20 || dy > 20) {
+        // Don't collapse immediately; keep preview open and suppress click
+        clearLongPressTimer()
+        ignoreNextClickRef.current = true
+      }
+    },
+    onTouchEnd: () => {
+      clearLongPressTimer()
+      touchStartPosRef.current = null
+      // If expanded, keep it for a brief moment to allow reading
+      if (mobileExpandedKey === key) {
+        scheduleCollapseMobileExpansion()
+      }
+    },
+    onTouchCancel: () => {
+      clearLongPressTimer()
+      touchStartPosRef.current = null
+      if (mobileExpandedKey === key) {
+        scheduleCollapseMobileExpansion()
+      }
+    }
+  })
 
   const getTotalHadithsCount = () => {
     return Object.values(volumeSummary).reduce((total, category) => {
@@ -363,23 +446,117 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
                   className="border-t border-theme p-4 sm:p-6 bg-gradient-to-r from-card/50 to-card/30 animate-in slide-in-from-top-2 duration-300"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                    {Object.entries(category.chapters).map(([chapterKey, chapter]) => (
+                    {Object.entries(category.chapters).map(([chapterKey, chapter]) => {
+                      const key = getChapterKey(category.categoryId, chapter.chapterInCategoryId)
+                      const isExpanded = mobileExpandedKey === key
+                      return (
                       <button
                         key={chapterKey}
-                        onClick={() => handleChapterClick(category.categoryId, chapter.chapterInCategoryId)}
-                        className="group relative bg-card rounded-xl p-4 sm:p-5 shadow-soft hover:shadow-medium transition-all duration-200 border border-theme hover:border-accent-primary/30 hover:scale-[1.02] text-left"
+                        onClick={(e) => {
+                          if (ignoreNextClickRef.current) {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            ignoreNextClickRef.current = false
+                            return
+                          }
+                          handleChapterClick(category.categoryId, chapter.chapterInCategoryId)
+                        }}
+                        {...getTouchHandlers(key)}
+                        aria-expanded={isExpanded}
+                        onMouseEnter={() => {
+                          setLeavingKey(null)
+                          setHoveredKey(key)
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredKey(null)
+                          setLeavingKey(key)
+                          if (leaveTimeoutRef.current) window.clearTimeout(leaveTimeoutRef.current)
+                          leaveTimeoutRef.current = window.setTimeout(() => {
+                            setLeavingKey(null)
+                          }, 900)
+                        }}
+                        onMouseMove={(e) => {
+                          const el = e.currentTarget as HTMLElement
+                          const rect = el.getBoundingClientRect()
+                          const x = e.clientX - rect.left
+                          const y = e.clientY - rect.top
+                          el.style.setProperty('--mx', `${x}px`)
+                          el.style.setProperty('--my', `${y}px`)
+                        }}
+                        className={clsx(
+                          'group relative bg-card rounded-xl border border-theme text-left',
+                          'p-4 sm:p-5 transition-all duration-900 ease-out',
+                          'touch-manipulation select-none',
+                          'shadow-soft hover:shadow-medium',
+                          'hover:border-accent-primary/15 md:hover:ring-1 md:hover:ring-accent-primary/10',
+                          'md:hover:translate-y-[-3px] md:hover:scale-[1.02]',
+                          // Simplified mobile expansion (no ring/glow, gentler lift/scale); keep desktop subtle
+                          isExpanded && 'translate-y-[-2px] scale-[1.02] z-10 border-accent-primary/15 md:translate-y-[-3px] md:scale-[1.02] md:p-5 md:ring-1 md:ring-accent-primary/15 md:shadow-medium'
+                        )}
+                        style={{
+                          transform: isExpanded ? 'translateY(-3px) scale(1.02)' : undefined
+                        }}
                       >
+                        {/* Subtle sliding gradient background (visible on mobile when expanded) */}
+                        <div className="absolute inset-0 rounded-xl overflow-hidden z-0 pointer-events-none">
+                          <div
+                            className={clsx(
+                              'absolute inset-0 bg-gradient-to-r from-[#15171b] via-[#111318] to-[#0f1114]',
+                              'transition-all duration-900 ease-in-out',
+                              hoveredKey === key && 'opacity-100 translate-x-0',
+                              leavingKey === key && 'opacity-0 translate-x-full',
+                              hoveredKey !== key && leavingKey !== key && 'opacity-0 -translate-x-full',
+                              isExpanded && 'opacity-100 translate-x-0'
+                            )}
+                          />
+                          {/* Cursor-following subtle glow (neutral, toned down) — desktop only */}
+                          <div
+                            className={clsx(
+                              'absolute inset-0 opacity-0 md:group-hover:opacity-90 transition-opacity duration-900 ease-out',
+                              isExpanded && 'md:opacity-100'
+                            )}
+                            style={{
+                              background: 'radial-gradient(200px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.06), rgba(0,0,0,0) 60%)'
+                            }}
+                          />
+                          {/* Outside-the-box cursor-following glow (neutral, toned down) — desktop only */}
+                          <div
+                            className={clsx(
+                              'absolute -inset-6 opacity-0 md:group-hover:opacity-80 transition-opacity duration-900 ease-out',
+                              isExpanded && 'md:opacity-100'
+                            )}
+                            style={{
+                              background: 'radial-gradient(240px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.04), rgba(0,0,0,0) 65%)',
+                              filter: 'blur(14px)'
+                            }}
+                          />
+                        </div>
                         {/* Chapter number indicator */}
                         <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-accent-primary to-accent-secondary rounded-full flex items-center justify-center text-white text-xs font-bold shadow-medium">
                           {chapter.chapterInCategoryId}
                         </div>
                         
-                        {/* Chapter content */}
-                        <div className="pr-4">
-                          <h4 className="font-semibold text-primary mb-3 leading-snug group-hover:text-accent-primary transition-colors line-clamp-2">
+                        {/* Chapter content (expands height smoothly) */}
+                        <div
+                          className={clsx(
+                            'pr-4 overflow-hidden',
+                            'relative z-10 transition-[max-height] duration-[700ms] md:duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+                            'max-h-24',
+                            'md:group-hover:max-h-[500px]'
+                          )}
+                          style={{ willChange: 'max-height', maxHeight: isExpanded ? '500px' as const : undefined }}
+                        >
+                          <h4 className={clsx(
+                            'font-semibold text-primary mb-3 leading-snug transition-colors',
+                            'group-hover:text-accent-primary/70',
+                            isExpanded && 'text-accent-primary/80',
+                            'line-clamp-2',
+                            'md:group-hover:line-clamp-none',
+                            isExpanded && 'line-clamp-none'
+                          )}>
                             {chapter.chapter}
                           </h4>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400"></div>
@@ -395,11 +572,11 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Subtle hover gradient overlay */}
                         <div className="absolute inset-0 bg-gradient-to-r from-accent-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
                       </button>
-                    ))}
+                    )})}
                   </div>
                 </div>
               )}

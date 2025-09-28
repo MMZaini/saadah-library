@@ -146,7 +146,7 @@ export default function AlKafiPage() {
       <header 
         style={{ background: 'var(--topbar-bg)' }}
         className="sticky top-0 z-40 backdrop-blur-md border-b border-theme">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center gap-2 sm:gap-4">
+  <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-2 sm:gap-4">
           {/* Back button removed: search bar only */}
 
           {/* Search */}
@@ -168,7 +168,7 @@ export default function AlKafiPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
+  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
         <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-8 shadow-soft backdrop-blur-sm">
           <div className="flex items-start gap-6">
             {bookInfo?.bookCover ? (
@@ -223,7 +223,7 @@ export default function AlKafiPage() {
 
       {/* Volume Explorer or Chapter Tree - Only show when not searching */}
       {!searchQuery && (
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
           {/* View Mode Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="hidden sm:block">

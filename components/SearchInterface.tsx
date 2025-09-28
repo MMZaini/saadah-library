@@ -73,7 +73,6 @@ export default function SearchInterface({
     exactPhrase: false,
     exactWords: false,
     flexibleMatching: false,
-    caseInsensitive: true, // Default to case-insensitive for better English search
     smartSearch: false
   })
 
@@ -110,7 +109,7 @@ export default function SearchInterface({
   // Helper function to check if any specific grading is selected
   const hasActiveFilters = () => {
     const hasGradingFilters = !selectedGradings.includes('all') && selectedGradings.length > 0
-    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching || searchOptions.smartSearch || !searchOptions.caseInsensitive
+    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching || searchOptions.smartSearch
     return hasGradingFilters || hasSearchOptions
   }
 
@@ -155,7 +154,6 @@ export default function SearchInterface({
       exactPhrase: false,
       exactWords: false,
       flexibleMatching: false,
-      caseInsensitive: true, // Default to case-insensitive
       smartSearch: false
     })
   }
@@ -192,7 +190,7 @@ export default function SearchInterface({
         // Get text content with case sensitivity option
         const getProcessedText = (text: string | null | undefined) => {
           if (!text) return ''
-          return searchOptions.caseInsensitive ? text.toLowerCase() : text
+          return text.toLowerCase()
         }
 
         const englishText = getProcessedText(hadith.englishText || hadith.thaqalaynMatn)
@@ -200,8 +198,7 @@ export default function SearchInterface({
         const allText = `${englishText} ${arabicText}`.trim()
 
         // Process search query based on language and case sensitivity
-        const processedQuery = isArabic ? normalizeArabic(searchText) : 
-                              (searchOptions.caseInsensitive ? searchText.toLowerCase() : searchText)
+  const processedQuery = isArabic ? normalizeArabic(searchText) : searchText.toLowerCase()
 
         if (searchOptions.exactPhrase) {
           // Exact phrase matching
@@ -222,7 +219,7 @@ export default function SearchInterface({
           
           return searchWords.every(searchWord => {
             // Use word boundary regex for exact word matching
-            const flags = searchOptions.caseInsensitive ? 'i' : ''
+            const flags = ''
             const escapedWord = searchWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             const wordRegex = new RegExp('\\b' + escapedWord + '\\b', flags)
             return wordRegex.test(allText)
@@ -249,7 +246,7 @@ export default function SearchInterface({
           
           // Enhanced English flexible matching with synonyms and stemming
           return flexibleEnglishMatch(allText, searchWords, {
-            caseInsensitive: searchOptions.caseInsensitive,
+            caseInsensitive: true,
             useSynonyms: true,
             useStemming: true
           })
@@ -262,7 +259,7 @@ export default function SearchInterface({
           }
           
           return smartSearch(allText, processedQuery, {
-            caseInsensitive: searchOptions.caseInsensitive
+            caseInsensitive: true
           })
         }
 
@@ -362,7 +359,7 @@ export default function SearchInterface({
   if (!searchQuery) return null
 
   return (
-    <section id="search-results" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
+    <section id="search-results" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
       {/* Search Header */}
       <div className="flex flex-col gap-4 mb-6">
         {/* Title and Clear Button Row */}
@@ -676,21 +673,7 @@ export default function SearchInterface({
                   <label className="block text-sm font-medium text-primary mb-3 select-none">
                     Additional Options
                   </label>
-                  <label className={clsx(
-                    "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30 transition-all duration-200 ease-out select-none",
-                    filtersLoaded ? "opacity-100" : "opacity-0"
-                  )}>
-                    <input
-                      type="checkbox"
-                      checked={searchOptions.caseInsensitive}
-                      onChange={(e) => handleSearchOptionChange('caseInsensitive', e.target.checked)}
-                      className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
-                    />
-                    <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Case Insensitive <span className="text-xs text-green-600 dark:text-green-400 font-medium">(Default)</span></span>
-                      <p className="text-xs text-muted mt-1 select-none">Ignore uppercase/lowercase differences ("Prayer" matches "PRAYER" and "prayer")</p>
-                    </div>
-                  </label>
+                  {/* Case-insensitive behavior is now fixed and always on; option removed */}
                 </div>
               </div>
 
@@ -766,18 +749,7 @@ export default function SearchInterface({
                           </button>
                         </span>
                       )}
-                      {!searchOptions.caseInsensitive && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-gray-150 dark:hover:bg-gray-900/40 transition-all duration-200">
-                          Case Sensitive
-                          <button
-                            onClick={() => handleSearchOptionChange('caseInsensitive', true)}
-                            className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
-                            title="Enable case insensitive search"
-                          >
-                            <IconX className="h-3 w-3" />
-                          </button>
-                        </span>
-                      )}
+                      {/* Case sensitive option removed - search is always case-insensitive */}
                     </div>
                   </div>
                   <button

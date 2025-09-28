@@ -98,7 +98,7 @@ export default function ChapterDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-card border border-theme rounded-xl p-12 shadow-soft">
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
@@ -113,7 +113,7 @@ export default function ChapterDetailPage() {
   if (error) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50/80 dark:bg-red-900/20 border border-red-200/60 dark:border-red-800/30 rounded-xl p-6 shadow-soft">
             <p className="text-red-800 dark:text-red-300">{error}</p>
           </div>
@@ -124,7 +124,7 @@ export default function ChapterDetailPage() {
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Chapter Header */}
         {chapterInfo && (
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200/60 dark:border-amber-800/30 rounded-xl p-6 shadow-soft mb-8 backdrop-blur-sm">

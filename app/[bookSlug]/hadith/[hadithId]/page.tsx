@@ -139,7 +139,7 @@ export default function HadithPage() {
   if (loading) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
           </div>
@@ -151,7 +151,7 @@ export default function HadithPage() {
   if (error || !hadith) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
           <button
             onClick={handleBackClick}
             className="mb-6 flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
@@ -183,7 +183,7 @@ export default function HadithPage() {
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={handleBackClick}
           className="mb-6 flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
@@ -201,12 +201,20 @@ export default function HadithPage() {
               Volume {hadith.volume} • {hadith.category} • {hadith.chapter}
             </p>
           </div>
-          
-          <HadithCard 
-            hadith={hadith}
-            className="mb-6"
-            showViewChapter={false}
-          />
+
+          {/* Match chapter card layout with index bubble */}
+          <div className="relative">
+            <div className="absolute -left-4 top-6 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-medium">
+              1
+            </div>
+            <div className="ml-8">
+              <HadithCard 
+                hadith={hadith}
+                className="mb-6"
+                showViewChapter={false}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </main>
