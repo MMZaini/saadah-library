@@ -5,7 +5,7 @@ import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { IconSearch, IconFilter, IconChevronLeft, IconChevronRight, IconX } from './Icons'
 import { useSettings } from '@/lib/settings-context'
-import { isArabicQuery, matchesArabicText, normalizeArabic } from '@/lib/search-utils'
+import { isArabicQuery, matchesArabicText, normalizeArabic, flexibleArabicWordMatch } from '@/lib/search-utils'
 import clsx from 'clsx'
 
 interface SearchInterfaceProps {
@@ -227,9 +227,9 @@ export default function SearchInterface({
           // Flexible matching - match word stems and variations
           const searchWords = queryText.split(/\s+/).filter(word => word.length > 0)
           if (isArabic) {
-            // Simple flexible: allow includes on each word, considering article variations
+            // Enhanced flexible Arabic matching with morphological awareness
             return searchWords.every(searchWord => {
-              return alVariants(searchWord).some(v => arabicText.includes(v))
+              return flexibleArabicWordMatch(arabicText, searchWord)
             })
           }
           return searchWords.every(searchWord => {
