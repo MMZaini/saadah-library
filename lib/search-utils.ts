@@ -415,33 +415,4 @@ export function smartSearch(text: string, query: string, options: {
   })
 }
 
-/**
- * Flexible Arabic word match for handling article variations and normalized matching.
- * Returns true if every search word has a match in the given Arabic text considering
- * common article (ال) presence/absence and normalization.
- */
-export function flexibleArabicWordMatch(arabicText: string | null | undefined, searchWord: string): boolean {
-  if (!arabicText || !searchWord) return false
-
-  const normalizedText = normalizeArabic(arabicText)
-  const normalizedWord = normalizeArabic(searchWord)
-
-  // Consider variants with and without the definite article 'ال'
-  const variants = new Set<string>([normalizedWord])
-  if (normalizedWord.startsWith('ال')) {
-    variants.add(normalizedWord.slice(2))
-  } else {
-    variants.add('ال' + normalizedWord)
-  }
-
-  // Also consider short contractions where hamza/aleph differences cleaned by normalizeArabic
-  // Check if any variant is included as a whole word or substring in the normalized text
-  for (const v of variants) {
-    if (normalizedText.includes(v)) return true
-    // Also check with word boundaries (split by spaces)
-    const words = normalizedText.split(/\s+/).filter(Boolean)
-    if (words.includes(v)) return true
-  }
-
-  return false
-}
+// (duplicate simple flexibleArabicWordMatch removed — keeping the improved implementation above)
