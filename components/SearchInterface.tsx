@@ -5,7 +5,7 @@ import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { IconSearch, IconFilter, IconChevronLeft, IconChevronRight, IconX } from './Icons'
 import { useSettings } from '@/lib/settings-context'
-import { isArabicQuery, matchesArabicText, normalizeArabic, flexibleEnglishMatch, smartSearch } from '@/lib/search-utils'
+import { isArabicQuery, matchesArabicText, normalizeArabic, flexibleEnglishMatch, smartSearch, flexibleArabicWordMatch } from '@/lib/search-utils'
 import clsx from 'clsx'
 
 interface SearchInterfaceProps {
