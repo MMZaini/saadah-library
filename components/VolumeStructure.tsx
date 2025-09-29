@@ -272,7 +272,19 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
     },
     onTouchEnd: () => {
       clearLongPressTimer()
+      const start = touchStartPosRef.current
       touchStartPosRef.current = null
+      
+      // If this was a tap (no significant movement), allow the next click to navigate
+      if (start) {
+        // Check if there was minimal movement (likely a tap)
+        const lastTouch = start
+        // For taps with minimal movement, allow navigation on next click
+        setTimeout(() => {
+          ignoreNextClickRef.current = false
+        }, 50) // Small delay to allow click event to fire
+      }
+      
       // If expanded, keep it for a brief moment to allow reading
       if (mobileExpandedKey === key) {
         scheduleCollapseMobileExpansion()

@@ -209,7 +209,17 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     },
     onTouchEnd: () => {
       clearLongPressTimer()
+      const start = touchStartPosRef.current
       touchStartPosRef.current = null
+      
+      // If this was a tap (no significant movement), allow the next click to navigate
+      if (start) {
+        // For taps with minimal movement, allow navigation on next click
+        setTimeout(() => {
+          ignoreNextClickRef.current = false
+        }, 50) // Small delay to allow click event to fire
+      }
+      
       if (mobileExpandedKey === key) {
         scheduleCollapseMobileExpansion()
       }
