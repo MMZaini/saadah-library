@@ -44,6 +44,8 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   const mobileCollapseTimeoutRef = useRef<number | null>(null)
   const ignoreNextClickRef = useRef(false)
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
+  const touchStartTimeRef = useRef<number | null>(null)
+  const longPressTriggeredRef = useRef(false)
   // Desktop hover gradient animation control
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
   const [leavingKey, setLeavingKey] = useState<string | null>(null)
@@ -185,15 +187,19 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     }, 1600)
   }
 
-  const getTouchHandlers = (key: string) => ({
+  const getTouchHandlers = (key: string, onNavigate: () => void) => ({
     onTouchStart: (e: React.TouchEvent) => {
       const t = e.touches && e.touches[0]
       if (t) touchStartPosRef.current = { x: t.clientX, y: t.clientY }
-      // Immediately uncollapse on touch; suppress the next click to avoid instant navigation
+      touchStartTimeRef.current = Date.now()
+      longPressTriggeredRef.current = false
       clearLongPressTimer()
-      setMobileExpandedKey(key)
-      ignoreNextClickRef.current = true
-      scheduleCollapseMobileExpansion()
+      // Schedule long-press to preview after 250ms
+      longPressTimeoutRef.current = window.setTimeout(() => {
+        longPressTriggeredRef.current = true
+        setMobileExpandedKey(key)
+        scheduleCollapseMobileExpansion()
+      }, 250)
     },
     onTouchMove: (e: React.TouchEvent) => {
       const start = touchStartPosRef.current
@@ -202,14 +208,26 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
       const dx = Math.abs(t.clientX - start.x)
       const dy = Math.abs(t.clientY - start.y)
       if (dx > 20 || dy > 20) {
-        // Keep preview open, just ensure click is suppressed
-        clearLongPressTimer()
+        // Ignore subsequent click if there's significant movement (scroll)
         ignoreNextClickRef.current = true
       }
     },
-    onTouchEnd: () => {
+    onTouchEnd: (e: React.TouchEvent) => {
+      const startTime = touchStartTimeRef.current || Date.now()
+      const duration = Date.now() - startTime
       clearLongPressTimer()
       touchStartPosRef.current = null
+      touchStartTimeRef.current = null
+
+      const withinTapThreshold = duration < 250
+      if (!longPressTriggeredRef.current && withinTapThreshold) {
+        e.preventDefault()
+        e.stopPropagation()
+        ignoreNextClickRef.current = true
+        onNavigate()
+        return
+      }
+
       if (mobileExpandedKey === key) {
         scheduleCollapseMobileExpansion()
       }
@@ -217,6 +235,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     onTouchCancel: () => {
       clearLongPressTimer()
       touchStartPosRef.current = null
+      touchStartTimeRef.current = null
       if (mobileExpandedKey === key) {
         scheduleCollapseMobileExpansion()
       }
@@ -390,7 +409,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                           }
                           handleChapterClick(category.categoryId, chapter.chapterInCategoryId)
                         }}
-                        {...getTouchHandlers(key)}
+                        {...getTouchHandlers(key, () => handleChapterClick(category.categoryId, chapter.chapterInCategoryId))}
                         aria-expanded={isExpanded}
                         onMouseEnter={() => {
                           setLeavingKey(null)

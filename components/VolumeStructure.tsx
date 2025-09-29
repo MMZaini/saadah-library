@@ -52,6 +52,8 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
   const mobileCollapseTimeoutRef = useRef<number | null>(null)
   const ignoreNextClickRef = useRef(false)
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
+  const touchStartTimeRef = useRef<number | null>(null)
+  const longPressTriggeredRef = useRef(false)
   // Desktop hover gradient animation control
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
   const [leavingKey, setLeavingKey] = useState<string | null>(null)
@@ -246,34 +248,52 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
     }, 1600)
   }
 
-  const getTouchHandlers = (key: string) => ({
+  const getTouchHandlers = (key: string, onNavigate: () => void) => ({
     onTouchStart: (e: React.TouchEvent) => {
-      // Record start position to detect meaningful movement (scrolls)
       const t = e.touches && e.touches[0]
       if (t) touchStartPosRef.current = { x: t.clientX, y: t.clientY }
-      // Immediately preview (uncollapse) on press for mobile; suppress the next click to avoid instant navigation
+      touchStartTimeRef.current = Date.now()
+      longPressTriggeredRef.current = false
       clearLongPressTimer()
-      setMobileExpandedKey(key)
-      ignoreNextClickRef.current = true
-      scheduleCollapseMobileExpansion()
+      // Schedule long-press to preview after 250ms
+      longPressTimeoutRef.current = window.setTimeout(() => {
+        longPressTriggeredRef.current = true
+        setMobileExpandedKey(key)
+        scheduleCollapseMobileExpansion()
+      }, 250)
     },
     onTouchMove: (e: React.TouchEvent) => {
-      // If user moves, treat as potential scroll; only react on significant movement
       const start = touchStartPosRef.current
       const t = e.touches && e.touches[0]
       if (!start || !t) return
       const dx = Math.abs(t.clientX - start.x)
       const dy = Math.abs(t.clientY - start.y)
+      // If significant move, cancel tap recognition but keep potential preview if long-press fires
       if (dx > 20 || dy > 20) {
-        // Don't collapse immediately; keep preview open and suppress click
-        clearLongPressTimer()
+        // Do not immediately clear long-press; user may still want preview
+        // Just mark that synthetic click should be ignored if it happens
         ignoreNextClickRef.current = true
       }
     },
-    onTouchEnd: () => {
+    onTouchEnd: (e: React.TouchEvent) => {
+      const startTime = touchStartTimeRef.current || Date.now()
+      const duration = Date.now() - startTime
+      const start = touchStartPosRef.current
       clearLongPressTimer()
       touchStartPosRef.current = null
-      // If expanded, keep it for a brief moment to allow reading
+      touchStartTimeRef.current = null
+
+      const withinTapThreshold = duration < 250
+      // If long-press hasn't triggered and it's a quick tap, navigate now
+      if (!longPressTriggeredRef.current && withinTapThreshold) {
+        e.preventDefault()
+        e.stopPropagation()
+        ignoreNextClickRef.current = true // swallow the subsequent synthetic click
+        onNavigate()
+        return
+      }
+
+      // Otherwise, if preview is open, keep briefly then collapse
       if (mobileExpandedKey === key) {
         scheduleCollapseMobileExpansion()
       }
@@ -281,6 +301,7 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
     onTouchCancel: () => {
       clearLongPressTimer()
       touchStartPosRef.current = null
+      touchStartTimeRef.current = null
       if (mobileExpandedKey === key) {
         scheduleCollapseMobileExpansion()
       }
@@ -461,7 +482,7 @@ export default function VolumeStructure({ bookId, bookName, volumes, baseRoute, 
                           }
                           handleChapterClick(category.categoryId, chapter.chapterInCategoryId)
                         }}
-                        {...getTouchHandlers(key)}
+                        {...getTouchHandlers(key, () => handleChapterClick(category.categoryId, chapter.chapterInCategoryId))}
                         aria-expanded={isExpanded}
                         onMouseEnter={() => {
                           setLeavingKey(null)

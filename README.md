@@ -1,59 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Saadah Library
 
-## Getting Started
+Saadah Library ("The Library of Happiness") is a free, non-profit online platform that makes classical and modern Islamic texts more accessible to readers worldwide. The project grew from a personal connection to a family library in Iraq and is intended as a public service: a reliable, well-organized digital library for students, researchers, scholars, and the curious public.
 
-First, run the development server:
+## Purpose
+
+- Democratize access to important Islamic works by providing a clean, searchable, and mobile-friendly interface.
+- Preserve scholarly material and citations, and make verified references and grading classifications easy to find.
+- Provide an environment where translations, annotations, and scholarly contributions can be linked and shared.
+- Offer the site as a charitable resource — free to use and (on request) open-source.
+
+## What the app provides
+
+- A browsable collection of key works (examples: Al-Kāfi, Nahj al-Balāgha).
+- Side-by-side translations and original-language text where available.
+- Bookmarks and personal saved items for study and review.
+- Hadith sharing and grading classifications with verifiable source references.
+- Responsive, accessible UI with dark mode, adjustable text size, and keyboard-friendly navigation.
+
+## Who it's for
+
+- Students and researchers of Islamic studies.
+- Community members seeking reliable translations and references.
+- Scholars collaborating to improve digital editions and classifications.
+
+## Tech stack
+
+- Built with React and Next.js (App Router) for server-side rendering and fast page loads.
+- Styling with Tailwind CSS and optimized image handling for performance.
+- Search utilities and indexing for Arabic text (server-side APIs and client helpers).
+- Deployed on Vercel (currently), with an emphasis on performance, accessibility, and minimal hosting cost.
+
+## Contributing and collaboration
+
+This project welcomes collaboration from developers, translators, and scholars. Contributions can include:
+
+- Improvements to front-end components and accessibility.
+- Adding verified texts, translations, and source metadata.
+- Implementing editorial features requested by scholars (for example: graded annotations, verified chains, or new text collections).
+
+If you're a scholar or community member interested in contributing content or review, please open an issue or reach out through the repository so we can discuss verification and attribution workflows.
+
+For developers:
+
+1. Fork the repository and open a branch for your changes.
+2. Run the app locally (see "Local development") and include tests where appropriate.
+3. Open a pull request with a clear description of your changes.
+
+## Local development
+
+Install dependencies and run the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License & Ethics
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The project is intended as a charitable, educational resource. If parts of the repository are published under a specific license, they will be noted in their respective directories. If you need specific licensing or permission information for a given text or translation, please check the source files or contact the maintainers.
 
-## Learn More
+## Acknowledgements
 
-To learn more about Next.js, take a look at the following resources:
+This project is inspired by family history and a commitment to public knowledge. Special thanks to contributors, reviewers, and the scholars helping to improve the quality and scope of the library.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-## Reducing Vercel usage (images & edge)
-
-If you're deploying on Vercel and seeing high usage for Image Optimization (transformations / cache writes / reads) or Edge/ISR metrics, try these strategies:
-
-- Disable the Vercel image optimizer when you don't need server-side transformations. Set this environment variable in Vercel: `DISABLE_VERCEL_IMAGE_OPTIMIZATION=1`. That will flip `images.unoptimized` in `next.config.ts` and stop Next.js from generating transformed images on the server (this removes Transformations and Cache Writes/Reads costs but shifts responsibility to the client or a CDN).
-- Prefer using pre-sized, optimized images stored on a CDN (e.g. Cloudflare, S3+CloudFront, or your hosting provider). Serve them via absolute URLs so Next.js doesn't try to transform them.
-- Use responsive images (`<img srcset>` or Next.js `<Image />` with fixed sizes) so you avoid generating many transformer variants at different sizes. Keep `imageSizes` and `deviceSizes` minimal and aligned with your UI breakpoints.
-- Avoid listing wide remotePatterns in `next.config.ts`; host frequently-used images on your own CDN or inlined assets when small.
-- Cache aggressively at CDN level and set long cache TTLs for images that rarely change. This reduces cache reads and origin bandwidth on Vercel.
-- If using many small images (icons/thumbnails), consider inlining them as SVG or using an icon font/sprite to avoid optimizer work.
-- Audit image usage in pages that run on the Edge or via ISR; move non-critical images off-edge rendering paths when possible.
-
-Using the `DISABLE_VERCEL_IMAGE_OPTIMIZATION=1` toggle is the quickest way to avoid the top three usage counters in Vercel (Transformations, Cache Writes, Cache Reads) while keeping the site functional.
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-
-
-
-git reminder:
-
-git add .
-git commit -m "Describe your changes here"
-git push
+If you'd like the repository to be fully open-source or to include additional attribution/licensing details, I can help add an explicit LICENSE file and contribution guidelines.
