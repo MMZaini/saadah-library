@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
 import { IconMenu, IconArrowLeft, IconBook, IconBookmark } from './Icons'
+import SignInButton from './SignInButton'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
@@ -276,7 +277,8 @@ export default function TopBar() {
           </div>
 
           {/* Right side - Actions */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <SignInButton />
             {/* Bookmarks Button */}
             <Link
               href="/bookmarks"
