@@ -1,0 +1,18 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/rebuild-arabic-index/route": "app/api/admin/rebuild-arabic-index/route.js",
+  "/api/search/route": "app/api/search/route.js",
+  "/api/admin/arabic-index-status/route": "app/api/admin/arabic-index-status/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/[bookSlug]/hadith/[hadithId]/page": "app/[bookSlug]/hadith/[hadithId]/page.js",
+  "/[bookSlug]/page": "app/[bookSlug]/page.js",
+  "/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]/page": "app/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]/page.js",
+  "/al-kafi/hadith/[hadithId]/page": "app/al-kafi/hadith/[hadithId]/page.js",
+  "/al-kafi/page": "app/al-kafi/page.js",
+  "/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]/page": "app/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]/page.js",
+  "/book/[bookId]/page": "app/book/[bookId]/page.js",
+  "/bookmarks/page": "app/bookmarks/page.js",
+  "/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]/page": "app/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]/page.js",
+  "/page": "app/page.js",
+  "/uyun-akhbar-al-rida/hadith/[hadithId]/page": "app/uyun-akhbar-al-rida/hadith/[hadithId]/page.js"
+}

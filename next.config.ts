@@ -5,8 +5,6 @@ const nextConfig: NextConfig = {
   basePath: '/read',
   // Expose basePath to client code for manual uses (fetch, share links, etc.)
   env: { NEXT_PUBLIC_BASE_PATH: '/read' },
-  // Use separate output dirs so `yarn dev` and `yarn build` can run simultaneously
-  distDir: process.env.BUILD_ENV === 'build' ? '.next-build' : '.next',
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },

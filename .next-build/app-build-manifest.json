@@ -1,0 +1,183 @@
+{
+  "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/app/_not-found/page-0cd0993f567f7539.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/css/f20d3ee1f51ca6ab.css",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/619-ba102abea3e3d0e4.js",
+      "static/chunks/928-17b831231105ac4d.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/app/layout-6373ea7c0e7881e4.js"
+    ],
+    "/api/admin/rebuild-arabic-index/route": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/app/api/admin/rebuild-arabic-index/route-8f23d0d5b4cd1ec7.js"
+    ],
+    "/api/search/route": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/app/api/search/route-8f23d0d5b4cd1ec7.js"
+    ],
+    "/api/admin/arabic-index-status/route": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/app/api/admin/arabic-index-status/route-8f23d0d5b4cd1ec7.js"
+    ],
+    "/[bookSlug]/hadith/[hadithId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/[bookSlug]/hadith/[hadithId]/page-56e8390b2c97ba1c.js"
+    ],
+    "/[bookSlug]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/665-e8c9a1b9fdc0af76.js",
+      "static/chunks/app/[bookSlug]/page-bb4fe4d5538962ec.js"
+    ],
+    "/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]/page-6ee9230861d9858a.js"
+    ],
+    "/al-kafi/hadith/[hadithId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/al-kafi/hadith/[hadithId]/page-b3650b3ae424dbcf.js"
+    ],
+    "/al-kafi/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/665-e8c9a1b9fdc0af76.js",
+      "static/chunks/app/al-kafi/page-3a72ce61251bdf36.js"
+    ],
+    "/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]/page-53f6f982729a7f8c.js"
+    ],
+    "/book/[bookId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/665-e8c9a1b9fdc0af76.js",
+      "static/chunks/app/book/[bookId]/page-c8e421125324a5c1.js"
+    ],
+    "/bookmarks/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/619-ba102abea3e3d0e4.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/bookmarks/page-4ff85ad74dd89e81.js"
+    ],
+    "/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]/page-2350e8fd20e4c6ef.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/619-ba102abea3e3d0e4.js",
+      "static/chunks/84-607166260db7b007.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/665-e8c9a1b9fdc0af76.js",
+      "static/chunks/app/page-9ce8d8ae2a22c719.js"
+    ],
+    "/uyun-akhbar-al-rida/hadith/[hadithId]/page": [
+      "static/chunks/webpack-f5ff79f7fe1aedb6.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-0e5dbd780b84011b.js",
+      "static/chunks/main-app-c7d7ec8cdadddd06.js",
+      "static/chunks/307-2c6e8957dac3f47b.js",
+      "static/chunks/346-c4aa013e7963e6b6.js",
+      "static/chunks/952-8ad2b99780c15429.js",
+      "static/chunks/579-a9c1a35895619aa4.js",
+      "static/chunks/962-17b07ada80f644dc.js",
+      "static/chunks/app/uyun-akhbar-al-rida/hadith/[hadithId]/page-ba3c406d39fd4278.js"
+    ]
+  }
+}

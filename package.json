@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "cross-env BUILD_ENV=build next build",
-    "start": "cross-env BUILD_ENV=build next start -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
     "lint": "eslint app components lib",
     "lint:fix": "eslint --fix app components lib",
     "format": "prettier --write .",
@@ -37,7 +37,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
-    "cross-env": "^10.1.0",
     "eslint": "^9.36.0",
     "eslint-config-next": "^15.4.6",
     "eslint-config-prettier": "^10.1.1",
