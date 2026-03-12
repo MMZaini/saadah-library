@@ -10,47 +10,47 @@ import { debounce } from '@/lib/performance'
 import { Search, Loader2 } from 'lucide-react'
 
 export default function Page() {
-  const navigation = useNavigation()
+  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } = useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Hadith[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
   useEffect(() => {
-    const saved = navigation.restoreScrollPosition()
+    const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    navigation.savePath('/')
-    const s = navigation.getSearchState()
+    savePath('/')
+    const s = getSearchState()
     if (s) {
       setSearchQuery(s.query)
-      setSearchResults(s.results)
+      setSearchResults(s.results as Hadith[])
     }
-  }, [navigation])
+  }, [restoreScrollPosition, savePath, getSearchState])
 
   useEffect(() => {
     const handle = () => {
       setSearchQuery('')
       setSearchResults([])
-      navigation.saveSearchState(null)
+      saveSearchState(null)
     }
     window.addEventListener('clearSearch', handle)
     return () => window.removeEventListener('clearSearch', handle)
-  }, [navigation])
+  }, [saveSearchState])
 
   useEffect(() => {
-    const save = () => navigation.saveScrollPosition(window.scrollY)
+    const save = () => saveScrollPosition(window.scrollY)
     window.addEventListener('beforeunload', save)
     return () => {
       window.removeEventListener('beforeunload', save)
-      navigation.saveScrollPosition(window.scrollY)
+      saveScrollPosition(window.scrollY)
     }
-  }, [navigation])
+  }, [saveScrollPosition])
 
   const debouncedSearch = useMemo(
     () =>
       debounce(async (query: string) => {
         if (!query.trim()) {
           setSearchResults([])
-          navigation.saveSearchState(null)
+          saveSearchState(null)
           return
         }
         setIsSearching(true)
@@ -58,7 +58,7 @@ export default function Page() {
           const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
           const data = await res.json()
           setSearchResults(data.results)
-          navigation.saveSearchState({
+          saveSearchState({
             query,
             results: data.results,
             page: 1,
@@ -66,19 +66,19 @@ export default function Page() {
           })
         } catch {
           setSearchResults([])
-          navigation.saveSearchState(null)
+          saveSearchState(null)
         } finally {
           setIsSearching(false)
         }
       }, 300),
-    [navigation],
+    [saveSearchState],
   )
 
   const handleSearchInput = (value: string) => {
     setSearchQuery(value)
     if (!value.trim()) {
       setSearchResults([])
-      navigation.saveSearchState(null)
+      saveSearchState(null)
       return
     }
     debouncedSearch(value)
@@ -87,7 +87,7 @@ export default function Page() {
   const handleClearSearch = () => {
     setSearchQuery('')
     setSearchResults([])
-    navigation.saveSearchState(null)
+    saveSearchState(null)
   }
 
   return (

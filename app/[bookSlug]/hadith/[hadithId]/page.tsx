@@ -36,27 +36,17 @@ export default function HadithPage() {
       try {
         let foundHadith: Hadith | null = null
 
-        if (
-          (bookId && bookId.includes('Uyun-akhbar-al-Rida')) ||
-          urlSlug === 'Uyun-akhbar-al-Rida'
-        ) {
-          const uyunVolumes = [
-            'Uyun-akhbar-al-Rida-Volume-1-Saduq',
-            'Uyun-akhbar-al-Rida-Volume-2-Saduq',
-          ]
-
-          for (const volumeBookId of uyunVolumes) {
-            try {
-              const volumeHadiths = await thaqalaynApi.getBookHadiths(volumeBookId)
-              foundHadith = volumeHadiths.find((h) => h.id === hadithId) || null
-              if (foundHadith) break
-            } catch {
-              continue
-            }
-          }
+        const config = getBookConfig(bookId)
+        if (config?.hasMultipleVolumes && config.volumes) {
+          // Multi-volume book: parallel lookup across all volumes (~300ms)
+          foundHadith = await thaqalaynApi.findHadithAcrossBooks(config.volumes, hadithId)
         } else {
-          const allHadiths = await thaqalaynApi.getBookHadiths(bookId)
-          foundHadith = allHadiths.find((h) => h.id === hadithId) || null
+          // Single-volume book: direct specific-hadith endpoint (~300ms)
+          try {
+            foundHadith = await thaqalaynApi.getSpecificHadith(bookId, hadithId)
+          } catch {
+            foundHadith = null
+          }
         }
 
         if (!foundHadith) {

@@ -46,6 +46,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   const longPressTriggeredRef = useRef(false)
   // Desktop hover gradient animation control
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [, setLeavingKey] = useState<string | null>(null)
   const leaveTimeoutRef = useRef<number | null>(null)
 
   const alKafiVolumes = Array.from({ length: 8 }, (_, i) => i + 1)

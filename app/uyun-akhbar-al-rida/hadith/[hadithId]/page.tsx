@@ -25,22 +25,12 @@ export default function HadithPage() {
       setError(null)
 
       try {
-        let foundHadith: Hadith | null = null
-
+        // Use parallel lookup across both volumes (~300ms vs sequential full downloads)
         const uyunVolumes = [
           'Uyun-akhbar-al-Rida-Volume-1-Saduq',
           'Uyun-akhbar-al-Rida-Volume-2-Saduq',
         ]
-
-        for (const volumeBookId of uyunVolumes) {
-          try {
-            const volumeHadiths = await thaqalaynApi.getBookHadiths(volumeBookId)
-            foundHadith = volumeHadiths.find((h) => h.id === hadithId) || null
-            if (foundHadith) break
-          } catch {
-            continue
-          }
-        }
+        const foundHadith = await thaqalaynApi.findHadithAcrossBooks(uyunVolumes, hadithId)
 
         if (!foundHadith) {
           setError('Hadith not found')

@@ -24,8 +24,8 @@ export default function GenericVolumeExplorer({
   const [error, setError] = useState<string | null>(null)
 
   const volumesList: string[] = bookConfig?.hasMultipleVolumes
-    ? bookConfig.volumes
-    : [bookConfig?.bookId]
+    ? (bookConfig.volumes ?? [])
+    : [bookConfig?.bookId].filter((x): x is string => !!x)
   const isMulti = !!bookConfig?.hasMultipleVolumes
   const volumeOptions = makeVolumeOptions(volumesList)
   const displayTitle = bookConfig?.englishName || bookConfig?.bookId || 'This Book'

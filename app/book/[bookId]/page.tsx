@@ -315,6 +315,7 @@ export default function BookPage() {
                   bookConfig || {
                     bookId: bookInfo.bookId,
                     englishName: bookInfo.englishName,
+                    baseName: bookInfo.bookId,
                     volumes: [bookInfo.bookId],
                     hasMultipleVolumes: false,
                   }

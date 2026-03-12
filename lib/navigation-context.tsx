@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, useRef, ReactNode } from 'react'
 
 interface NavigationState {
   scrollPosition: number
@@ -35,46 +35,55 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     searchState: null,
   })
 
-  const saveScrollPosition = (position: number) => {
+  // Keep a ref so getSearchState / restoreScrollPosition always read the
+  // latest value without adding navigationState to callback deps (which would
+  // recreate the callbacks on every state change and break memoisation).
+  const stateRef = useRef(navigationState)
+  stateRef.current = navigationState
+
+  const saveScrollPosition = useCallback((position: number) => {
     setNavigationState((prev) => ({ ...prev, scrollPosition: position }))
-  }
+  }, [])
 
-  const saveSearchState = (searchState: NavigationState['searchState']) => {
+  const saveSearchState = useCallback((searchState: NavigationState['searchState']) => {
     setNavigationState((prev) => ({ ...prev, searchState }))
-  }
+  }, [])
 
-  const savePath = (path: string) => {
+  const savePath = useCallback((path: string) => {
     setNavigationState((prev) => ({ ...prev, lastPath: path }))
-  }
+  }, [])
 
-  const restoreScrollPosition = () => {
-    return navigationState.scrollPosition
-  }
+  const restoreScrollPosition = useCallback(() => {
+    return stateRef.current.scrollPosition
+  }, [])
 
-  const getSearchState = () => {
-    return navigationState.searchState
-  }
+  const getSearchState = useCallback(() => {
+    return stateRef.current.searchState
+  }, [])
 
-  const clearNavigationState = () => {
+  const clearNavigationState = useCallback(() => {
     setNavigationState({
       scrollPosition: 0,
       lastPath: '/',
       searchState: null,
     })
-  }
+  }, [])
+
+  const value = useMemo<NavigationContextType>(
+    () => ({
+      navigationState,
+      saveScrollPosition,
+      saveSearchState,
+      savePath,
+      restoreScrollPosition,
+      getSearchState,
+      clearNavigationState,
+    }),
+    [navigationState, saveScrollPosition, saveSearchState, savePath, restoreScrollPosition, getSearchState, clearNavigationState],
+  )
 
   return (
-    <NavigationContext.Provider
-      value={{
-        navigationState,
-        saveScrollPosition,
-        saveSearchState,
-        savePath,
-        restoreScrollPosition,
-        getSearchState,
-        clearNavigationState,
-      }}
-    >
+    <NavigationContext.Provider value={value}>
       {children}
     </NavigationContext.Provider>
   )

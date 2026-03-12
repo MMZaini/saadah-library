@@ -14,7 +14,7 @@ const BookStructureExplorer = lazy(() => import('@/components/AlKafiVolumeStruct
 const AlKafiBookBrowser = lazy(() => import('@/components/AlKafiBookBrowser'))
 
 export default function AlKafiPage() {
-  const navigation = useNavigation()
+  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } = useNavigation()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Hadith[]>([])
@@ -33,38 +33,38 @@ export default function AlKafiPage() {
   }, [])
 
   useEffect(() => {
-    const saved = navigation.restoreScrollPosition()
+    const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    navigation.savePath('/al-kafi')
-    const s = navigation.getSearchState()
+    savePath('/al-kafi')
+    const s = getSearchState()
     if (s) {
       setSearchQuery(s.query)
-      setSearchResults(s.results)
+      setSearchResults(s.results as Hadith[])
     }
-  }, [navigation])
+  }, [restoreScrollPosition, savePath, getSearchState])
 
   useEffect(() => {
-    const save = () => navigation.saveScrollPosition(window.scrollY)
+    const save = () => saveScrollPosition(window.scrollY)
     window.addEventListener('beforeunload', save)
     return () => {
       window.removeEventListener('beforeunload', save)
-      navigation.saveScrollPosition(window.scrollY)
+      saveScrollPosition(window.scrollY)
     }
-  }, [navigation])
+  }, [saveScrollPosition])
 
   const debouncedSearch = useMemo(
     () =>
       debounce(async (query: string) => {
         if (!query.trim()) {
           setSearchResults([])
-          navigation.saveSearchState(null)
+          saveSearchState(null)
           return
         }
         setIsSearching(true)
         try {
           const response = await alKafiApi.searchAlKafi(query)
           setSearchResults(response.results)
-          navigation.saveSearchState({
+          saveSearchState({
             query,
             results: response.results,
             page: 1,
@@ -72,20 +72,20 @@ export default function AlKafiPage() {
           })
         } catch {
           setSearchResults([])
-          navigation.saveSearchState(null)
+          saveSearchState(null)
         } finally {
           setIsSearching(false)
         }
       }, 300),
 
-    [navigation],
+    [saveSearchState],
   )
 
   const handleSearchInput = (value: string) => {
     setSearchQuery(value)
     if (!value.trim()) {
       setSearchResults([])
-      navigation.saveSearchState(null)
+      saveSearchState(null)
       return
     }
     debouncedSearch(value)
@@ -94,7 +94,7 @@ export default function AlKafiPage() {
   const handleClearSearch = () => {
     setSearchQuery('')
     setSearchResults([])
-    navigation.saveSearchState(null)
+    saveSearchState(null)
   }
 
   const VIEW_MODES = [

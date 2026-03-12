@@ -60,6 +60,7 @@ export default function VolumeStructure({
   const longPressTriggeredRef = useRef(false)
   // Desktop hover gradient animation control
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [, setLeavingKey] = useState<string | null>(null)
   const leaveTimeoutRef = useRef<number | null>(null)
 
   const volumeOptions = makeVolumeOptions(volumes)
@@ -78,7 +79,7 @@ export default function VolumeStructure({
           // Load hadiths from all volumes
           if (bookId.includes('Al-Kafi')) {
             const allVolumeHadiths = await Promise.all(
-              volumes.map((vol) => alKafiApi.getVolumeHadiths(vol)),
+              volumes.map((vol) => alKafiApi.getVolumeHadiths(Number(vol))),
             )
             hadiths = allVolumeHadiths.flat()
           } else {
