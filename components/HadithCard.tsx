@@ -294,8 +294,6 @@ const HadithCard = ({
             </Badge>
             <span className="text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
           </div>
-          <p className="line-clamp-1 text-sm font-medium text-foreground">{hadith.category}</p>
-          <p className="line-clamp-1 text-xs text-foreground-muted">{hadith.chapter}</p>
         </div>
 
         {/* Action buttons */}
