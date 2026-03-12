@@ -353,6 +353,7 @@ const HadithCard = ({
               ref={arabicRef}
               className="hadith-arabic-text text-right font-arabic text-base leading-loose text-foreground sm:text-lg"
               dir="rtl"
+              style={{ fontSize: `${settings.arabicFontSize}%` }}
             >
               {arabicOverflow && !arabicExpanded ? <>{arabicText.slice(0, 750)}...</> : arabicText}
             </div>

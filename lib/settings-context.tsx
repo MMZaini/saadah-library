@@ -35,7 +35,7 @@ type SettingsContextType = {
 
 const defaultSettings: Settings = {
   theme: 'dark',
-  arabicFontSize: 135,
+  arabicFontSize: 100,
   englishFontSize: 100,
   alwaysShowFullHadith: false, // false = collapsed by default (current behavior)
 }
@@ -67,6 +67,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           ...defaultSettings,
           ...parsed,
           theme: 'dark', // Always force dark mode
+          // Clamp font sizes to valid 75-150 range (step 5)
+          arabicFontSize: Math.round(Math.min(150, Math.max(75, parsed.arabicFontSize ?? defaultSettings.arabicFontSize)) / 5) * 5,
+          englishFontSize: Math.round(Math.min(150, Math.max(75, parsed.englishFontSize ?? defaultSettings.englishFontSize)) / 5) * 5,
         }
 
         setSettings(mergedSettings)
@@ -159,7 +162,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [updateSettings])
 
   const resetArabicFontSize = useCallback(() => {
-    updateSettings({ arabicFontSize: 135 })
+    updateSettings({ arabicFontSize: 100 })
   }, [updateSettings])
 
   const resetEnglishFontSize = useCallback(() => {

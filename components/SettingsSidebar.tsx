@@ -9,7 +9,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
-import { Slider } from '@/components/ui/slider'
+import { SteppedSlider } from '@/components/ui/stepped-slider'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
@@ -77,12 +77,12 @@ export default function SettingsSidebar() {
                   </Button>
                 </div>
               </div>
-              <Slider
-                min={70}
-                max={200}
+              <SteppedSlider
+                min={75}
+                max={150}
                 step={5}
-                value={[settings.arabicFontSize]}
-                onValueChange={([v]) => updateSettings({ arabicFontSize: v })}
+                value={settings.arabicFontSize}
+                onValueChange={(v) => updateSettings({ arabicFontSize: v })}
               />
             </div>
 
@@ -105,12 +105,12 @@ export default function SettingsSidebar() {
                   </Button>
                 </div>
               </div>
-              <Slider
-                min={70}
-                max={200}
+              <SteppedSlider
+                min={75}
+                max={150}
                 step={5}
-                value={[settings.englishFontSize]}
-                onValueChange={([v]) => updateSettings({ englishFontSize: v })}
+                value={settings.englishFontSize}
+                onValueChange={(v) => updateSettings({ englishFontSize: v })}
               />
             </div>
           </section>
