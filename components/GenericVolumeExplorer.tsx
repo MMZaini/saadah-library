@@ -5,8 +5,15 @@ import { thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import { BookConfig } from '@/lib/books-config'
 
-export default function GenericVolumeExplorer({ bookConfig, className }: any) {
+export default function GenericVolumeExplorer({
+  bookConfig,
+  className,
+}: {
+  bookConfig: BookConfig
+  className?: string
+}) {
   const [selectedVolume, setSelectedVolume] = useState<string | 'all'>(() => {
     if (bookConfig?.hasMultipleVolumes) return bookConfig?.volumes?.[0] ?? 'all'
     return bookConfig?.volumes?.[0] ?? bookConfig?.bookId ?? 'all'
@@ -17,8 +24,8 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
   const [error, setError] = useState<string | null>(null)
 
   const volumesList: string[] = bookConfig?.hasMultipleVolumes
-    ? bookConfig.volumes
-    : [bookConfig?.bookId]
+    ? (bookConfig.volumes ?? [])
+    : [bookConfig?.bookId].filter((x): x is string => !!x)
   const isMulti = !!bookConfig?.hasMultipleVolumes
   const volumeOptions = makeVolumeOptions(volumesList)
   const displayTitle = bookConfig?.englishName || bookConfig?.bookId || 'This Book'
@@ -41,7 +48,7 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
       }
 
       setRandomHadith(hadith)
-    } catch (err) {
+    } catch {
       // Error logging removed
       setError('Failed to load hadith from this volume')
     } finally {

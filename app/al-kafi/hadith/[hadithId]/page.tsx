@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { alKafiApi, Hadith } from '@/lib/api'
+import { alKafiApi, thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from '@/components/HadithCard'
-import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -12,7 +11,6 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 export default function HadithPage() {
   const router = useRouter()
   const params = useParams()
-  const { settings } = useSettings()
   const { setChapterInfo } = useChapter()
 
   const hadithId = parseInt(params.hadithId as string)
@@ -27,17 +25,9 @@ export default function HadithPage() {
       setError(null)
 
       try {
-        let foundHadith: Hadith | null = null
-
-        for (let volumeId = 1; volumeId <= 8; volumeId++) {
-          try {
-            const volumeHadiths = await alKafiApi.getVolumeHadiths(volumeId)
-            foundHadith = volumeHadiths.find((h) => h.id === hadithId) || null
-            if (foundHadith) break
-          } catch {
-            continue
-          }
-        }
+        // Use parallel lookup across all 8 volumes (~300ms vs sequential full downloads)
+        const alKafiVolumes = alKafiApi.getAlKafiVolumes()
+        const foundHadith = await thaqalaynApi.findHadithAcrossBooks(alKafiVolumes, hadithId)
 
         if (!foundHadith) {
           setError('Hadith not found')

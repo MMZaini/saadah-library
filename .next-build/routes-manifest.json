@@ -1,0 +1,158 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "/read",
+  "redirects": [
+    {
+      "source": "/read/",
+      "destination": "/read",
+      "basePath": false,
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^/read/$"
+    },
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    },
+    {
+      "source": "/",
+      "destination": "/read",
+      "basePath": false,
+      "statusCode": 308,
+      "regex": "^(?!/read/_next)/(?:/)?$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/al-kafi/hadith/[hadithId]",
+      "regex": "^/al\\-kafi/hadith/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPhadithId": "nxtPhadithId"
+      },
+      "namedRegex": "^/al\\-kafi/hadith/(?<nxtPhadithId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]",
+      "regex": "^/al\\-kafi/volume/([^/]+?)/chapter/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPvolumeId": "nxtPvolumeId",
+        "nxtPcategoryId": "nxtPcategoryId",
+        "nxtPchapterInCategoryId": "nxtPchapterInCategoryId"
+      },
+      "namedRegex": "^/al\\-kafi/volume/(?<nxtPvolumeId>[^/]+?)/chapter/(?<nxtPcategoryId>[^/]+?)/(?<nxtPchapterInCategoryId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/book/[bookId]",
+      "regex": "^/book/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPbookId": "nxtPbookId"
+      },
+      "namedRegex": "^/book/(?<nxtPbookId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]",
+      "regex": "^/book/([^/]+?)/chapter/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPbookId": "nxtPbookId",
+        "nxtPcategoryId": "nxtPcategoryId",
+        "nxtPchapterInCategoryId": "nxtPchapterInCategoryId"
+      },
+      "namedRegex": "^/book/(?<nxtPbookId>[^/]+?)/chapter/(?<nxtPcategoryId>[^/]+?)/(?<nxtPchapterInCategoryId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/uyun-akhbar-al-rida/hadith/[hadithId]",
+      "regex": "^/uyun\\-akhbar\\-al\\-rida/hadith/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPhadithId": "nxtPhadithId"
+      },
+      "namedRegex": "^/uyun\\-akhbar\\-al\\-rida/hadith/(?<nxtPhadithId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/[bookSlug]",
+      "regex": "^/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPbookSlug": "nxtPbookSlug"
+      },
+      "namedRegex": "^/(?<nxtPbookSlug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]",
+      "regex": "^/([^/]+?)/chapter/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPbookSlug": "nxtPbookSlug",
+        "nxtPcategoryId": "nxtPcategoryId",
+        "nxtPchapterInCategoryId": "nxtPchapterInCategoryId"
+      },
+      "namedRegex": "^/(?<nxtPbookSlug>[^/]+?)/chapter/(?<nxtPcategoryId>[^/]+?)/(?<nxtPchapterInCategoryId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/[bookSlug]/hadith/[hadithId]",
+      "regex": "^/([^/]+?)/hadith/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPbookSlug": "nxtPbookSlug",
+        "nxtPhadithId": "nxtPhadithId"
+      },
+      "namedRegex": "^/(?<nxtPbookSlug>[^/]+?)/hadith/(?<nxtPhadithId>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/al-kafi",
+      "regex": "^/al\\-kafi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/al\\-kafi(?:/)?$"
+    },
+    {
+      "page": "/bookmarks",
+      "regex": "^/bookmarks(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/bookmarks(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

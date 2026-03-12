@@ -1,0 +1,664 @@
+'use strict'
+;(self.webpackChunk_N_E = self.webpackChunk_N_E || []).push([
+  [962],
+  {
+    3962: (e, a, t) => {
+      t.d(a, { A: () => G })
+      var n = t(5155),
+        i = t(2115),
+        s = t(8579),
+        r = t(6198),
+        o = t(916),
+        l = t(2740),
+        d = t(5016),
+        c = t(7812),
+        h = t(7003),
+        u = t(4664),
+        m = t(2180),
+        x = t(6060)
+      let g = x.bL,
+        f = x.l9,
+        b = i.forwardRef((e, a) => {
+          let { className: t, sideOffset: i = 4, ...s } = e
+          return (0, n.jsx)(x.ZL, {
+            children: (0, n.jsx)(x.UC, {
+              ref: a,
+              sideOffset: i,
+              className: (0, d.cn)(
+                'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-1 p-1 text-foreground shadow-md',
+                'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+                t,
+              ),
+              ...s,
+            }),
+          })
+        })
+      b.displayName = x.UC.displayName
+      let p = i.forwardRef((e, a) => {
+        let { className: t, inset: i, ...s } = e
+        return (0, n.jsx)(x.q7, {
+          ref: a,
+          className: (0, d.cn)(
+            'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-surface-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0',
+            i && 'pl-8',
+            t,
+          ),
+          ...s,
+        })
+      })
+      ;((p.displayName = x.q7.displayName),
+        (i.forwardRef((e, a) => {
+          let { className: t, ...i } = e
+          return (0, n.jsx)(x.wv, {
+            ref: a,
+            className: (0, d.cn)('-mx-1 my-1 h-px bg-border', t),
+            ...i,
+          })
+        }).displayName = x.wv.displayName))
+      var j = t(8754),
+        w = t(235),
+        v = t(5880),
+        k = t(5426),
+        y = t(4788),
+        N = t(9715),
+        C = t(7066),
+        _ = t(1047),
+        I = t(4033),
+        S = t(7937)
+      function z(e) {
+        var a
+        let t = e.bookId || '',
+          n = (0, l.ei)(t)
+        return n
+          ? 'Al-Kafi' === n.bookId
+            ? '/al-kafi/hadith/'.concat(e.id)
+            : '/'.concat((0, l.yU)(n.bookId), '/hadith/').concat(e.id)
+          : t.includes('Uyun') || (null == (a = e.book) ? void 0 : a.toLowerCase().includes('uyun'))
+            ? '/Uyun-akhbar-al-Rida/hadith/'.concat(e.id)
+            : t
+              ? '/'.concat((0, l.yU)(t), '/hadith/').concat(e.id)
+              : '/al-kafi/hadith/'.concat(e.id)
+      }
+      function F(e) {
+        let a = e.toLowerCase()
+        return a.includes('sahih') || a.includes('صحيح')
+          ? 'sahih'
+          : a.includes('hasan') || a.includes('حسن') || a.includes('good')
+            ? 'hasan'
+            : a.includes('daif') || a.includes('ضعيف') || a.includes('weak')
+              ? 'daif'
+              : 'secondary'
+      }
+      let G = (0, i.memo)((e) => {
+        let {
+            hadith: a,
+            className: t,
+            showViewChapter: x = !1,
+            showNotesToggle: G = !1,
+            notesVisible: A = !1,
+            onToggleNotes: U,
+            showArabicByDefault: L = !1,
+            highlightQuery: T,
+          } = e,
+          { settings: q } = (0, r.t)(),
+          { addBookmark: E, removeBookmark: $, isBookmarked: M } = (0, o.T)(),
+          [H, R] = (0, i.useState)(L),
+          [Z, B] = (0, i.useState)(q.alwaysShowFullHadith),
+          [V, W] = (0, i.useState)(!0),
+          D = (0, i.useRef)(null),
+          [K, O] = (0, i.useState)(!1),
+          [J, P] = (0, i.useState)(null),
+          Q = M(a.bookId, a.id)
+        ;((0, i.useEffect)(() => {
+          B(q.alwaysShowFullHadith)
+        }, [q.alwaysShowFullHadith]),
+          (0, i.useEffect)(() => {
+            R(L)
+          }, [L]))
+        let {
+            englishText: X,
+            arabicText: Y,
+            isLongText: ee,
+          } = (0, i.useMemo)(() => {
+            let e = a.englishText || a.thaqalaynMatn,
+              t = a.arabicText,
+              n = a.thaqalaynSanad,
+              i =
+                n && e
+                  ? (function (e, a) {
+                      if (!e || !a) return e
+                      let t = e.trim(),
+                        n = a.trim()
+                      if (t.startsWith(n))
+                        return t
+                          .slice(n.length)
+                          .replace(/^[:\s;"']+/, '')
+                          .trim()
+                      let i = (e) =>
+                        e
+                          .replace(/[^\w\s]/g, ' ')
+                          .replace(/\s+/g, ' ')
+                          .toLowerCase()
+                          .trim()
+                      if (i(t).startsWith(i(n))) {
+                        let e = n.split(/\s+/),
+                          a = 0,
+                          i = 0
+                        for (let n = 0; n < t.length && i < e.length; n++)
+                          if (/\w/.test(t[n])) {
+                            let e = n
+                            for (; e < t.length && /\w/.test(t[e]); ) e++
+                            ;(i++, (a = e), (n = e - 1))
+                          }
+                        if (i === e.length)
+                          return t
+                            .slice(a)
+                            .replace(/^[:\s;"']+/, '')
+                            .trim()
+                      }
+                      return t
+                    })(e, n)
+                  : e
+            return {
+              englishText: i,
+              arabicText: t,
+              isLongText: ((null == i ? void 0 : i.length) || 0) > 750,
+            }
+          }, [a.englishText, a.thaqalaynMatn, a.arabicText, a.thaqalaynSanad]),
+          ea = (0, i.useCallback)(
+            (e, a) => {
+              if (!e) return null
+              let t = a ? e.slice(0, 750) + '...' : e
+              if (!(null == T ? void 0 : T.trim())) return t
+              let i = (0, s.$e)(t, T)
+              return 1 !== i.length || i[0].highlight
+                ? i.map((e, a) =>
+                    e.highlight
+                      ? (0, n.jsx)(
+                          'mark',
+                          { className: 'rounded-sm bg-accent/25 text-inherit', children: e.text },
+                          a,
+                        )
+                      : e.text,
+                  )
+                : t
+            },
+            [T],
+          )
+        ;(0, i.useEffect)(() => {
+          let e = D.current
+          if (!e) return void O(!1)
+          let a = () => {
+            try {
+              let a = e.cloneNode(!0)
+              ;((a.style.cssText = 'position:absolute;visibility:hidden;width:'.concat(
+                e.offsetWidth,
+                'px;max-height:none;height:auto',
+              )),
+                document.body.appendChild(a))
+              let t = a.scrollHeight > e.clientHeight + 2
+              ;(document.body.removeChild(a), O(t))
+            } catch (e) {
+              O(!1)
+            }
+          }
+          return (
+            a(),
+            window.addEventListener('resize', a),
+            () => window.removeEventListener('resize', a)
+          )
+        }, [Y, q.arabicFontSize, V])
+        let et = (0, i.useMemo)(() => {
+            var e, t, n
+            return {
+              majlisi:
+                null == (e = a.gradingsFull)
+                  ? void 0
+                  : e.find((e) => e.author.name_en.toLowerCase().includes('majlisi')),
+              mohseni:
+                null == (t = a.gradingsFull)
+                  ? void 0
+                  : t.find((e) => e.author.name_en.toLowerCase().includes('mohseni')),
+              behbudi:
+                null == (n = a.gradingsFull)
+                  ? void 0
+                  : n.find((e) => e.author.name_en.toLowerCase().includes('behbudi')),
+            }
+          }, [a.gradingsFull]),
+          en = (0, i.useCallback)((e) => {
+            ;(P(e), setTimeout(() => P(null), 1500))
+          }, []),
+          ei = (0, i.useCallback)(async () => {
+            let e = ''.concat(window.location.origin).concat('/read').concat(z(a))
+            ;(await navigator.clipboard.writeText(e), en('Link copied'))
+          }, [a, en]),
+          es = (0, i.useCallback)(async () => {
+            let e = [a.book || 'Unknown Book']
+            ;(a.volume && e.push('Volume '.concat(a.volume)),
+              e.push(a.chapter || 'Unknown Chapter'),
+              e.push('Hadith '.concat(a.id)),
+              await navigator.clipboard.writeText(e.join(', ')),
+              en('Source copied'))
+          }, [a, en]),
+          er = (0, i.useCallback)(async () => {
+            let e = ''.concat(window.location.origin).concat('/read').concat(z(a)),
+              t = [a.book || 'Unknown Book']
+            ;(a.volume && t.push('Volume '.concat(a.volume)),
+              t.push(a.chapter || 'Unknown Chapter'),
+              t.push('Hadith '.concat(a.id)),
+              await navigator.clipboard.writeText(''.concat(t.join(', '), '\n').concat(e)),
+              en('Copied'))
+          }, [a, en]),
+          eo = (0, i.useCallback)(() => {
+            window.open(
+              ''.concat(window.location.origin).concat('/read').concat(z(a)),
+              '_blank',
+              'noopener',
+            )
+          }, [a]),
+          el = (0, i.useCallback)(() => {
+            Q ? $(a.bookId, a.id) : E(a)
+          }, [Q, a, E, $]),
+          ed = (0, i.useMemo)(
+            () =>
+              (function (e) {
+                var a
+                let t = e.bookId || '',
+                  n = (0, l.ei)(t),
+                  i = '/al-kafi',
+                  s = !0
+                return (
+                  n
+                    ? 'Al-Kafi' === n.bookId
+                      ? (i = '/al-kafi')
+                      : ((i = '/'.concat((0, l.yU)(n.bookId))), (s = !1))
+                    : t.includes('Uyun') ||
+                        (null == (a = e.book) ? void 0 : a.toLowerCase().includes('uyun'))
+                      ? ((i = '/Uyun-akhbar-al-Rida'), (s = !1))
+                      : t && ((i = '/'.concat((0, l.yU)(t))), (s = !1)),
+                  s
+                    ? ''
+                        .concat(i, '/volume/')
+                        .concat(e.volume, '/chapter/')
+                        .concat(e.categoryId, '/')
+                        .concat(e.chapterInCategoryId)
+                    : ''
+                        .concat(i, '/chapter/')
+                        .concat(e.categoryId, '/')
+                        .concat(e.chapterInCategoryId)
+                )
+              })(a),
+            [a],
+          ),
+          ec = (e, a) => {
+            if (!e) return null
+            let t = a
+              ? ((e) => {
+                  let a = F(e)
+                  return 'sahih' === a
+                    ? {
+                        number: '1',
+                        color: 'text-emerald-400',
+                        note: 'Strong chain. Does not guarantee full authenticity. Further investigation required.',
+                      }
+                    : 'hasan' === a
+                      ? {
+                          number: '1',
+                          color: 'text-emerald-400',
+                          note: 'Good chain. May be authentic, but does not guarantee full authenticity. Further investigation required.',
+                        }
+                      : 'daif' === a
+                        ? {
+                            number: '2',
+                            color: 'text-red-400',
+                            note: 'Weak chain. Does not necessarily mean the hadith is inauthentic. Further investigation required.',
+                          }
+                        : {
+                            number: '3',
+                            color: 'text-foreground-muted',
+                            note: "Chain requires further investigation. Does not determine the hadith's authenticity.",
+                          }
+                })(a)
+              : null
+            return (0, n.jsxs)('div', {
+              className: 'max-w-[200px] space-y-1.5 text-xs',
+              children: [
+                (0, n.jsxs)('p', {
+                  className: 'font-medium',
+                  children: [
+                    e.author.name_en,
+                    e.author.death_date &&
+                      (0, n.jsxs)('span', {
+                        className: 'font-normal text-foreground-muted',
+                        children: [' ', '(d. ', e.author.death_date, ')'],
+                      }),
+                  ],
+                }),
+                e.grade_en && (0, n.jsx)('p', { children: e.grade_en }),
+                e.grade_ar && (0, n.jsx)('p', { dir: 'rtl', children: e.grade_ar }),
+                e.reference_en &&
+                  (0, n.jsx)('p', {
+                    className: 'border-t border-border pt-1 text-foreground-muted',
+                    children: e.reference_en,
+                  }),
+                t &&
+                  (0, n.jsx)('p', {
+                    className:
+                      'border-t border-border pt-1.5 italic leading-snug text-foreground-muted',
+                    children: t.note,
+                  }),
+              ],
+            })
+          }
+        return (0, n.jsxs)('article', {
+          className: (0, d.cn)('rounded-lg border border-border bg-surface-1 p-4 sm:p-5', t),
+          children: [
+            (0, n.jsxs)('div', {
+              className: 'mb-3 flex items-start justify-between gap-2',
+              children: [
+                (0, n.jsx)('div', {
+                  className: 'min-w-0 flex-1 space-y-1',
+                  children: (0, n.jsxs)('div', {
+                    className: 'flex flex-wrap items-center gap-1.5',
+                    children: [
+                      (0, n.jsxs)(c.E, {
+                        variant: 'secondary',
+                        className: 'text-[11px]',
+                        children: [a.book, ' ', a.volume ? '\xb7 Vol. '.concat(a.volume) : ''],
+                      }),
+                      (0, n.jsxs)('span', {
+                        className: 'text-xs tabular-nums text-foreground-faint',
+                        children: ['#', a.id],
+                      }),
+                    ],
+                  }),
+                }),
+                (0, n.jsxs)('div', {
+                  className: 'flex shrink-0 items-center gap-1',
+                  children: [
+                    (0, n.jsxs)(m.m_, {
+                      children: [
+                        (0, n.jsx)(m.k$, {
+                          asChild: !0,
+                          children: (0, n.jsx)(h.$, {
+                            variant: 'ghost',
+                            size: 'icon',
+                            className: (0, d.cn)('h-7 w-7', Q && 'text-bookmark'),
+                            onClick: el,
+                            children: Q
+                              ? (0, n.jsx)(j.A, { className: 'h-3.5 w-3.5' })
+                              : (0, n.jsx)(w.A, { className: 'h-3.5 w-3.5' }),
+                          }),
+                        }),
+                        (0, n.jsx)(m.ZI, { children: Q ? 'Remove bookmark' : 'Bookmark' }),
+                      ],
+                    }),
+                    Y &&
+                      (0, n.jsxs)(m.m_, {
+                        children: [
+                          (0, n.jsx)(m.k$, {
+                            asChild: !0,
+                            children: (0, n.jsx)(h.$, {
+                              variant: H ? 'default' : 'ghost',
+                              size: 'icon',
+                              className: 'h-7 w-7 font-arabic text-xs',
+                              onClick: () => R(!H),
+                              children: 'ع',
+                            }),
+                          }),
+                          (0, n.jsx)(m.ZI, { children: H ? 'Hide Arabic' : 'Show Arabic' }),
+                        ],
+                      }),
+                    (0, n.jsxs)(m.m_, {
+                      children: [
+                        (0, n.jsx)(m.k$, {
+                          asChild: !0,
+                          children: (0, n.jsx)(h.$, {
+                            variant: 'ghost',
+                            size: 'icon',
+                            className: 'h-7 w-7',
+                            onClick: eo,
+                            children: (0, n.jsx)(v.A, { className: 'h-3.5 w-3.5' }),
+                          }),
+                        }),
+                        (0, n.jsx)(m.ZI, { children: 'Open in new tab' }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            (0, n.jsx)('div', {
+              className: 'space-y-3',
+              children:
+                H && Y
+                  ? (0, n.jsxs)('div', {
+                      className: 'hadith-block bg-surface-2/50 rounded-md border border-border',
+                      children: [
+                        (0, n.jsx)('div', {
+                          ref: D,
+                          className: 'hadith-arabic-text text-right font-arabic text-foreground',
+                          dir: 'rtl',
+                          style: { fontSize: ''.concat(1.485 * q.arabicFontSize, '%') },
+                          children: K && !V ? ea(Y, !0) : ea(Y),
+                        }),
+                        K &&
+                          (0, n.jsx)('button', {
+                            onClick: () => W(!V),
+                            className:
+                              'mt-1 text-xs font-medium text-accent transition-colors hover:underline',
+                            children: V ? 'اعرض أقل' : 'اقرأ المزيد',
+                          }),
+                      ],
+                    })
+                  : (0, n.jsxs)('div', {
+                      children: [
+                        a.thaqalaynSanad &&
+                          (0, n.jsx)('p', {
+                            className:
+                              'hadith-english-text mb-2 line-clamp-3 font-mono text-xs text-foreground-faint sm:line-clamp-none sm:text-sm',
+                            style: { fontSize: ''.concat(q.englishFontSize, '%') },
+                            children: a.thaqalaynSanad.trim(),
+                          }),
+                        (0, n.jsxs)('div', {
+                          className:
+                            'hadith-english-text text-sm leading-relaxed text-foreground sm:text-base',
+                          style: { fontSize: ''.concat(q.englishFontSize, '%') },
+                          children: [
+                            ee && !Z ? ea(X, !0) : ea(X),
+                            ee &&
+                              (0, n.jsx)('button', {
+                                onClick: () => B(!Z),
+                                className:
+                                  'ml-1 text-xs font-medium text-accent transition-colors hover:underline',
+                                children: Z ? 'Show less' : 'Read more',
+                              }),
+                          ],
+                        }),
+                      ],
+                    }),
+            }),
+            (a.majlisiGrading || a.mohseniGrading || a.behbudiGrading) &&
+              (0, n.jsxs)(n.Fragment, {
+                children: [
+                  (0, n.jsx)(u.w, { className: 'my-3' }),
+                  (0, n.jsxs)('div', {
+                    className: 'flex flex-wrap items-center gap-1.5',
+                    children: [
+                      a.majlisiGrading &&
+                        (0, n.jsxs)(m.m_, {
+                          children: [
+                            (0, n.jsx)(m.k$, {
+                              asChild: !0,
+                              children: (0, n.jsx)('span', {
+                                children: (0, n.jsxs)(c.E, {
+                                  variant: F(a.majlisiGrading),
+                                  className: 'cursor-default text-[11px]',
+                                  children: ['Majlisi: ', a.majlisiGrading],
+                                }),
+                              }),
+                            }),
+                            (0, n.jsx)(m.ZI, {
+                              side: 'bottom',
+                              children: ec(et.majlisi, a.majlisiGrading) || 'Majlisi grading',
+                            }),
+                          ],
+                        }),
+                      a.mohseniGrading &&
+                        (0, n.jsxs)(m.m_, {
+                          children: [
+                            (0, n.jsx)(m.k$, {
+                              asChild: !0,
+                              children: (0, n.jsx)('span', {
+                                children: (0, n.jsxs)(c.E, {
+                                  variant: F(a.mohseniGrading),
+                                  className: 'cursor-default text-[11px]',
+                                  children: ['Mohseni: ', a.mohseniGrading],
+                                }),
+                              }),
+                            }),
+                            (0, n.jsx)(m.ZI, {
+                              side: 'bottom',
+                              children: ec(et.mohseni, a.mohseniGrading) || 'Mohseni grading',
+                            }),
+                          ],
+                        }),
+                      a.behbudiGrading &&
+                        (0, n.jsxs)(m.m_, {
+                          children: [
+                            (0, n.jsx)(m.k$, {
+                              asChild: !0,
+                              children: (0, n.jsx)('span', {
+                                children: (0, n.jsxs)(c.E, {
+                                  variant: F(a.behbudiGrading),
+                                  className: 'cursor-default text-[11px]',
+                                  children: ['Behbudi: ', a.behbudiGrading],
+                                }),
+                              }),
+                            }),
+                            (0, n.jsx)(m.ZI, {
+                              side: 'bottom',
+                              children: ec(et.behbudi, a.behbudiGrading) || 'Behbudi grading',
+                            }),
+                          ],
+                        }),
+                    ],
+                  }),
+                ],
+              }),
+            (0, n.jsx)(u.w, { className: 'my-3' }),
+            (0, n.jsxs)('div', {
+              className: 'flex items-center justify-between gap-2',
+              children: [
+                (0, n.jsxs)('div', {
+                  className: 'flex items-center gap-1',
+                  children: [
+                    (0, n.jsxs)(g, {
+                      children: [
+                        (0, n.jsx)(f, {
+                          asChild: !0,
+                          children: (0, n.jsxs)(h.$, {
+                            variant: 'ghost',
+                            size: 'sm',
+                            className: 'h-7 gap-1 px-2 text-xs text-foreground-muted',
+                            children: [(0, n.jsx)(k.A, { className: 'h-3 w-3' }), J || 'Copy'],
+                          }),
+                        }),
+                        (0, n.jsxs)(b, {
+                          align: 'start',
+                          children: [
+                            (0, n.jsxs)(p, {
+                              onClick: ei,
+                              children: [
+                                (0, n.jsx)(y.A, { className: 'mr-2 h-3.5 w-3.5' }),
+                                'Copy link',
+                              ],
+                            }),
+                            (0, n.jsxs)(p, {
+                              onClick: es,
+                              children: [
+                                (0, n.jsx)(N.A, { className: 'mr-2 h-3.5 w-3.5' }),
+                                'Copy source',
+                              ],
+                            }),
+                            (0, n.jsxs)(p, {
+                              onClick: er,
+                              children: [
+                                (0, n.jsx)(C.A, { className: 'mr-2 h-3.5 w-3.5' }),
+                                'Copy both',
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                    G &&
+                      U &&
+                      (0, n.jsxs)(h.$, {
+                        variant: 'ghost',
+                        size: 'sm',
+                        className: (0, d.cn)(
+                          'h-7 gap-1 px-2 text-xs',
+                          A ? 'text-accent' : 'text-foreground-muted',
+                        ),
+                        onClick: U,
+                        children: [
+                          (0, n.jsx)(_.A, { className: 'h-3 w-3' }),
+                          'Notes',
+                          (0, n.jsx)(I.A, {
+                            className: (0, d.cn)('h-3 w-3 transition-transform', A && 'rotate-180'),
+                          }),
+                        ],
+                      }),
+                  ],
+                }),
+                x &&
+                  a.volume &&
+                  a.categoryId &&
+                  null != a.chapterInCategoryId &&
+                  (0, n.jsxs)('a', {
+                    href: ed,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    className:
+                      'flex items-center gap-0.5 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground',
+                    children: ['View Chapter', (0, n.jsx)(S.A, { className: 'h-3 w-3' })],
+                  }),
+              ],
+            }),
+          ],
+        })
+      })
+    },
+    7812: (e, a, t) => {
+      t.d(a, { E: () => o })
+      var n = t(5155)
+      t(2115)
+      var i = t(3101),
+        s = t(5016)
+      let r = (0, i.F)(
+        'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
+        {
+          variants: {
+            variant: {
+              default: 'bg-accent/15 text-accent',
+              secondary: 'bg-surface-2 text-foreground-muted',
+              outline: 'border border-border text-foreground-muted',
+              sahih: 'bg-emerald-500/15 text-emerald-400',
+              hasan: 'bg-green-500/15 text-green-400',
+              daif: 'bg-red-500/15 text-red-400',
+              warning: 'bg-orange-500/15 text-orange-400',
+              info: 'bg-blue-500/15 text-blue-400',
+              purple: 'bg-purple-500/15 text-purple-400',
+            },
+          },
+          defaultVariants: { variant: 'default' },
+        },
+      )
+      function o(e) {
+        let { className: a, variant: t, ...i } = e
+        return (0, n.jsx)('div', { className: (0, s.cn)(r({ variant: t }), a), ...i })
+      }
+    },
+  },
+])

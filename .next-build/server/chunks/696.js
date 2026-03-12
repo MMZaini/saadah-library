@@ -1,0 +1,255 @@
+'use strict'
+;((exports.id = 696),
+  (exports.ids = [696]),
+  (exports.modules = {
+    696: (a, b, c) => {
+      ;(c.r(b), c.d(b, { default: () => j }))
+      var d = c(21124),
+        e = c(38301),
+        f = c(94348),
+        g = c(36818),
+        h = c(15514),
+        i = c(18085)
+      function j({ bookConfig: a, className: b }) {
+        let [c, j] = (0, e.useState)(() =>
+            a?.hasMultipleVolumes
+              ? (a?.volumes?.[0] ?? 'all')
+              : (a?.volumes?.[0] ?? a?.bookId ?? 'all'),
+          ),
+          [k, l] = (0, e.useState)(null),
+          [m, n] = (0, e.useState)(!1),
+          [o, p] = (0, e.useState)(null),
+          q = a?.hasMultipleVolumes ? (a.volumes ?? []) : [a?.bookId].filter((a) => !!a),
+          r = !!a?.hasMultipleVolumes,
+          s = (0, i.l)(q),
+          t = a?.englishName || a?.bookId || 'This Book',
+          u = (Array.isArray(q) && q.length) || 1,
+          v = async (a) => {
+            ;(n(!0), p(null), l(null))
+            try {
+              let b = null
+              if ('all' === a) {
+                let a = (q || []).filter(Boolean)
+                if (0 === a.length) throw Error('No volumes available')
+                let c = a[Math.floor(Math.random() * a.length)]
+                b = await f.C$.getRandomHadithFromBook(c)
+              } else b = await f.C$.getRandomHadithFromBook(a)
+              l(b)
+            } catch {
+              p('Failed to load hadith from this volume')
+            } finally {
+              n(!1)
+            }
+          }
+        return (0, d.jsxs)('div', {
+          className: (0, h.cn)('space-y-6', b),
+          children: [
+            (0, d.jsxs)('div', {
+              className: 'rounded-xl border border-border bg-surface-1 p-6',
+              children: [
+                (0, d.jsxs)('div', {
+                  className: 'mb-4 flex items-center gap-4',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className:
+                        'flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2',
+                      children: (0, d.jsx)('svg', {
+                        className: 'h-5 w-5 text-foreground-muted',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        viewBox: '0 0 24 24',
+                        children: (0, d.jsx)('path', {
+                          strokeLinecap: 'round',
+                          strokeLinejoin: 'round',
+                          strokeWidth: 2,
+                          d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                        }),
+                      }),
+                    }),
+                    (0, d.jsxs)('div', {
+                      children: [
+                        (0, d.jsxs)('h3', {
+                          className: 'mb-1 text-lg font-bold text-foreground',
+                          children: [t, ' Volume Explorer'],
+                        }),
+                        (0, d.jsxs)('p', {
+                          className: 'text-sm text-foreground-muted',
+                          children: [
+                            t,
+                            ' consists of ',
+                            u,
+                            ' volume',
+                            1 === u ? '' : 's',
+                            '. Select a specific volume or "All Volumes" to explore random hadiths.',
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, d.jsxs)('div', {
+                  className:
+                    'flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className: 'flex items-center gap-3',
+                      children: r
+                        ? (0, d.jsxs)(d.Fragment, {
+                            children: [
+                              (0, d.jsx)('label', {
+                                htmlFor: 'volume-select',
+                                className:
+                                  'whitespace-nowrap text-sm font-semibold text-foreground-muted',
+                                children: 'Volume:',
+                              }),
+                              (0, d.jsxs)('div', {
+                                className: 'relative',
+                                children: [
+                                  (0, d.jsx)('select', {
+                                    id: 'volume-select',
+                                    value: c,
+                                    onChange: (a) => {
+                                      var b
+                                      ;(j((b = 'all' === a.target.value ? 'all' : a.target.value)),
+                                        v(b))
+                                    },
+                                    disabled: m,
+                                    className: (0, h.cn)(
+                                      'appearance-none border border-border bg-background',
+                                      'rounded-lg px-4 py-2.5 pr-12 font-semibold text-foreground',
+                                      'transition-colors duration-200',
+                                      'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                                      'min-w-[130px] cursor-pointer hover:border-zinc-600/50',
+                                      m && 'cursor-not-allowed opacity-50',
+                                    ),
+                                    children: s.map((a) =>
+                                      (0, d.jsx)(
+                                        'option',
+                                        { value: a.value, children: a.label },
+                                        a.value,
+                                      ),
+                                    ),
+                                  }),
+                                  (0, d.jsx)('div', {
+                                    className:
+                                      'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3',
+                                    children: (0, d.jsx)('svg', {
+                                      className: 'h-4 w-4 text-foreground-muted',
+                                      fill: 'none',
+                                      stroke: 'currentColor',
+                                      viewBox: '0 0 24 24',
+                                      children: (0, d.jsx)('path', {
+                                        strokeLinecap: 'round',
+                                        strokeLinejoin: 'round',
+                                        strokeWidth: 2,
+                                        d: 'M19 9l-7 7-7-7',
+                                      }),
+                                    }),
+                                  }),
+                                ],
+                              }),
+                            ],
+                          })
+                        : (0, d.jsxs)('div', {
+                            className: 'text-sm font-semibold text-foreground-muted',
+                            children: [
+                              'Volume:',
+                              ' ',
+                              (0, d.jsx)('span', {
+                                className: 'font-medium',
+                                children: (0, i.P)(q, s[0]?.value),
+                              }),
+                            ],
+                          }),
+                    }),
+                    (0, d.jsx)('button', {
+                      onClick: () => v(c),
+                      disabled: m,
+                      className: (0, h.cn)(
+                        'rounded-lg bg-accent px-6 py-2.5 font-semibold text-accent-foreground',
+                        'hover:bg-accent/90 transition-colors duration-200',
+                        m && 'cursor-not-allowed opacity-50',
+                      ),
+                      children: m
+                        ? (0, d.jsxs)('div', {
+                            className: 'flex items-center gap-2',
+                            children: [
+                              (0, d.jsx)('div', {
+                                className:
+                                  'h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white',
+                              }),
+                              'Loading...',
+                            ],
+                          })
+                        : 'New Hadith',
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            o &&
+              (0, d.jsx)('div', {
+                className:
+                  'rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/20',
+                children: (0, d.jsx)('p', {
+                  className: 'text-sm text-red-800 dark:text-red-300',
+                  children: o,
+                }),
+              }),
+            m &&
+              (0, d.jsx)('div', {
+                className: 'border-theme bg-card shadow-soft rounded-xl border p-12',
+                children: (0, d.jsxs)('div', {
+                  className: 'flex items-center justify-center',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className: 'border-primary h-8 w-8 animate-spin rounded-full border-b-2',
+                    }),
+                    (0, d.jsx)('span', {
+                      className: 'text-muted ml-3',
+                      children: 'Loading hadith...',
+                    }),
+                  ],
+                }),
+              }),
+            !m &&
+              !o &&
+              k &&
+              (0, d.jsxs)(d.Fragment, {
+                children: [
+                  (0, d.jsxs)('div', {
+                    className:
+                      'flex items-center justify-center gap-2 text-sm text-foreground-muted',
+                    children: [
+                      (0, d.jsx)('div', { className: 'bg-accent/60 h-2 w-2 rounded-full' }),
+                      (0, d.jsxs)('span', {
+                        children: [
+                          'Random hadith from',
+                          ' ',
+                          'all' === c ? `All ${t} Volumes` : `${t} ${(0, i.P)(q, c)}`,
+                        ],
+                      }),
+                    ],
+                  }),
+                  (0, d.jsx)(g.A, { hadith: k }),
+                ],
+              }),
+          ],
+        })
+      }
+    },
+    18085: (a, b, c) => {
+      function d(a) {
+        let b = Array.isArray(a) && a.length > 0 ? a : []
+        if (0 === b.length) return [{ value: 1, label: 'Volume 1' }]
+        let c = b.map((a, b) => ({ value: a, label: `Volume ${b + 1}` }))
+        return (b.length > 1 && c.push({ value: 'all', label: 'All Volumes' }), c)
+      }
+      function e(a, b) {
+        let c = d(a),
+          e = c.find((a) => String(a.value) === String(b))
+        return e ? e.label : c[0]?.label || 'Volume 1'
+      }
+      c.d(b, { P: () => e, l: () => d })
+    },
+  }))

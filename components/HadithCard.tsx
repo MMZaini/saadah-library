@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, useMemo, useCallback, memo, ReactNode } from 'react'
 import { Hadith } from '@/lib/api'
+import { getHighlightSegments } from '@/lib/search-utils'
 import { useSettings } from '@/lib/settings-context'
-import { useNavigation } from '@/lib/navigation-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
 import { cn } from '@/lib/utils'
@@ -24,7 +23,6 @@ import {
   Copy,
   ExternalLink,
   ChevronRight,
-  MoreHorizontal,
   FileText,
   Link2,
   ClipboardList,
@@ -40,6 +38,7 @@ interface HadithCardProps {
   notesVisible?: boolean
   onToggleNotes?: () => void
   showArabicByDefault?: boolean
+  highlightQuery?: string
 }
 
 // ── Helpers ──
@@ -148,10 +147,9 @@ const HadithCard = ({
   notesVisible = false,
   onToggleNotes,
   showArabicByDefault = false,
+  highlightQuery,
 }: HadithCardProps) => {
   const { settings } = useSettings()
-  const router = useRouter()
-  const navigation = useNavigation()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
 
   const [showArabic, setShowArabic] = useState(showArabicByDefault)
@@ -184,6 +182,27 @@ const HadithCard = ({
       isLongText: (processed?.length || 0) > 750,
     }
   }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad])
+
+  // Render text with search highlighting
+  const renderHighlighted = useCallback(
+    (text: string | undefined, truncate?: boolean): ReactNode => {
+      if (!text) return null
+      const display = truncate ? text.slice(0, 750) + '...' : text
+      if (!highlightQuery?.trim()) return display
+      const segments = getHighlightSegments(display, highlightQuery)
+      if (segments.length === 1 && !segments[0].highlight) return display
+      return segments.map((seg, i) =>
+        seg.highlight ? (
+          <mark key={i} className="bg-accent/25 rounded-sm text-inherit">
+            {seg.text}
+          </mark>
+        ) : (
+          seg.text
+        ),
+      )
+    },
+    [highlightQuery],
+  )
 
   // Arabic overflow detection
   useEffect(() => {
@@ -226,7 +245,7 @@ const HadithCard = ({
   }, [])
 
   const handleCopyLink = useCallback(async () => {
-    const url = `${window.location.origin}${getHadithUrl(hadith)}`
+    const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`
     await navigator.clipboard.writeText(url)
     flash('Link copied')
   }, [hadith, flash])
@@ -241,7 +260,7 @@ const HadithCard = ({
   }, [hadith, flash])
 
   const handleCopyBoth = useCallback(async () => {
-    const url = `${window.location.origin}${getHadithUrl(hadith)}`
+    const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`
     const parts = [hadith.book || 'Unknown Book']
     if (hadith.volume) parts.push(`Volume ${hadith.volume}`)
     parts.push(hadith.chapter || 'Unknown Chapter')
@@ -251,20 +270,56 @@ const HadithCard = ({
   }, [hadith, flash])
 
   const handleOpenNewTab = useCallback(() => {
-    window.open(`${window.location.origin}${getHadithUrl(hadith)}`, '_blank', 'noopener')
+    window.open(
+      `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`,
+      '_blank',
+      'noopener',
+    )
   }, [hadith])
 
   const handleBookmarkToggle = useCallback(() => {
-    bookmarked ? removeBookmark(hadith.bookId, hadith.id) : addBookmark(hadith)
+    if (bookmarked) {
+      removeBookmark(hadith.bookId, hadith.id)
+    } else {
+      addBookmark(hadith)
+    }
   }, [bookmarked, hadith, addBookmark, removeBookmark])
 
   const chapterUrl = useMemo(() => getChapterUrl(hadith), [hadith])
 
   // Grading tooltip content builder
-  const gradingTooltipContent = (data: typeof gradingData.majlisi) => {
+  const getGradingInfo = (grading: string) => {
+    const variant = gradingVariant(grading)
+    if (variant === 'sahih')
+      return {
+        number: '1',
+        color: 'text-emerald-400',
+        note: 'Strong chain. Does not guarantee full authenticity. Further investigation required.',
+      }
+    if (variant === 'hasan')
+      return {
+        number: '1',
+        color: 'text-emerald-400',
+        note: 'Good chain. May be authentic, but does not guarantee full authenticity. Further investigation required.',
+      }
+    if (variant === 'daif')
+      return {
+        number: '2',
+        color: 'text-red-400',
+        note: 'Weak chain. Does not necessarily mean the hadith is inauthentic. Further investigation required.',
+      }
+    return {
+      number: '3',
+      color: 'text-foreground-muted',
+      note: "Chain requires further investigation. Does not determine the hadith's authenticity.",
+    }
+  }
+
+  const gradingTooltipContent = (data: typeof gradingData.majlisi, grading?: string) => {
     if (!data) return null
+    const info = grading ? getGradingInfo(grading) : null
     return (
-      <div className="max-w-xs space-y-1 text-xs">
+      <div className="max-w-[200px] space-y-1.5 text-xs">
         <p className="font-medium">
           {data.author.name_en}
           {data.author.death_date && (
@@ -278,6 +333,11 @@ const HadithCard = ({
         {data.grade_ar && <p dir="rtl">{data.grade_ar}</p>}
         {data.reference_en && (
           <p className="border-t border-border pt-1 text-foreground-muted">{data.reference_en}</p>
+        )}
+        {info && (
+          <p className="border-t border-border pt-1.5 italic leading-snug text-foreground-muted">
+            {info.note}
+          </p>
         )}
       </div>
     )
@@ -294,8 +354,6 @@ const HadithCard = ({
             </Badge>
             <span className="text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
           </div>
-          <p className="line-clamp-1 text-sm font-medium text-foreground">{hadith.category}</p>
-          <p className="line-clamp-1 text-xs text-foreground-muted">{hadith.chapter}</p>
         </div>
 
         {/* Action buttons */}
@@ -351,11 +409,13 @@ const HadithCard = ({
           <div className="hadith-block bg-surface-2/50 rounded-md border border-border">
             <div
               ref={arabicRef}
-              className="hadith-arabic-text text-right font-arabic text-base leading-loose text-foreground sm:text-lg"
+              className="hadith-arabic-text text-right font-arabic text-foreground"
               dir="rtl"
-              style={{ fontSize: `${settings.arabicFontSize}%` }}
+              style={{ fontSize: `${settings.arabicFontSize * 1.485}%` }}
             >
-              {arabicOverflow && !arabicExpanded ? <>{arabicText.slice(0, 750)}...</> : arabicText}
+              {arabicOverflow && !arabicExpanded
+                ? renderHighlighted(arabicText, true)
+                : renderHighlighted(arabicText)}
             </div>
             {arabicOverflow && (
               <button
@@ -380,7 +440,9 @@ const HadithCard = ({
               className="hadith-english-text text-sm leading-relaxed text-foreground sm:text-base"
               style={{ fontSize: `${settings.englishFontSize}%` }}
             >
-              {isLongText && !expanded ? <>{englishText.slice(0, 750)}...</> : englishText}
+              {isLongText && !expanded
+                ? renderHighlighted(englishText, true)
+                : renderHighlighted(englishText)}
               {isLongText && (
                 <button
                   onClick={() => setExpanded(!expanded)}
@@ -405,14 +467,15 @@ const HadithCard = ({
                   <span>
                     <Badge
                       variant={gradingVariant(hadith.majlisiGrading)}
-                      className="cursor-help text-[11px]"
+                      className="cursor-default text-[11px]"
                     >
                       Majlisi: {hadith.majlisiGrading}
                     </Badge>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {gradingTooltipContent(gradingData.majlisi) || 'Majlisi grading'}
+                  {gradingTooltipContent(gradingData.majlisi, hadith.majlisiGrading) ||
+                    'Majlisi grading'}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -422,14 +485,15 @@ const HadithCard = ({
                   <span>
                     <Badge
                       variant={gradingVariant(hadith.mohseniGrading)}
-                      className="cursor-help text-[11px]"
+                      className="cursor-default text-[11px]"
                     >
                       Mohseni: {hadith.mohseniGrading}
                     </Badge>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {gradingTooltipContent(gradingData.mohseni) || 'Mohseni grading'}
+                  {gradingTooltipContent(gradingData.mohseni, hadith.mohseniGrading) ||
+                    'Mohseni grading'}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -439,14 +503,15 @@ const HadithCard = ({
                   <span>
                     <Badge
                       variant={gradingVariant(hadith.behbudiGrading)}
-                      className="cursor-help text-[11px]"
+                      className="cursor-default text-[11px]"
                     >
                       Behbudi: {hadith.behbudiGrading}
                     </Badge>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {gradingTooltipContent(gradingData.behbudi) || 'Behbudi grading'}
+                  {gradingTooltipContent(gradingData.behbudi, hadith.behbudiGrading) ||
+                    'Behbudi grading'}
                 </TooltipContent>
               </Tooltip>
             )}

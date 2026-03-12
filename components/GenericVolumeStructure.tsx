@@ -23,7 +23,7 @@ export default function GenericVolumeStructure({
     <VolumeStructure
       bookId={bookId}
       bookName={bookName || bookId}
-      volumes={volumes as any as number[]}
+      volumes={volumes as (number | string)[]}
       baseRoute={baseRoute}
       className={className}
     />

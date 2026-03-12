@@ -1,0 +1,509 @@
+'use strict'
+;((exports.id = 602),
+  (exports.ids = [602]),
+  (exports.modules = {
+    18085: (a, b, c) => {
+      function d(a) {
+        let b = Array.isArray(a) && a.length > 0 ? a : []
+        if (0 === b.length) return [{ value: 1, label: 'Volume 1' }]
+        let c = b.map((a, b) => ({ value: a, label: `Volume ${b + 1}` }))
+        return (b.length > 1 && c.push({ value: 'all', label: 'All Volumes' }), c)
+      }
+      function e(a, b) {
+        let c = d(a),
+          e = c.find((a) => String(a.value) === String(b))
+        return e ? e.label : c[0]?.label || 'Volume 1'
+      }
+      c.d(b, { P: () => e, l: () => d })
+    },
+    47602: (a, b, c) => {
+      ;(c.r(b), c.d(b, { default: () => m }))
+      var d = c(21124),
+        e = c(38301),
+        f = c(94348),
+        g = c(36818),
+        h = c(85351),
+        i = c(59405),
+        j = c(47748),
+        k = c(15514),
+        l = c(18085)
+      function m({ bookId: a, bookConfig: b = null, className: c }) {
+        let [m, n] = (0, e.useState)(() => (b?.hasMultipleVolumes ? b?.volumes?.[0] || 'all' : a)),
+          [o, p] = (0, e.useState)({}),
+          [q, r] = (0, e.useState)(new Set()),
+          [s, t] = (0, e.useState)(null),
+          [u, v] = (0, e.useState)([]),
+          [w, x] = (0, e.useState)(!1),
+          [y, z] = (0, e.useState)(!1),
+          [A, B] = (0, e.useState)(null),
+          C = b?.hasMultipleVolumes ? b.volumes : [a],
+          D = (0, l.l)(C),
+          E = b?.englishName || a,
+          F = async (a, b, c, d) => {
+            ;(z(!0), t({ category: c, chapter: d, categoryId: a, chapterId: b }))
+            try {
+              let c = []
+              if ('all' === m) {
+                let d = (C || []).map(async (c) =>
+                  (await f.A1.getBookHadiths(c)).filter(
+                    (c) => c.categoryId === a && c.chapterInCategoryId === b,
+                  ),
+                )
+                c = (await Promise.all(d)).flat()
+              } else c = await f.A1.getChapterHadiths(m, a, b)
+              let d = c.sort((a, b) => a.id - b.id)
+              v(d)
+            } catch {
+              v([])
+            } finally {
+              z(!1)
+            }
+          },
+          G = () => Object.values(o).reduce((a, b) => a + (b.totalHadiths || 0), 0)
+        return (0, d.jsxs)('div', {
+          className: (0, k.cn)('space-y-6', c),
+          children: [
+            (0, d.jsxs)('div', {
+              className: 'rounded-xl border border-border bg-surface-1 p-6',
+              children: [
+                (0, d.jsxs)('div', {
+                  className: 'mb-4 flex items-center gap-4',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className:
+                        'flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2',
+                      children: (0, d.jsx)('svg', {
+                        className: 'h-5 w-5 text-foreground-muted',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        viewBox: '0 0 24 24',
+                        children: (0, d.jsx)('path', {
+                          strokeLinecap: 'round',
+                          strokeLinejoin: 'round',
+                          strokeWidth: 2,
+                          d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                        }),
+                      }),
+                    }),
+                    (0, d.jsxs)('div', {
+                      children: [
+                        (0, d.jsxs)('h3', {
+                          className: 'text-primary mb-1 text-lg font-bold',
+                          children: [E, ' Volume Explorer'],
+                        }),
+                        (0, d.jsxs)('p', {
+                          className: 'text-secondary text-sm',
+                          children: [
+                            'Browse ',
+                            E,
+                            ' volumes individually or view the complete collection structure',
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, d.jsxs)('div', {
+                  className: 'flex flex-col justify-between gap-4 sm:flex-row sm:items-center',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className: 'flex items-center gap-3',
+                      children: (0, d.jsxs)('div', {
+                        className: 'relative',
+                        children: [
+                          (0, d.jsx)('select', {
+                            value: String(m),
+                            onChange: (a) => {
+                              let b = a.target.value
+                              n('all' === b ? 'all' : isNaN(Number(b)) ? b : String(b))
+                            },
+                            disabled: w,
+                            className: (0, k.cn)(
+                              'border-theme bg-card appearance-none border',
+                              'text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold',
+                              'hover:shadow-medium shadow-soft transition-all duration-200',
+                              'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                              'min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50',
+                              w && 'cursor-not-allowed opacity-50',
+                            ),
+                            children: D.map((a) =>
+                              (0, d.jsx)(
+                                'option',
+                                { value: a.value, children: a.label },
+                                String(a.value),
+                              ),
+                            ),
+                          }),
+                          (0, d.jsx)('div', {
+                            className:
+                              'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3',
+                            children: (0, d.jsx)('svg', {
+                              className: 'text-secondary h-5 w-5',
+                              fill: 'none',
+                              stroke: 'currentColor',
+                              viewBox: '0 0 24 24',
+                              children: (0, d.jsx)('path', {
+                                strokeLinecap: 'round',
+                                strokeLinejoin: 'round',
+                                strokeWidth: 2,
+                                d: 'M19 9l-7 7-7-7',
+                              }),
+                            }),
+                          }),
+                        ],
+                      }),
+                    }),
+                    !w &&
+                      G() > 0 &&
+                      (0, d.jsxs)('div', {
+                        className: 'border-theme flex flex-wrap items-center gap-4 border-t pt-4',
+                        children: [
+                          (0, d.jsxs)('div', {
+                            className: 'flex items-center gap-2',
+                            children: [
+                              (0, d.jsx)('div', {
+                                className: 'shadow-soft h-3 w-3 rounded-full bg-green-500',
+                              }),
+                              (0, d.jsxs)('span', {
+                                className: 'text-primary text-sm font-semibold',
+                                children: [G().toLocaleString(), ' hadiths'],
+                              }),
+                            ],
+                          }),
+                          (0, d.jsxs)('div', {
+                            className: 'flex items-center gap-2',
+                            children: [
+                              (0, d.jsx)('div', {
+                                className: 'shadow-soft h-3 w-3 rounded-full bg-blue-500',
+                              }),
+                              (0, d.jsxs)('span', {
+                                className: 'text-primary text-sm font-semibold',
+                                children: [Object.keys(o).length, ' categories'],
+                              }),
+                            ],
+                          }),
+                          (0, d.jsxs)('div', {
+                            className: 'flex items-center gap-2',
+                            children: [
+                              (0, d.jsx)('div', {
+                                className: 'shadow-soft h-3 w-3 rounded-full bg-purple-500',
+                              }),
+                              (0, d.jsx)('span', {
+                                className: 'text-primary text-sm font-semibold',
+                                children: 'all' === m ? 'All Volumes' : (0, l.P)(C, m),
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                  ],
+                }),
+                (0, d.jsx)('p', {
+                  className: 'text-secondary mt-4 text-sm',
+                  children:
+                    'Browse the complete structure of the selected book. Click on categories to expand them and view chapters. Click on any chapter to read all hadiths in that chapter.',
+                }),
+              ],
+            }),
+            w &&
+              (0, d.jsx)('div', {
+                className: 'border-theme bg-card shadow-soft rounded-xl border p-12',
+                children: (0, d.jsxs)('div', {
+                  className: 'flex items-center justify-center',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className: 'border-primary h-8 w-8 animate-spin rounded-full border-b-2',
+                    }),
+                    (0, d.jsx)('span', {
+                      className: 'text-muted ml-3',
+                      children: 'Loading book structure...',
+                    }),
+                  ],
+                }),
+              }),
+            A &&
+              (0, d.jsx)('div', {
+                className:
+                  'rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/20',
+                children: (0, d.jsx)('p', {
+                  className: 'text-sm text-red-800 dark:text-red-300',
+                  children: A,
+                }),
+              }),
+            !w &&
+              !A &&
+              Object.keys(o).length > 0 &&
+              (0, d.jsxs)('div', {
+                className: 'grid gap-4 lg:grid-cols-3 lg:gap-6',
+                children: [
+                  (0, d.jsx)('div', {
+                    className: 'lg:col-span-1',
+                    children: (0, d.jsxs)('div', {
+                      className:
+                        'border-theme bg-card shadow-soft max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border sm:max-h-[70vh] lg:max-h-[80vh]',
+                      children: [
+                        (0, d.jsxs)('div', {
+                          className: 'border-theme bg-card sticky top-0 z-10 border-b p-3 sm:p-4',
+                          children: [
+                            (0, d.jsxs)('h4', {
+                              className: 'text-primary text-sm font-semibold sm:text-base',
+                              children: [
+                                (0, d.jsx)('span', {
+                                  className: 'sm:hidden',
+                                  children: 'Categories',
+                                }),
+                                (0, d.jsx)('span', {
+                                  className: 'hidden sm:inline',
+                                  children: 'Categories & Chapters',
+                                }),
+                              ],
+                            }),
+                            (0, d.jsx)('p', {
+                              className: 'text-muted mt-1 hidden text-xs sm:block',
+                              children: 'Click to expand categories',
+                            }),
+                          ],
+                        }),
+                        (0, d.jsx)('div', {
+                          className: 'p-1 sm:p-2',
+                          children: Object.entries(o).map(([a, b]) =>
+                            (0, d.jsxs)(
+                              'div',
+                              {
+                                className: 'mb-1 sm:mb-2',
+                                children: [
+                                  (0, d.jsxs)('button', {
+                                    onClick: () => {
+                                      r((b) => {
+                                        let c = new Set(b)
+                                        return (c.has(a) ? c.delete(a) : c.add(a), c)
+                                      })
+                                    },
+                                    className:
+                                      'hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3',
+                                    children: [
+                                      q.has(a)
+                                        ? (0, d.jsx)(h.A, {
+                                            className: 'text-muted h-4 w-4 flex-shrink-0',
+                                          })
+                                        : (0, d.jsx)(i.A, {
+                                            className: 'text-muted h-4 w-4 flex-shrink-0',
+                                          }),
+                                      (0, d.jsxs)('div', {
+                                        className: 'min-w-0 flex-1',
+                                        children: [
+                                          (0, d.jsx)('div', {
+                                            className:
+                                              'text-primary text-sm font-medium leading-tight',
+                                            children: b.category,
+                                          }),
+                                          (0, d.jsxs)('div', {
+                                            className: 'text-muted mt-1 text-xs',
+                                            children: [
+                                              b.totalHadiths,
+                                              ' hadiths •',
+                                              ' ',
+                                              Object.keys(b.chapters).length,
+                                              ' chapters',
+                                            ],
+                                          }),
+                                        ],
+                                      }),
+                                    ],
+                                  }),
+                                  q.has(a) &&
+                                    (0, d.jsx)('div', {
+                                      className: 'ml-6 mt-1 space-y-1',
+                                      children: Object.entries(b.chapters).map(([c, e]) =>
+                                        (0, d.jsxs)(
+                                          'button',
+                                          {
+                                            onClick: () => {
+                                              var d, f
+                                              ;(t({
+                                                category: a,
+                                                chapter: c,
+                                                categoryId: (d = b.categoryId),
+                                                chapterId: (f = e.chapterInCategoryId),
+                                              }),
+                                                F(d, f, a, c))
+                                            },
+                                            className: (0, k.cn)(
+                                              'w-full rounded p-2 text-left text-sm transition-colors',
+                                              s?.category === a && s?.chapter === c
+                                                ? 'bg-primary/10 text-primary border-primary/20 border'
+                                                : 'hover:bg-card-hover text-secondary',
+                                            ),
+                                            children: [
+                                              (0, d.jsx)('div', {
+                                                className: 'leading-tight',
+                                                children: e.chapter,
+                                              }),
+                                              (0, d.jsxs)('div', {
+                                                className: 'text-muted mt-1 text-xs',
+                                                children: [e.hadithCount, ' hadiths'],
+                                              }),
+                                            ],
+                                          },
+                                          `${a}-${c}`,
+                                        ),
+                                      ),
+                                    }),
+                                ],
+                              },
+                              a,
+                            ),
+                          ),
+                        }),
+                      ],
+                    }),
+                  }),
+                  (0, d.jsx)('div', {
+                    className: 'lg:col-span-2',
+                    children: s
+                      ? (0, d.jsxs)('div', {
+                          className: 'space-y-4',
+                          children: [
+                            (0, d.jsx)('div', {
+                              className: 'mb-8 rounded-xl border border-border bg-surface-1 p-6',
+                              children: (0, d.jsxs)('div', {
+                                className: 'flex items-center justify-between',
+                                children: [
+                                  (0, d.jsxs)('div', {
+                                    children: [
+                                      (0, d.jsx)('h2', {
+                                        className: 'mb-2 text-2xl font-bold text-foreground',
+                                        children: s.category,
+                                      }),
+                                      (0, d.jsx)('p', {
+                                        className: 'mb-3 font-medium text-foreground-muted',
+                                        children: s.chapter,
+                                      }),
+                                      (0, d.jsxs)('div', {
+                                        className: 'flex items-center gap-3 text-sm',
+                                        children: [
+                                          (0, d.jsx)('span', {
+                                            className:
+                                              'rounded-full bg-surface-2 px-3 py-1.5 font-medium text-foreground',
+                                            children: 'all' === m ? 'All Volumes' : (0, l.P)(C, m),
+                                          }),
+                                          (0, d.jsxs)('span', {
+                                            className:
+                                              'rounded-full bg-surface-2 px-3 py-1.5 font-medium text-foreground',
+                                            children: [
+                                              u.length,
+                                              ' ',
+                                              1 === u.length ? 'Hadith' : 'Hadiths',
+                                            ],
+                                          }),
+                                        ],
+                                      }),
+                                    ],
+                                  }),
+                                  y &&
+                                    (0, d.jsxs)('div', {
+                                      className:
+                                        'flex items-center gap-2 text-sm text-foreground-muted',
+                                      children: [
+                                        (0, d.jsx)('div', {
+                                          className:
+                                            'h-4 w-4 animate-spin rounded-full border-b-2 border-foreground-muted',
+                                        }),
+                                        'Loading hadiths...',
+                                      ],
+                                    }),
+                                ],
+                              }),
+                            }),
+                            (0, d.jsx)('div', {
+                              className:
+                                'max-h-[80vh] space-y-6 overflow-y-auto overflow-x-visible',
+                              children: y
+                                ? (0, d.jsxs)('div', {
+                                    className:
+                                      'border-theme bg-card shadow-soft rounded-xl border p-12 text-center',
+                                    children: [
+                                      (0, d.jsx)('div', {
+                                        className:
+                                          'border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2',
+                                      }),
+                                      (0, d.jsx)('p', {
+                                        className: 'text-muted',
+                                        children: 'Loading chapter hadiths...',
+                                      }),
+                                    ],
+                                  })
+                                : u.length > 0
+                                  ? u.map((b, c) =>
+                                      (0, d.jsx)(
+                                        g.A,
+                                        { hadith: b },
+                                        b._id ?? `${b.bookId ?? a}-${b.id ?? c}`,
+                                      ),
+                                    )
+                                  : (0, d.jsx)('div', {
+                                      className:
+                                        'border-theme bg-card shadow-soft rounded-xl border p-8 text-center',
+                                      children: (0, d.jsx)('p', {
+                                        className: 'text-muted',
+                                        children: 'No hadiths found in this chapter.',
+                                      }),
+                                    }),
+                            }),
+                          ],
+                        })
+                      : (0, d.jsxs)('div', {
+                          className:
+                            'border-theme bg-card shadow-soft rounded-xl border p-12 text-center',
+                          children: [
+                            (0, d.jsx)(j.A, { className: 'text-muted mx-auto mb-4 h-12 w-12' }),
+                            (0, d.jsx)('h4', {
+                              className: 'text-primary mb-2 text-lg font-medium',
+                              children: 'Select a Chapter to Begin Reading',
+                            }),
+                            (0, d.jsx)('p', {
+                              className: 'text-muted mb-4',
+                              children:
+                                'Expand a category on the left and select a chapter to view its hadiths with complete text, Arabic content, and grading information.',
+                            }),
+                            (0, d.jsxs)('div', {
+                              className: 'text-muted text-sm',
+                              children: [
+                                (0, d.jsx)('p', { children: '\uD83D\uDCD6 Each hadith includes:' }),
+                                (0, d.jsxs)('ul', {
+                                  className: 'mt-2 space-y-1',
+                                  children: [
+                                    (0, d.jsx)('li', {
+                                      children: '• Complete English and Arabic text',
+                                    }),
+                                    (0, d.jsx)('li', { children: '• Chain of narration (Sanad)' }),
+                                    (0, d.jsx)('li', {
+                                      children: '• Scholarly grading and authentication',
+                                    }),
+                                    (0, d.jsx)('li', { children: '• Source references and links' }),
+                                  ],
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                  }),
+                ],
+              }),
+          ],
+        })
+      }
+    },
+    47748: (a, b, c) => {
+      c.d(b, { A: () => d })
+      let d = (0, c(14959).A)('book', [
+        [
+          'path',
+          {
+            d: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20',
+            key: 'k3hazp',
+          },
+        ],
+      ])
+    },
+  }))

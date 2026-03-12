@@ -1,0 +1,800 @@
+;(self.webpackChunk_N_E = self.webpackChunk_N_E || []).push([
+  [177],
+  {
+    122: (e, a, t) => {
+      'use strict'
+      ;(t.r(a), t.d(a, { default: () => s }))
+      let s = {
+        src: '/read/_next/static/media/favicon.19597811.ico',
+        height: 32,
+        width: 32,
+        blurWidth: 0,
+        blurHeight: 0,
+      }
+    },
+    830: (e, a, t) => {
+      'use strict'
+      t.d(a, { default: () => b })
+      var s = t(5155),
+        l = t(2619),
+        i = t.n(l),
+        n = t(63),
+        r = t(7937),
+        o = t(5626),
+        d = t(235),
+        c = t(5870),
+        u = t(2740),
+        h = t(6059),
+        m = t(6198),
+        x = t(3668),
+        f = t(3243),
+        g = t(916),
+        p = t(7003)
+      function b() {
+        var e
+        let { toggleSettings: a } = (0, m.t)(),
+          { chapterInfo: t } = (0, x.h)(),
+          { bookmarkCount: l } = (0, g.T)(),
+          b = (0, f.c)(),
+          j = (0, n.usePathname)(),
+          v = (0, n.useParams)(),
+          y = (0, n.useRouter)(),
+          w = j.startsWith('/book/')
+            ? v.bookId
+            : '/' === j ||
+                '/al-kafi' === j ||
+                j.startsWith('/al-kafi/') ||
+                j.includes('/Uyun-akhbar-al-Rida')
+              ? null
+              : v.bookSlug,
+          N = w ? (0, u.bE)(w) : null,
+          k = (e) =>
+            e
+              ? e
+                  .replace(/-/g, ' ')
+                  .replace(/\bvolume\b \d+/i, '')
+                  .replace(/\bSaduq\b/i, '')
+                  .trim()
+              : '',
+          A = (e) =>
+            e
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(RegExp('\\p{M}', 'gu'), '')
+              .replace(/[^a-z0-9]+/g, ''),
+          S = (e) => {
+            if (!e) return null
+            let a = A(e)
+            for (let e of h.b) {
+              let t = A(e.title)
+              if (t && (a.includes(t) || t.includes(a))) return e.title
+            }
+            return null
+          },
+          q = j.includes('/al-kafi/volume/') && j.includes('/chapter/'),
+          C =
+            (j.startsWith('/book/') ||
+              ('/' !== j && '/al-kafi' !== j && !j.startsWith('/al-kafi/'))) &&
+            j.includes('/chapter/'),
+          z = q || C,
+          M = j.includes('/al-kafi/hadith/'),
+          P = '/' !== j && '/al-kafi' !== j && !j.startsWith('/al-kafi/') && j.includes('/hadith/'),
+          E = M || P,
+          R = N ? S(N) || (null == (e = (0, u.ei)(N)) ? void 0 : e.englishName) || k(N) : ''
+        return (0, s.jsx)('header', {
+          className:
+            'bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 border-b border-border backdrop-blur',
+          children: (0, s.jsxs)('div', {
+            className: 'mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6',
+            children: [
+              (z || E) &&
+                (0, s.jsx)(p.$, {
+                  variant: 'ghost',
+                  size: 'icon',
+                  className: 'h-8 w-8 shrink-0',
+                  onClick: () => {
+                    q || M ? y.push('/al-kafi') : w ? y.push('/'.concat(w)) : y.push('/')
+                  },
+                  children: (0, s.jsx)(o.A, { className: 'h-4 w-4' }),
+                }),
+              (0, s.jsx)(i(), {
+                href: '/',
+                onClick: (e) => {
+                  '/' === j &&
+                    (e.preventDefault(),
+                    b.saveSearchState(null),
+                    window.dispatchEvent(new CustomEvent('clearSearch')))
+                },
+                className: 'shrink-0 font-arabic text-lg font-bold tracking-tight sm:text-xl',
+                children: 'مكتبة السعادة',
+              }),
+              '/' !== j &&
+                (0, s.jsxs)('div', {
+                  className: 'hidden min-w-0 items-center gap-1.5 sm:flex',
+                  children: [
+                    (0, s.jsx)(r.A, { className: 'h-3.5 w-3.5 shrink-0 text-foreground-faint' }),
+                    (() => {
+                      if ('/' === j) return null
+                      if ('/bookmarks' === j)
+                        return (0, s.jsx)('span', {
+                          className: 'text-sm text-foreground-muted',
+                          children: 'Bookmarks',
+                        })
+                      if ('/al-kafi' === j && !q && !M)
+                        return (0, s.jsx)('span', {
+                          className: 'text-sm text-foreground-muted',
+                          children: 'Al-Kāfi',
+                        })
+                      if (z && t)
+                        return (0, s.jsxs)('div', {
+                          className: 'flex items-center gap-1 text-sm text-foreground-muted',
+                          children: [
+                            (0, s.jsx)(i(), {
+                              href: q ? '/al-kafi' : w ? '/'.concat(w) : '/',
+                              className: 'transition-colors hover:text-foreground',
+                              children: q ? 'Al-Kāfi' : R,
+                            }),
+                            t.volumeId &&
+                              (0, s.jsxs)(s.Fragment, {
+                                children: [
+                                  (0, s.jsx)(r.A, { className: 'h-3 w-3' }),
+                                  (0, s.jsxs)('span', { children: ['Vol. ', t.volumeId] }),
+                                ],
+                              }),
+                            (0, s.jsx)(r.A, { className: 'h-3 w-3' }),
+                            (0, s.jsx)('span', {
+                              className: 'max-w-[200px] truncate text-foreground',
+                              children: t.chapter,
+                            }),
+                          ],
+                        })
+                      if (E && t)
+                        return (0, s.jsxs)('div', {
+                          className: 'flex items-center gap-1 text-sm text-foreground-muted',
+                          children: [
+                            (0, s.jsx)(i(), {
+                              href: M ? '/al-kafi' : w ? '/'.concat(w) : '/',
+                              className: 'transition-colors hover:text-foreground',
+                              children: M ? 'Al-Kāfi' : R,
+                            }),
+                            (0, s.jsx)(r.A, { className: 'h-3 w-3' }),
+                            (0, s.jsx)('span', {
+                              className: 'text-foreground',
+                              children: 'Hadith',
+                            }),
+                          ],
+                        })
+                      if (N) {
+                        var e
+                        let a =
+                          S(N) || (null == (e = (0, u.ei)(N)) ? void 0 : e.englishName) || k(N)
+                        return (0, s.jsx)('span', {
+                          className: 'truncate text-sm text-foreground-muted',
+                          children: a,
+                        })
+                      }
+                      return null
+                    })(),
+                  ],
+                }),
+              (0, s.jsx)('div', { className: 'flex-1' }),
+              (0, s.jsxs)('div', {
+                className: 'flex items-center gap-1',
+                children: [
+                  (0, s.jsx)(p.$, {
+                    variant: 'ghost',
+                    size: 'icon',
+                    className: 'relative h-8 w-8',
+                    asChild: !0,
+                    children: (0, s.jsxs)(i(), {
+                      href: '/bookmarks',
+                      title: 'Bookmarks ('.concat(l, ')'),
+                      children: [
+                        (0, s.jsx)(d.A, { className: 'h-4 w-4' }),
+                        l > 0 &&
+                          (0, s.jsx)('span', {
+                            className:
+                              'absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-bookmark text-[10px] font-bold text-background',
+                            children: l > 99 ? '99+' : l,
+                          }),
+                      ],
+                    }),
+                  }),
+                  (0, s.jsx)(p.$, {
+                    variant: 'ghost',
+                    size: 'icon',
+                    className: 'h-8 w-8',
+                    onClick: a,
+                    title: 'Settings',
+                    children: (0, s.jsx)(c.A, { className: 'h-4 w-4' }),
+                  }),
+                ],
+              }),
+            ],
+          }),
+        })
+      }
+    },
+    1290: () => {},
+    2419: (e, a, t) => {
+      'use strict'
+      t.d(a, { default: () => o })
+      var s = t(5155)
+      t(2115)
+      var l = t(6198),
+        i = t(3668),
+        n = t(3243),
+        r = t(916)
+      function o(e) {
+        let { children: a } = e
+        return (0, s.jsx)(l.Z, {
+          children: (0, s.jsx)(i.x, {
+            children: (0, s.jsx)(n.i, { children: (0, s.jsx)(r.$, { children: a }) }),
+          }),
+        })
+      }
+    },
+    3243: (e, a, t) => {
+      'use strict'
+      t.d(a, { c: () => r, i: () => n })
+      var s = t(5155),
+        l = t(2115)
+      let i = (0, l.createContext)(void 0)
+      function n(e) {
+        let { children: a } = e,
+          [t, n] = (0, l.useState)({ scrollPosition: 0, lastPath: '/', searchState: null }),
+          r = (0, l.useRef)(t)
+        r.current = t
+        let o = (0, l.useCallback)((e) => {
+            n((a) => ({ ...a, scrollPosition: e }))
+          }, []),
+          d = (0, l.useCallback)((e) => {
+            n((a) => ({ ...a, searchState: e }))
+          }, []),
+          c = (0, l.useCallback)((e) => {
+            n((a) => ({ ...a, lastPath: e }))
+          }, []),
+          u = (0, l.useCallback)(() => r.current.scrollPosition, []),
+          h = (0, l.useCallback)(() => r.current.searchState, []),
+          m = (0, l.useCallback)(() => {
+            n({ scrollPosition: 0, lastPath: '/', searchState: null })
+          }, []),
+          x = (0, l.useMemo)(
+            () => ({
+              navigationState: t,
+              saveScrollPosition: o,
+              saveSearchState: d,
+              savePath: c,
+              restoreScrollPosition: u,
+              getSearchState: h,
+              clearNavigationState: m,
+            }),
+            [t, o, d, c, u, h, m],
+          )
+        return (0, s.jsx)(i.Provider, { value: x, children: a })
+      }
+      function r() {
+        let e = (0, l.useContext)(i)
+        if (void 0 === e) throw Error('useNavigation must be used within a NavigationProvider')
+        return e
+      }
+    },
+    3668: (e, a, t) => {
+      'use strict'
+      t.d(a, { h: () => r, x: () => n })
+      var s = t(5155),
+        l = t(2115)
+      let i = (0, l.createContext)(void 0)
+      function n(e) {
+        let { children: a } = e,
+          [t, n] = (0, l.useState)(null)
+        return (0, s.jsx)(i.Provider, { value: { chapterInfo: t, setChapterInfo: n }, children: a })
+      }
+      function r() {
+        let e = (0, l.useContext)(i)
+        if (!e) throw Error('useChapter must be used within ChapterProvider')
+        return e
+      }
+    },
+    4219: (e, a, t) => {
+      ;(Promise.resolve().then(t.bind(t, 122)),
+        Promise.resolve().then(t.t.bind(t, 1290, 23)),
+        Promise.resolve().then(t.bind(t, 2419)),
+        Promise.resolve().then(t.bind(t, 6109)),
+        Promise.resolve().then(t.bind(t, 830)),
+        Promise.resolve().then(t.bind(t, 2180)),
+        Promise.resolve().then(t.t.bind(t, 9220, 23)))
+    },
+    6059: (e, a, t) => {
+      'use strict'
+      t.d(a, { b: () => s })
+      let s = [
+        {
+          id: 1,
+          title: 'Al-Kāfi',
+          author: 'Shaykh Muḥammad b. Yaʿqūb al-Kulaynī',
+          image: 'https://thaqalayn.net/css/images/1-round.jpeg',
+          highlighted: !0,
+        },
+        {
+          id: 2,
+          title: 'ʿUyūn akhbār al-Riḍā',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/11-round.jpeg',
+        },
+        {
+          id: 3,
+          title: 'Al-Amālī',
+          author: 'Shaykh Muḥammad b. Muḥammad al-Mufīd',
+          image: 'https://thaqalayn.net/css/images/13-round.jpeg',
+        },
+        {
+          id: 4,
+          title: 'Al-Amālī',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/29-round.jpeg',
+        },
+        {
+          id: 5,
+          title: 'Man Lā Yaḥḍuruh al-Faqīh',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/34-round.jpeg',
+          description:
+            'A jurisprudential collection compiled by Shaykh al-Ṣaduq, covering practical legal rulings and traditions across multiple volumes.',
+        },
+        {
+          id: 6,
+          title: 'Al-Tawḥīd',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/14-round.jpeg',
+        },
+        {
+          id: 7,
+          title: 'Kitāb al-Ghayba',
+          author: 'Abū ʿAbd Allah Muḥammad b. Ibrāhīm al-Nuʿmānī',
+          image: 'https://thaqalayn.net/css/images/22-round.jpeg',
+        },
+        {
+          id: 8,
+          title: 'Kitāb al-Ghayba',
+          author: 'Shaykh Muḥammad b. al-Ḥasan al-Ṭūsī',
+          image: 'https://thaqalayn.net/css/images/27-round.jpeg',
+        },
+        {
+          id: 9,
+          title: 'Nahj al-Balāgha',
+          author: 'al-Sharīf al-Raḍī',
+          image: 'https://thaqalayn.net/css/images/32-round.jpeg',
+        },
+        {
+          id: 10,
+          title: 'Ṣifāt al-Shīʿa',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/26-round.jpeg',
+        },
+        {
+          id: 11,
+          title: 'Faḍaʾil al-Shīʿa',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/25-round.jpeg',
+        },
+        {
+          id: 12,
+          title: 'Kitāb al-Muʾmin',
+          author: 'Ḥusayn b. Saʿīd al-Ahwāzī',
+          image: 'https://thaqalayn.net/css/images/30-round.jpeg',
+        },
+        {
+          id: 13,
+          title: 'Kitāb al-Zuhd',
+          author: 'Ḥusayn b. Saʿīd al-Ahwāzī',
+          image: 'https://thaqalayn.net/css/images/31-round.jpeg',
+        },
+        {
+          id: 14,
+          title: 'Risālat al-Ḥuqūq',
+          author: 'attributed to Imam Zayn al-ʿĀbidīn (a.s)',
+          image: 'https://thaqalayn.net/css/images/33-round.jpeg',
+        },
+        {
+          id: 15,
+          title: 'Thawāb al-Aʿmāl wa ʿiqāb al-Aʿmāl',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/23-round.jpeg',
+        },
+        {
+          id: 16,
+          title: 'Al-Khiṣāl',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/10-round.jpeg',
+        },
+        {
+          id: 17,
+          title: 'Kāmil al-Ziyārāt',
+          author: 'Shaykh Jaʿfar b. Muḥammad al-Qummī',
+          image: 'https://thaqalayn.net/css/images/24-round.jpeg',
+        },
+        {
+          id: 18,
+          title: 'Kitāb al-Ḍuʿafāʾ',
+          author: 'Abū al-Ḥusayn Aḥmad b. al-Ḥusayn al-Ghaḍāʾirī',
+          image: 'https://thaqalayn.net/css/images/17-round.jpeg',
+        },
+        {
+          id: 19,
+          title: 'Maʿānī al-ʾAkhbār',
+          author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+          image: 'https://thaqalayn.net/css/images/28-round.jpeg',
+        },
+        {
+          id: 20,
+          title: 'Muʿjam al-Aḥādīth al-Muʿtabara',
+          author: 'Shaykh Muḥammad Āṣif al-Muḥsinī',
+          image: 'https://thaqalayn.net/css/images/9-round.jpeg',
+        },
+      ]
+    },
+    6109: (e, a, t) => {
+      'use strict'
+      t.d(a, { default: () => w })
+      var s = t(5155),
+        l = t(6198),
+        i = t(2115),
+        n = t(3409),
+        r = t(5229),
+        o = t(5016)
+      let d = n.bL
+      ;(n.l9, n.bm)
+      let c = n.ZL,
+        u = i.forwardRef((e, a) => {
+          let { className: t, ...l } = e
+          return (0, s.jsx)(n.hJ, {
+            className: (0, o.cn)(
+              'fixed inset-0 z-50 bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+              t,
+            ),
+            ...l,
+            ref: a,
+          })
+        })
+      u.displayName = n.hJ.displayName
+      let h = i.forwardRef((e, a) => {
+        let { side: t = 'right', className: l, children: i, ...d } = e
+        return (0, s.jsxs)(c, {
+          children: [
+            (0, s.jsx)(u, {}),
+            (0, s.jsxs)(n.UC, {
+              ref: a,
+              className: (0, o.cn)(
+                'fixed z-50 flex flex-col gap-4 border-border bg-surface-1 p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-200 data-[state=open]:duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out',
+                'top' === t &&
+                  'inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
+                'bottom' === t &&
+                  'inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+                'left' === t &&
+                  'inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
+                'right' === t &&
+                  'inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
+                l,
+              ),
+              ...d,
+              children: [
+                i,
+                (0, s.jsxs)(n.bm, {
+                  className:
+                    'absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none',
+                  children: [
+                    (0, s.jsx)(r.A, { className: 'h-4 w-4' }),
+                    (0, s.jsx)('span', { className: 'sr-only', children: 'Close' }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        })
+      })
+      h.displayName = n.UC.displayName
+      let m = (e) => {
+          let { className: a, ...t } = e
+          return (0, s.jsx)('div', {
+            className: (0, o.cn)('flex flex-col space-y-2 text-left', a),
+            ...t,
+          })
+        },
+        x = i.forwardRef((e, a) => {
+          let { className: t, ...l } = e
+          return (0, s.jsx)(n.hE, {
+            ref: a,
+            className: (0, o.cn)('text-lg font-semibold text-foreground', t),
+            ...l,
+          })
+        })
+      x.displayName = n.hE.displayName
+      let f = i.forwardRef((e, a) => {
+        let { className: t, ...l } = e
+        return (0, s.jsx)(n.VY, {
+          ref: a,
+          className: (0, o.cn)('text-sm text-foreground-muted', t),
+          ...l,
+        })
+      })
+      f.displayName = n.VY.displayName
+      var g = t(7621)
+      let p = i.forwardRef((e, a) => {
+        let { className: t, ...l } = e
+        return (0, s.jsx)(g.bL, {
+          className: (0, o.cn)(
+            'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-accent data-[state=unchecked]:bg-border',
+            t,
+          ),
+          ...l,
+          ref: a,
+          children: (0, s.jsx)(g.zi, {
+            className: (0, o.cn)(
+              'pointer-events-none block h-4 w-4 rounded-full bg-foreground shadow-sm ring-0 transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0',
+            ),
+          }),
+        })
+      })
+      function b(e) {
+        let { min: a, max: t, step: l, value: n, onValueChange: r, className: d } = e,
+          c = i.useRef(null),
+          u = i.useRef(!1),
+          [, h] = i.useState(0),
+          m = i.useMemo(() => {
+            let e = []
+            for (let s = a; s <= t; s += l) e.push(s)
+            return e
+          }, [a, t, l]),
+          x = m.length - 1,
+          f = m.indexOf(n),
+          g = f >= 0 ? f : Math.round(((n - a) / (t - a)) * x),
+          p = x > 0 ? g / x : 0,
+          b = i.useCallback(
+            (e) => {
+              let a = c.current
+              if (!a) return
+              let t = a.getBoundingClientRect()
+              r(m[Math.round(Math.max(0, Math.min(1, (e - t.left) / t.width)) * x)])
+            },
+            [x, m, r],
+          )
+        i.useEffect(() => {
+          let e = (e) => {
+              u.current && b(e.clientX)
+            },
+            a = () => {
+              u.current && ((u.current = !1), h((e) => e + 1))
+            }
+          return (
+            window.addEventListener('pointermove', e),
+            window.addEventListener('pointerup', a),
+            window.addEventListener('pointercancel', a),
+            () => {
+              ;(window.removeEventListener('pointermove', e),
+                window.removeEventListener('pointerup', a),
+                window.removeEventListener('pointercancel', a))
+            }
+          )
+        }, [b])
+        let j = i.useCallback(
+          (e) => {
+            ;(e.preventDefault(),
+              e.stopPropagation(),
+              (u.current = !0),
+              h((e) => e + 1),
+              b(e.clientX))
+          },
+          [b],
+        )
+        return (0, s.jsx)('div', {
+          className: (0, o.cn)('relative flex w-full touch-none select-none items-center', d),
+          style: { height: 28 },
+          onPointerDown: j,
+          role: 'slider',
+          'aria-valuemin': a,
+          'aria-valuemax': t,
+          'aria-valuenow': n,
+          tabIndex: 0,
+          onKeyDown: (e) => {
+            'ArrowRight' === e.key || 'ArrowUp' === e.key
+              ? (e.preventDefault(), r(m[Math.min(g + 1, x)]))
+              : ('ArrowLeft' === e.key || 'ArrowDown' === e.key) &&
+                (e.preventDefault(), r(m[Math.max(g - 1, 0)]))
+          },
+          children: (0, s.jsxs)('div', {
+            ref: c,
+            className: 'relative h-1 w-full rounded-sm bg-zinc-800',
+            children: [
+              (0, s.jsx)('div', {
+                className: 'absolute inset-y-0 left-0 rounded-sm bg-zinc-500',
+                style: { width: ''.concat(100 * p, '%') },
+              }),
+              m.map((e, a) => {
+                let t = (a / x) * 100
+                return (0, s.jsx)(
+                  'div',
+                  {
+                    className: (0, o.cn)(
+                      'absolute top-1/2 z-10 h-2 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-[1px] transition-colors duration-100',
+                      a <= g ? 'bg-zinc-400' : 'bg-zinc-700',
+                    ),
+                    style: { left: ''.concat(t, '%') },
+                  },
+                  e,
+                )
+              }),
+              (0, s.jsx)('div', {
+                className: (0, o.cn)(
+                  'absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2',
+                  'h-3.5 w-2.5 rounded-[2px] border border-zinc-500 bg-zinc-300 shadow-sm',
+                  u.current && 'scale-110 bg-zinc-200',
+                ),
+                style: { left: ''.concat(100 * p, '%') },
+              }),
+            ],
+          }),
+        })
+      }
+      p.displayName = g.bL.displayName
+      var j = t(4664),
+        v = t(7003),
+        y = t(8314)
+      function w() {
+        let {
+          settings: e,
+          updateSettings: a,
+          isSettingsOpen: t,
+          toggleSettings: i,
+          resetArabicFontSize: n,
+          resetEnglishFontSize: r,
+        } = (0, l.t)()
+        return (0, s.jsx)(d, {
+          open: t,
+          onOpenChange: i,
+          children: (0, s.jsxs)(h, {
+            side: 'right',
+            className: 'flex flex-col overflow-hidden',
+            children: [
+              (0, s.jsxs)(m, {
+                children: [
+                  (0, s.jsx)(x, { children: 'Settings' }),
+                  (0, s.jsx)(f, { children: 'Customize your reading experience.' }),
+                ],
+              }),
+              (0, s.jsx)(j.w, { className: '-mx-6 w-auto' }),
+              (0, s.jsxs)('div', {
+                className: '-mx-6 -mb-6 flex-1 space-y-6 overflow-y-auto px-6 pb-6 pt-1',
+                children: [
+                  (0, s.jsxs)('section', {
+                    className: 'space-y-3',
+                    children: [
+                      (0, s.jsx)('h3', {
+                        className: 'text-sm font-medium text-foreground',
+                        children: 'Hadith Display',
+                      }),
+                      (0, s.jsxs)('label', {
+                        className:
+                          'flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border px-3 py-3',
+                        children: [
+                          (0, s.jsxs)('div', {
+                            className: 'min-w-0 flex-1',
+                            children: [
+                              (0, s.jsx)('p', {
+                                className: 'text-sm font-medium text-foreground',
+                                children: 'Always show full text',
+                              }),
+                              (0, s.jsx)('p', {
+                                className: 'mt-0.5 text-xs text-foreground-muted',
+                                children: 'Expand all hadith text by default',
+                              }),
+                            ],
+                          }),
+                          (0, s.jsx)(p, {
+                            checked: e.alwaysShowFullHadith,
+                            onCheckedChange: (e) => a({ alwaysShowFullHadith: e }),
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  (0, s.jsx)(j.w, { className: '-mx-6 w-auto' }),
+                  (0, s.jsxs)('section', {
+                    className: 'space-y-5',
+                    children: [
+                      (0, s.jsx)('h3', {
+                        className: 'text-sm font-medium text-foreground',
+                        children: 'Text Size',
+                      }),
+                      (0, s.jsxs)('div', {
+                        className: 'space-y-3',
+                        children: [
+                          (0, s.jsxs)('div', {
+                            className: 'flex items-center justify-between',
+                            children: [
+                              (0, s.jsx)('span', {
+                                className: 'text-sm text-foreground-muted',
+                                children: 'Arabic',
+                              }),
+                              (0, s.jsxs)('div', {
+                                className: 'flex items-center gap-2',
+                                children: [
+                                  (0, s.jsxs)('span', {
+                                    className:
+                                      'min-w-[3ch] text-right text-xs tabular-nums text-foreground-faint',
+                                    children: [e.arabicFontSize, '%'],
+                                  }),
+                                  (0, s.jsx)(v.$, {
+                                    variant: 'ghost',
+                                    size: 'icon',
+                                    className: 'h-6 w-6',
+                                    onClick: n,
+                                    title: 'Reset Arabic font size',
+                                    children: (0, s.jsx)(y.A, { className: 'h-3 w-3' }),
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                          (0, s.jsx)(b, {
+                            min: 75,
+                            max: 150,
+                            step: 5,
+                            value: e.arabicFontSize,
+                            onValueChange: (e) => a({ arabicFontSize: e }),
+                          }),
+                        ],
+                      }),
+                      (0, s.jsxs)('div', {
+                        className: 'space-y-3',
+                        children: [
+                          (0, s.jsxs)('div', {
+                            className: 'flex items-center justify-between',
+                            children: [
+                              (0, s.jsx)('span', {
+                                className: 'text-sm text-foreground-muted',
+                                children: 'English',
+                              }),
+                              (0, s.jsxs)('div', {
+                                className: 'flex items-center gap-2',
+                                children: [
+                                  (0, s.jsxs)('span', {
+                                    className:
+                                      'min-w-[3ch] text-right text-xs tabular-nums text-foreground-faint',
+                                    children: [e.englishFontSize, '%'],
+                                  }),
+                                  (0, s.jsx)(v.$, {
+                                    variant: 'ghost',
+                                    size: 'icon',
+                                    className: 'h-6 w-6',
+                                    onClick: r,
+                                    title: 'Reset English font size',
+                                    children: (0, s.jsx)(y.A, { className: 'h-3 w-3' }),
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                          (0, s.jsx)(b, {
+                            min: 75,
+                            max: 150,
+                            step: 5,
+                            value: e.englishFontSize,
+                            onValueChange: (e) => a({ englishFontSize: e }),
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        })
+      }
+    },
+  },
+  (e) => {
+    ;(e.O(0, [442, 307, 619, 928, 952, 441, 255, 358], () => e((e.s = 4219))), (_N_E = e.O()))
+  },
+])

@@ -1,42 +1,45 @@
 // Performance monitoring utilities
 
-export const measurePerformance = (name: string, fn: () => void) => {
-  if (typeof performance !== 'undefined') {
-    const start = performance.now()
-    fn()
-    const end = performance.now()
-    // Performance logging removed for production
-  } else {
-    fn()
-  }
+export const measurePerformance = (_name: string, fn: () => void) => {
+  fn()
 }
 
-export const measureAsyncPerformance = async (name: string, fn: () => Promise<any>) => {
-  if (typeof performance !== 'undefined') {
-    const start = performance.now()
-    const result = await fn()
-    const end = performance.now()
-    // Performance logging removed for production
-    return result
-  } else {
-    return await fn()
-  }
+export const measureAsyncPerformance = async (_name: string, fn: () => Promise<unknown>) => {
+  return await fn()
 }
 
-// Debounce utility for search
+// Debounce utility for search (with cancel support)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DebouncedFunction<T extends (...args: any[]) => any> = ((
+  ...args: Parameters<T>
+) => void) & {
+  cancel: () => void
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number,
-): ((...args: Parameters<T>) => void) => {
+): DebouncedFunction<T> => {
   let timeout: NodeJS.Timeout | null = null
 
-  return (...args: Parameters<T>) => {
+  const debounced = (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
+
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+  }
+
+  return debounced as DebouncedFunction<T>
 }
 
 // Throttle utility for scroll events
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const throttle = <T extends (...args: any[]) => any>(
   func: T,
   limit: number,

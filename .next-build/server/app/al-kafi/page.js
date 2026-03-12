@@ -1,0 +1,1041 @@
+;(() => {
+  var a = {}
+  ;((a.id = 532),
+    (a.ids = [532]),
+    (a.modules = {
+      261: (a) => {
+        'use strict'
+        a.exports = require('next/dist/shared/lib/router/utils/app-paths')
+      },
+      3295: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/after-task-async-storage.external.js')
+      },
+      4738: (a, b, c) => {
+        'use strict'
+        ;(c.r(b), c.d(b, { default: () => s }))
+        var d = c(21124),
+          e = c(38301),
+          f = c(94348),
+          g = c(18131),
+          h = c(61365),
+          i = c(22147),
+          j = c(31701),
+          k = c(15514),
+          l = c(22544),
+          m = c(88285),
+          n = c(14263),
+          o = c(15303)
+        let p = (0, e.lazy)(() => c.e(949).then(c.bind(c, 76949))),
+          q = (0, e.lazy)(() => c.e(497).then(c.bind(c, 46497))),
+          r = (0, e.lazy)(() => c.e(605).then(c.bind(c, 81605)))
+        function s() {
+          let {
+              restoreScrollPosition: a,
+              savePath: b,
+              getSearchState: c,
+              saveSearchState: s,
+              saveScrollPosition: t,
+            } = (0, h.c)(),
+            u = (0, e.useRef)(null),
+            { history: v, addToHistory: w, clearHistory: x } = (0, i.d)(u),
+            [y, z] = (0, e.useState)(!1),
+            [A, B] = (0, e.useState)(''),
+            [C, D] = (0, e.useState)([]),
+            [E, F] = (0, e.useState)(!1),
+            [G, H] = (0, e.useState)(null),
+            [I, J] = (0, e.useState)(null),
+            [K, L] = (0, e.useState)('structure'),
+            M = (0, e.useMemo)(
+              () =>
+                (0, j.sg)(async (a) => {
+                  if (!a.trim()) {
+                    ;(D([]), H(null), s(null))
+                    return
+                  }
+                  ;(F(!0), H(null))
+                  try {
+                    let b = f.lH.getAlKafiVolumes().join(','),
+                      c = await fetch(`/read/api/search?q=${encodeURIComponent(a)}&book=${b}`),
+                      d = await c.json()
+                    if (!c.ok || d.error) throw Error(d.error || 'Search failed')
+                    let e = d.results
+                    ;(D(e),
+                      s({
+                        query: a,
+                        results: e,
+                        page: 1,
+                        filters: { grading: 'all', sort: 'relevance' },
+                      }))
+                  } catch {
+                    ;(D([]), H('Search failed. Please try again.'), s(null))
+                  } finally {
+                    F(!1)
+                  }
+                }, 300),
+              [s],
+            )
+          return (0, d.jsxs)('main', {
+            className: 'min-h-screen',
+            children: [
+              (0, d.jsx)('div', {
+                className: 'mx-auto max-w-2xl px-4 pt-6 sm:px-6',
+                children: (0, d.jsxs)('div', {
+                  className: 'relative',
+                  children: [
+                    (0, d.jsxs)('div', {
+                      className:
+                        'flex items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5',
+                      children: [
+                        (0, d.jsx)(m.A, { className: 'h-4 w-4 shrink-0 text-foreground-faint' }),
+                        (0, d.jsx)('input', {
+                          ref: u,
+                          placeholder: 'Search across all Al-Kāfi volumes… (Ctrl+K)',
+                          value: A,
+                          onChange: (a) =>
+                            ((a) => {
+                              if ((B(a), z(!1), !a.trim())) {
+                                ;(M.cancel(), D([]), H(null), s(null))
+                                return
+                              }
+                              M(a)
+                            })(a.target.value),
+                          onFocus: () => {
+                            !A && v.length > 0 && z(!0)
+                          },
+                          onBlur: () => setTimeout(() => z(!1), 200),
+                          onKeyDown: (a) => {
+                            ;('Enter' === a.key && (A.trim() && w(A.trim()), z(!1)),
+                              'Escape' === a.key && (z(!1), u.current?.blur()))
+                          },
+                          className:
+                            'w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint',
+                        }),
+                        E &&
+                          (0, d.jsx)(n.A, {
+                            className: 'h-4 w-4 shrink-0 animate-spin text-foreground-muted',
+                          }),
+                        (0, d.jsx)('kbd', {
+                          className:
+                            'hidden shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-foreground-faint sm:inline-block',
+                          children: '⌘K',
+                        }),
+                      ],
+                    }),
+                    y &&
+                      v.length > 0 &&
+                      (0, d.jsxs)('div', {
+                        className:
+                          'absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-surface-1 shadow-lg',
+                        children: [
+                          (0, d.jsxs)('div', {
+                            className: 'flex items-center justify-between px-3 py-1.5',
+                            children: [
+                              (0, d.jsx)('span', {
+                                className: 'text-xs font-medium text-foreground-muted',
+                                children: 'Recent searches',
+                              }),
+                              (0, d.jsx)('button', {
+                                onMouseDown: (a) => a.preventDefault(),
+                                onClick: x,
+                                className:
+                                  'text-xs text-foreground-faint transition-colors hover:text-foreground-muted',
+                                children: 'Clear',
+                              }),
+                            ],
+                          }),
+                          v.map((a, b) =>
+                            (0, d.jsxs)(
+                              'button',
+                              {
+                                onMouseDown: (a) => a.preventDefault(),
+                                onClick: () => {
+                                  ;(B(a), z(!1), M(a))
+                                },
+                                className:
+                                  'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-surface-2',
+                                children: [
+                                  (0, d.jsx)(o.A, {
+                                    className: 'h-3 w-3 shrink-0 text-foreground-faint',
+                                  }),
+                                  (0, d.jsx)('span', { className: 'truncate', children: a }),
+                                ],
+                              },
+                              b,
+                            ),
+                          ),
+                        ],
+                      }),
+                  ],
+                }),
+              }),
+              (0, d.jsx)('section', {
+                className: 'mx-auto mt-6 max-w-5xl px-4 sm:px-6',
+                children: (0, d.jsx)('div', {
+                  className: 'rounded-lg border border-border bg-surface-1 p-5 sm:p-6',
+                  children: (0, d.jsxs)('div', {
+                    className: 'flex items-start gap-5',
+                    children: [
+                      I?.bookCover &&
+                        (0, d.jsx)('img', {
+                          src: I.bookCover,
+                          alt: 'Al-Kāfi',
+                          className: 'hidden w-32 shrink-0 rounded object-cover md:block',
+                        }),
+                      (0, d.jsxs)('div', {
+                        className: 'min-w-0 flex-1',
+                        children: [
+                          (0, d.jsxs)('h1', {
+                            className: 'text-2xl font-bold text-foreground sm:text-3xl',
+                            children: [
+                              'Al-Kāfi ',
+                              (0, d.jsx)('span', {
+                                className: 'font-arabic text-foreground-muted',
+                                children: '(الكافي)',
+                              }),
+                            ],
+                          }),
+                          (0, d.jsx)('p', {
+                            className: 'mt-1 text-sm text-foreground-muted',
+                            children: 'By Shaykh Muḥammad b. Yaʿqūb al-Kulaynī',
+                          }),
+                          (0, d.jsx)('p', {
+                            className: 'mt-3 text-sm leading-relaxed text-foreground-muted',
+                            children:
+                              'One of the most significant collections of Shīʿī Ḥadīth, compiled over twenty years. Eight volumes covering principles of belief, jurisprudence, and miscellaneous teachings.',
+                          }),
+                          (0, d.jsxs)('div', {
+                            className: 'mt-3 flex flex-wrap gap-1.5',
+                            children: [
+                              (0, d.jsx)(l.E, { variant: 'secondary', children: '8 Volumes' }),
+                              (0, d.jsx)(l.E, {
+                                variant: 'secondary',
+                                children: 'Four Major Books',
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                }),
+              }),
+              (0, d.jsx)(g.A, {
+                searchQuery: A,
+                searchResults: C,
+                isSearching: E,
+                onSearch: M,
+                onClearSearch: () => {
+                  ;(M.cancel(), B(''), D([]), H(null), s(null), z(!1))
+                },
+                searchContext: 'al-kafi',
+                searchError: G,
+              }),
+              !A &&
+                (0, d.jsxs)('section', {
+                  className: 'mx-auto mt-6 max-w-5xl px-4 pb-12 sm:px-6',
+                  children: [
+                    (0, d.jsxs)('div', {
+                      className: 'mb-4 flex items-center justify-between',
+                      children: [
+                        (0, d.jsx)('h2', {
+                          className: 'text-lg font-semibold text-foreground',
+                          children: 'Explore',
+                        }),
+                        (0, d.jsx)('div', {
+                          className: 'flex rounded-md border border-border bg-surface-1 p-0.5',
+                          children: [
+                            { key: 'structure', label: 'Volume Explorer', short: 'Explorer' },
+                            { key: 'chapters', label: 'Chapter Tree', short: 'Tree' },
+                            { key: 'explorer', label: 'Random', short: 'Random' },
+                          ].map((a) =>
+                            (0, d.jsxs)(
+                              'button',
+                              {
+                                onClick: () => L(a.key),
+                                className: (0, k.cn)(
+                                  'rounded-[5px] px-3 py-1.5 text-xs font-medium transition-colors',
+                                  K === a.key
+                                    ? 'bg-accent text-accent-foreground'
+                                    : 'text-foreground-muted hover:text-foreground',
+                                ),
+                                children: [
+                                  (0, d.jsx)('span', { className: 'sm:hidden', children: a.short }),
+                                  (0, d.jsx)('span', {
+                                    className: 'hidden sm:inline',
+                                    children: a.label,
+                                  }),
+                                ],
+                              },
+                              a.key,
+                            ),
+                          ),
+                        }),
+                      ],
+                    }),
+                    (0, d.jsx)(e.Suspense, {
+                      fallback: (0, d.jsx)('div', {
+                        className: 'flex items-center justify-center py-12',
+                        children: (0, d.jsx)(n.A, {
+                          className: 'h-6 w-6 animate-spin text-foreground-muted',
+                        }),
+                      }),
+                      children:
+                        'structure' === K
+                          ? (0, d.jsx)(q, {})
+                          : 'chapters' === K
+                            ? (0, d.jsx)(r, {})
+                            : (0, d.jsx)(p, {}),
+                    }),
+                  ],
+                }),
+            ],
+          })
+        }
+      },
+      6874: (a, b, c) => {
+        Promise.resolve().then(c.bind(c, 94308))
+      },
+      10846: (a) => {
+        'use strict'
+        a.exports = require('next/dist/compiled/next-server/app-page.runtime.prod.js')
+      },
+      19121: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/action-async-storage.external.js')
+      },
+      24802: (a, b, c) => {
+        Promise.resolve().then(c.bind(c, 4738))
+      },
+      26713: (a) => {
+        'use strict'
+        a.exports = require('next/dist/shared/lib/router/utils/is-bot')
+      },
+      28354: (a) => {
+        'use strict'
+        a.exports = require('util')
+      },
+      29294: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/work-async-storage.external.js')
+      },
+      33873: (a) => {
+        'use strict'
+        a.exports = require('path')
+      },
+      41025: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/dynamic-access-async-storage.external.js')
+      },
+      56718: (a, b, c) => {
+        'use strict'
+        ;(c.r(b),
+          c.d(b, {
+            GlobalError: () => D.a,
+            __next_app__: () => J,
+            handler: () => L,
+            pages: () => I,
+            routeModule: () => K,
+            tree: () => H,
+          }))
+        var d = c(49754),
+          e = c(9117),
+          f = c(46595),
+          g = c(32324),
+          h = c(39326),
+          i = c(38928),
+          j = c(20175),
+          k = c(12),
+          l = c(54290),
+          m = c(12696),
+          n = c(82802),
+          o = c(77533),
+          p = c(45229),
+          q = c(32822),
+          r = c(261),
+          s = c(26453),
+          t = c(52474),
+          u = c(26713),
+          v = c(51356),
+          w = c(62685),
+          x = c(36225),
+          y = c(63446),
+          z = c(2762),
+          A = c(45742),
+          B = c(86439),
+          C = c(81170),
+          D = c.n(C),
+          E = c(62506),
+          F = c(91203),
+          G = {}
+        for (let a in E)
+          0 >
+            [
+              'default',
+              'tree',
+              'pages',
+              'GlobalError',
+              '__next_app__',
+              'routeModule',
+              'handler',
+            ].indexOf(a) && (G[a] = () => E[a])
+        c.d(b, G)
+        let H = {
+            children: [
+              '',
+              {
+                children: [
+                  'al-kafi',
+                  {
+                    children: [
+                      '__PAGE__',
+                      {},
+                      {
+                        page: [
+                          () => Promise.resolve().then(c.bind(c, 94308)),
+                          'C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\al-kafi\\page.tsx',
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    metadata: {
+                      icon: [
+                        async (a) => (await Promise.resolve().then(c.bind(c, 36014))).default(a),
+                      ],
+                      apple: [],
+                      openGraph: [],
+                      twitter: [],
+                      manifest: void 0,
+                    },
+                  },
+                ],
+              },
+              {
+                layout: [
+                  () => Promise.resolve().then(c.bind(c, 16953)),
+                  'C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\layout.tsx',
+                ],
+                'global-error': [
+                  () => Promise.resolve().then(c.t.bind(c, 81170, 23)),
+                  'next/dist/client/components/builtin/global-error.js',
+                ],
+                'not-found': [
+                  () => Promise.resolve().then(c.t.bind(c, 87028, 23)),
+                  'next/dist/client/components/builtin/not-found.js',
+                ],
+                forbidden: [
+                  () => Promise.resolve().then(c.t.bind(c, 90461, 23)),
+                  'next/dist/client/components/builtin/forbidden.js',
+                ],
+                unauthorized: [
+                  () => Promise.resolve().then(c.t.bind(c, 32768, 23)),
+                  'next/dist/client/components/builtin/unauthorized.js',
+                ],
+                metadata: {
+                  icon: [async (a) => (await Promise.resolve().then(c.bind(c, 36014))).default(a)],
+                  apple: [],
+                  openGraph: [],
+                  twitter: [],
+                  manifest: void 0,
+                },
+              },
+            ],
+          }.children,
+          I = ['C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\al-kafi\\page.tsx'],
+          J = { require: c, loadChunk: () => Promise.resolve() },
+          K = new d.AppPageRouteModule({
+            definition: {
+              kind: e.RouteKind.APP_PAGE,
+              page: '/al-kafi/page',
+              pathname: '/al-kafi',
+              bundlePath: '',
+              filename: '',
+              appPaths: [],
+            },
+            userland: { loaderTree: H },
+            distDir: '.next-build',
+            relativeProjectDir: '',
+          })
+        async function L(a, b, d) {
+          var C
+          let G = '/al-kafi/page'
+          '/index' === G && (G = '/')
+          let M = (0, h.getRequestMeta)(a, 'postponed'),
+            N = (0, h.getRequestMeta)(a, 'minimalMode'),
+            O = await K.prepare(a, b, { srcPage: G, multiZoneDraftMode: !1 })
+          if (!O)
+            return (
+              (b.statusCode = 400),
+              b.end('Bad Request'),
+              null == d.waitUntil || d.waitUntil.call(d, Promise.resolve()),
+              null
+            )
+          let {
+              buildId: P,
+              query: Q,
+              params: R,
+              parsedUrl: S,
+              pageIsDynamic: T,
+              buildManifest: U,
+              nextFontManifest: V,
+              reactLoadableManifest: W,
+              serverActionsManifest: X,
+              clientReferenceManifest: Y,
+              subresourceIntegrityManifest: Z,
+              prerenderManifest: $,
+              isDraftMode: _,
+              resolvedPathname: aa,
+              revalidateOnlyGenerated: ab,
+              routerServerContext: ac,
+              nextConfig: ad,
+              interceptionRoutePatterns: ae,
+            } = O,
+            af = S.pathname || '/',
+            ag = (0, r.normalizeAppPath)(G),
+            { isOnDemandRevalidate: ah } = O,
+            ai = K.match(af, $),
+            aj = !!$.routes[aa],
+            ak = !!(ai || aj || $.routes[ag]),
+            al = a.headers['user-agent'] || '',
+            am = (0, u.getBotType)(al),
+            an = (0, p.isHtmlBotRequest)(a),
+            ao =
+              (0, h.getRequestMeta)(a, 'isPrefetchRSCRequest') ??
+              '1' === a.headers[t.NEXT_ROUTER_PREFETCH_HEADER],
+            ap = (0, h.getRequestMeta)(a, 'isRSCRequest') ?? !!a.headers[t.RSC_HEADER],
+            aq = (0, s.getIsPossibleServerAction)(a),
+            ar =
+              (0, m.checkIsAppPPREnabled)(ad.experimental.ppr) &&
+              (null == (C = $.routes[ag] ?? $.dynamicRoutes[ag]) ? void 0 : C.renderingMode) ===
+                'PARTIALLY_STATIC',
+            as = !1,
+            at = !1,
+            au = ar ? M : void 0,
+            av = ar && ap && !ao,
+            aw = (0, h.getRequestMeta)(a, 'segmentPrefetchRSCRequest'),
+            ax = !al || (0, p.shouldServeStreamingMetadata)(al, ad.htmlLimitedBots)
+          an && ar && ((ak = !1), (ax = !1))
+          let ay = !0 === K.isDev || !ak || 'string' == typeof M || av,
+            az = an && ar,
+            aA = null
+          _ || !ak || ay || aq || au || av || (aA = aa)
+          let aB = aA
+          ;(!aB && K.isDev && (aB = aa), K.isDev || _ || !ak || !ap || av || (0, k.d)(a.headers))
+          let aC = {
+            ...E,
+            tree: H,
+            pages: I,
+            GlobalError: D(),
+            handler: L,
+            routeModule: K,
+            __next_app__: J,
+          }
+          X &&
+            Y &&
+            (0, o.setReferenceManifestsSingleton)({
+              page: G,
+              clientReferenceManifest: Y,
+              serverActionsManifest: X,
+              serverModuleMap: (0, q.createServerModuleMap)({ serverActionsManifest: X }),
+            })
+          let aD = a.method || 'GET',
+            aE = (0, g.getTracer)(),
+            aF = aE.getActiveScopeSpan()
+          try {
+            let f = K.getVaryHeader(aa, ae)
+            b.setHeader('Vary', f)
+            let k = async (c, d) => {
+                let e = new l.NodeNextRequest(a),
+                  f = new l.NodeNextResponse(b)
+                return K.render(e, f, d).finally(() => {
+                  if (!c) return
+                  c.setAttributes({ 'http.status_code': b.statusCode, 'next.rsc': !1 })
+                  let d = aE.getRootSpanAttributes()
+                  if (!d) return
+                  if (d.get('next.span_type') !== i.BaseServerSpan.handleRequest)
+                    return void console.warn(
+                      `Unexpected root span type '${d.get('next.span_type')}'. Please report this Next.js issue https://github.com/vercel/next.js`,
+                    )
+                  let e = d.get('next.route')
+                  if (e) {
+                    let a = `${aD} ${e}`
+                    ;(c.setAttributes({ 'next.route': e, 'http.route': e, 'next.span_name': a }),
+                      c.updateName(a))
+                  } else c.updateName(`${aD} ${a.url}`)
+                })
+              },
+              m = async ({ span: e, postponed: f, fallbackRouteParams: g }) => {
+                let i = {
+                    query: Q,
+                    params: R,
+                    page: ag,
+                    sharedContext: { buildId: P },
+                    serverComponentsHmrCache: (0, h.getRequestMeta)(a, 'serverComponentsHmrCache'),
+                    fallbackRouteParams: g,
+                    renderOpts: {
+                      App: () => null,
+                      Document: () => null,
+                      pageConfig: {},
+                      ComponentMod: aC,
+                      Component: (0, j.T)(aC),
+                      params: R,
+                      routeModule: K,
+                      page: G,
+                      postponed: f,
+                      shouldWaitOnAllReady: az,
+                      serveStreamingMetadata: ax,
+                      supportsDynamicResponse: 'string' == typeof f || ay,
+                      buildManifest: U,
+                      nextFontManifest: V,
+                      reactLoadableManifest: W,
+                      subresourceIntegrityManifest: Z,
+                      serverActionsManifest: X,
+                      clientReferenceManifest: Y,
+                      setIsrStatus: null == ac ? void 0 : ac.setIsrStatus,
+                      dir: c(33873).join(process.cwd(), K.relativeProjectDir),
+                      isDraftMode: _,
+                      isRevalidate: ak && !f && !av,
+                      botType: am,
+                      isOnDemandRevalidate: ah,
+                      isPossibleServerAction: aq,
+                      assetPrefix: ad.assetPrefix,
+                      nextConfigOutput: ad.output,
+                      crossOrigin: ad.crossOrigin,
+                      trailingSlash: ad.trailingSlash,
+                      previewProps: $.preview,
+                      deploymentId: ad.deploymentId,
+                      enableTainting: ad.experimental.taint,
+                      htmlLimitedBots: ad.htmlLimitedBots,
+                      devtoolSegmentExplorer: ad.experimental.devtoolSegmentExplorer,
+                      reactMaxHeadersLength: ad.reactMaxHeadersLength,
+                      multiZoneDraftMode: !1,
+                      incrementalCache: (0, h.getRequestMeta)(a, 'incrementalCache'),
+                      cacheLifeProfiles: ad.experimental.cacheLife,
+                      basePath: ad.basePath,
+                      serverActions: ad.experimental.serverActions,
+                      ...(as
+                        ? {
+                            nextExport: !0,
+                            supportsDynamicResponse: !1,
+                            isStaticGeneration: !0,
+                            isRevalidate: !0,
+                            isDebugDynamicAccesses: as,
+                          }
+                        : {}),
+                      experimental: {
+                        isRoutePPREnabled: ar,
+                        expireTime: ad.expireTime,
+                        staleTimes: ad.experimental.staleTimes,
+                        cacheComponents: !!ad.experimental.cacheComponents,
+                        clientSegmentCache: !!ad.experimental.clientSegmentCache,
+                        clientParamParsing: !!ad.experimental.clientParamParsing,
+                        dynamicOnHover: !!ad.experimental.dynamicOnHover,
+                        inlineCss: !!ad.experimental.inlineCss,
+                        authInterrupts: !!ad.experimental.authInterrupts,
+                        clientTraceMetadata: ad.experimental.clientTraceMetadata || [],
+                      },
+                      waitUntil: d.waitUntil,
+                      onClose: (a) => {
+                        b.on('close', a)
+                      },
+                      onAfterTaskError: () => {},
+                      onInstrumentationRequestError: (b, c, d) => K.onRequestError(a, b, d, ac),
+                      err: (0, h.getRequestMeta)(a, 'invokeError'),
+                      dev: K.isDev,
+                    },
+                  },
+                  l = await k(e, i),
+                  { metadata: m } = l,
+                  { cacheControl: n, headers: o = {}, fetchTags: p } = m
+                if (
+                  (p && (o[y.NEXT_CACHE_TAGS_HEADER] = p),
+                  (a.fetchMetrics = m.fetchMetrics),
+                  ak && (null == n ? void 0 : n.revalidate) === 0 && !K.isDev && !ar)
+                ) {
+                  let a = m.staticBailoutInfo,
+                    b = Object.defineProperty(
+                      Error(`Page changed from static to dynamic at runtime ${aa}${(null == a ? void 0 : a.description) ? `, reason: ${a.description}` : ''}
+see more here https://nextjs.org/docs/messages/app-static-to-dynamic-error`),
+                      '__NEXT_ERROR_CODE',
+                      { value: 'E132', enumerable: !1, configurable: !0 },
+                    )
+                  if (null == a ? void 0 : a.stack) {
+                    let c = a.stack
+                    b.stack = b.message + c.substring(c.indexOf('\n'))
+                  }
+                  throw b
+                }
+                return {
+                  value: {
+                    kind: v.CachedRouteKind.APP_PAGE,
+                    html: l,
+                    headers: o,
+                    rscData: m.flightData,
+                    postponed: m.postponed,
+                    status: m.statusCode,
+                    segmentData: m.segmentData,
+                  },
+                  cacheControl: n,
+                }
+              },
+              o = async ({ hasResolved: c, previousCacheEntry: f, isRevalidating: g, span: i }) => {
+                let j,
+                  k = !1 === K.isDev,
+                  l = c || b.writableEnded
+                if (ah && ab && !f && !N)
+                  return (
+                    (null == ac ? void 0 : ac.render404)
+                      ? await ac.render404(a, b)
+                      : ((b.statusCode = 404), b.end('This page could not be found')),
+                    null
+                  )
+                if (
+                  (ai && (j = (0, w.parseFallbackField)(ai.fallback)),
+                  j === w.FallbackMode.PRERENDER &&
+                    (0, u.isBot)(al) &&
+                    (!ar || an) &&
+                    (j = w.FallbackMode.BLOCKING_STATIC_RENDER),
+                  (null == f ? void 0 : f.isStale) === -1 && (ah = !0),
+                  ah &&
+                    (j !== w.FallbackMode.NOT_FOUND || f) &&
+                    (j = w.FallbackMode.BLOCKING_STATIC_RENDER),
+                  !N &&
+                    j !== w.FallbackMode.BLOCKING_STATIC_RENDER &&
+                    aB &&
+                    !l &&
+                    !_ &&
+                    T &&
+                    (k || !aj))
+                ) {
+                  let b
+                  if ((k || ai) && j === w.FallbackMode.NOT_FOUND) throw new B.NoFallbackError()
+                  if (ar && !ap) {
+                    let c =
+                      'string' == typeof (null == ai ? void 0 : ai.fallback)
+                        ? ai.fallback
+                        : k
+                          ? ag
+                          : null
+                    if (
+                      ((b = await K.handleResponse({
+                        cacheKey: c,
+                        req: a,
+                        nextConfig: ad,
+                        routeKind: e.RouteKind.APP_PAGE,
+                        isFallback: !0,
+                        prerenderManifest: $,
+                        isRoutePPREnabled: ar,
+                        responseGenerator: async () =>
+                          m({
+                            span: i,
+                            postponed: void 0,
+                            fallbackRouteParams: k || at ? (0, n.u)(ag) : null,
+                          }),
+                        waitUntil: d.waitUntil,
+                      })),
+                      null === b)
+                    )
+                      return null
+                    if (b) return (delete b.cacheControl, b)
+                  }
+                }
+                let o = ah || g || !au ? void 0 : au
+                if (as && void 0 !== o)
+                  return {
+                    cacheControl: { revalidate: 1, expire: void 0 },
+                    value: {
+                      kind: v.CachedRouteKind.PAGES,
+                      html: x.default.EMPTY,
+                      pageData: {},
+                      headers: void 0,
+                      status: void 0,
+                    },
+                  }
+                let p =
+                  T && ar && ((0, h.getRequestMeta)(a, 'renderFallbackShell') || at)
+                    ? (0, n.u)(af)
+                    : null
+                return m({ span: i, postponed: o, fallbackRouteParams: p })
+              },
+              p = async (c) => {
+                var f, g, i, j, k
+                let l,
+                  n = await K.handleResponse({
+                    cacheKey: aA,
+                    responseGenerator: (a) => o({ span: c, ...a }),
+                    routeKind: e.RouteKind.APP_PAGE,
+                    isOnDemandRevalidate: ah,
+                    isRoutePPREnabled: ar,
+                    req: a,
+                    nextConfig: ad,
+                    prerenderManifest: $,
+                    waitUntil: d.waitUntil,
+                  })
+                if (
+                  (_ &&
+                    b.setHeader(
+                      'Cache-Control',
+                      'private, no-cache, no-store, max-age=0, must-revalidate',
+                    ),
+                  K.isDev && b.setHeader('Cache-Control', 'no-store, must-revalidate'),
+                  !n)
+                ) {
+                  if (aA)
+                    throw Object.defineProperty(
+                      Error('invariant: cache entry required but not generated'),
+                      '__NEXT_ERROR_CODE',
+                      { value: 'E62', enumerable: !1, configurable: !0 },
+                    )
+                  return null
+                }
+                if ((null == (f = n.value) ? void 0 : f.kind) !== v.CachedRouteKind.APP_PAGE)
+                  throw Object.defineProperty(
+                    Error(
+                      `Invariant app-page handler received invalid cache entry ${null == (i = n.value) ? void 0 : i.kind}`,
+                    ),
+                    '__NEXT_ERROR_CODE',
+                    { value: 'E707', enumerable: !1, configurable: !0 },
+                  )
+                let p = 'string' == typeof n.value.postponed
+                ak &&
+                  !av &&
+                  (!p || ao) &&
+                  (N ||
+                    b.setHeader(
+                      'x-nextjs-cache',
+                      ah ? 'REVALIDATED' : n.isMiss ? 'MISS' : n.isStale ? 'STALE' : 'HIT',
+                    ),
+                  b.setHeader(t.NEXT_IS_PRERENDER_HEADER, '1'))
+                let { value: q } = n
+                if (au) l = { revalidate: 0, expire: void 0 }
+                else if (N && ap && !ao && ar) l = { revalidate: 0, expire: void 0 }
+                else if (!K.isDev)
+                  if (_) l = { revalidate: 0, expire: void 0 }
+                  else if (ak) {
+                    if (n.cacheControl)
+                      if ('number' == typeof n.cacheControl.revalidate) {
+                        if (n.cacheControl.revalidate < 1)
+                          throw Object.defineProperty(
+                            Error(
+                              `Invalid revalidate configuration provided: ${n.cacheControl.revalidate} < 1`,
+                            ),
+                            '__NEXT_ERROR_CODE',
+                            { value: 'E22', enumerable: !1, configurable: !0 },
+                          )
+                        l = {
+                          revalidate: n.cacheControl.revalidate,
+                          expire:
+                            (null == (j = n.cacheControl) ? void 0 : j.expire) ?? ad.expireTime,
+                        }
+                      } else l = { revalidate: y.CACHE_ONE_YEAR, expire: void 0 }
+                  } else b.getHeader('Cache-Control') || (l = { revalidate: 0, expire: void 0 })
+                if (
+                  ((n.cacheControl = l),
+                  'string' == typeof aw &&
+                    (null == q ? void 0 : q.kind) === v.CachedRouteKind.APP_PAGE &&
+                    q.segmentData)
+                ) {
+                  b.setHeader(t.NEXT_DID_POSTPONE_HEADER, '2')
+                  let c = null == (k = q.headers) ? void 0 : k[y.NEXT_CACHE_TAGS_HEADER]
+                  N && ak && c && 'string' == typeof c && b.setHeader(y.NEXT_CACHE_TAGS_HEADER, c)
+                  let d = q.segmentData.get(aw)
+                  return void 0 !== d
+                    ? (0, A.sendRenderResult)({
+                        req: a,
+                        res: b,
+                        generateEtags: ad.generateEtags,
+                        poweredByHeader: ad.poweredByHeader,
+                        result: x.default.fromStatic(d, t.RSC_CONTENT_TYPE_HEADER),
+                        cacheControl: n.cacheControl,
+                      })
+                    : ((b.statusCode = 204),
+                      (0, A.sendRenderResult)({
+                        req: a,
+                        res: b,
+                        generateEtags: ad.generateEtags,
+                        poweredByHeader: ad.poweredByHeader,
+                        result: x.default.EMPTY,
+                        cacheControl: n.cacheControl,
+                      }))
+                }
+                let r = (0, h.getRequestMeta)(a, 'onCacheEntry')
+                if (
+                  r &&
+                  (await r(
+                    { ...n, value: { ...n.value, kind: 'PAGE' } },
+                    { url: (0, h.getRequestMeta)(a, 'initURL') },
+                  ))
+                )
+                  return null
+                if (p && au)
+                  throw Object.defineProperty(
+                    Error('Invariant: postponed state should not be present on a resume request'),
+                    '__NEXT_ERROR_CODE',
+                    { value: 'E396', enumerable: !1, configurable: !0 },
+                  )
+                if (q.headers) {
+                  let a = { ...q.headers }
+                  for (let [c, d] of ((N && ak) || delete a[y.NEXT_CACHE_TAGS_HEADER],
+                  Object.entries(a)))
+                    if (void 0 !== d)
+                      if (Array.isArray(d)) for (let a of d) b.appendHeader(c, a)
+                      else ('number' == typeof d && (d = d.toString()), b.appendHeader(c, d))
+                }
+                let s = null == (g = q.headers) ? void 0 : g[y.NEXT_CACHE_TAGS_HEADER]
+                if (
+                  (N && ak && s && 'string' == typeof s && b.setHeader(y.NEXT_CACHE_TAGS_HEADER, s),
+                  !q.status || (ap && ar) || (b.statusCode = q.status),
+                  !N && q.status && F.RedirectStatusCode[q.status] && ap && (b.statusCode = 200),
+                  p && b.setHeader(t.NEXT_DID_POSTPONE_HEADER, '1'),
+                  ap && !_)
+                ) {
+                  if (void 0 === q.rscData) {
+                    if (q.postponed)
+                      throw Object.defineProperty(
+                        Error('Invariant: Expected postponed to be undefined'),
+                        '__NEXT_ERROR_CODE',
+                        { value: 'E372', enumerable: !1, configurable: !0 },
+                      )
+                    return (0, A.sendRenderResult)({
+                      req: a,
+                      res: b,
+                      generateEtags: ad.generateEtags,
+                      poweredByHeader: ad.poweredByHeader,
+                      result: q.html,
+                      cacheControl: av ? { revalidate: 0, expire: void 0 } : n.cacheControl,
+                    })
+                  }
+                  return (0, A.sendRenderResult)({
+                    req: a,
+                    res: b,
+                    generateEtags: ad.generateEtags,
+                    poweredByHeader: ad.poweredByHeader,
+                    result: x.default.fromStatic(q.rscData, t.RSC_CONTENT_TYPE_HEADER),
+                    cacheControl: n.cacheControl,
+                  })
+                }
+                let u = q.html
+                if (!p || N || ap)
+                  return (0, A.sendRenderResult)({
+                    req: a,
+                    res: b,
+                    generateEtags: ad.generateEtags,
+                    poweredByHeader: ad.poweredByHeader,
+                    result: u,
+                    cacheControl: n.cacheControl,
+                  })
+                if (as)
+                  return (
+                    u.push(
+                      new ReadableStream({
+                        start(a) {
+                          ;(a.enqueue(z.ENCODED_TAGS.CLOSED.BODY_AND_HTML), a.close())
+                        },
+                      }),
+                    ),
+                    (0, A.sendRenderResult)({
+                      req: a,
+                      res: b,
+                      generateEtags: ad.generateEtags,
+                      poweredByHeader: ad.poweredByHeader,
+                      result: u,
+                      cacheControl: { revalidate: 0, expire: void 0 },
+                    })
+                  )
+                let w = new TransformStream()
+                return (
+                  u.push(w.readable),
+                  m({ span: c, postponed: q.postponed, fallbackRouteParams: null })
+                    .then(async (a) => {
+                      var b, c
+                      if (!a)
+                        throw Object.defineProperty(
+                          Error('Invariant: expected a result to be returned'),
+                          '__NEXT_ERROR_CODE',
+                          { value: 'E463', enumerable: !1, configurable: !0 },
+                        )
+                      if ((null == (b = a.value) ? void 0 : b.kind) !== v.CachedRouteKind.APP_PAGE)
+                        throw Object.defineProperty(
+                          Error(
+                            `Invariant: expected a page response, got ${null == (c = a.value) ? void 0 : c.kind}`,
+                          ),
+                          '__NEXT_ERROR_CODE',
+                          { value: 'E305', enumerable: !1, configurable: !0 },
+                        )
+                      await a.value.html.pipeTo(w.writable)
+                    })
+                    .catch((a) => {
+                      w.writable.abort(a).catch((a) => {
+                        console.error("couldn't abort transformer", a)
+                      })
+                    }),
+                  (0, A.sendRenderResult)({
+                    req: a,
+                    res: b,
+                    generateEtags: ad.generateEtags,
+                    poweredByHeader: ad.poweredByHeader,
+                    result: u,
+                    cacheControl: { revalidate: 0, expire: void 0 },
+                  })
+                )
+              }
+            if (!aF)
+              return await aE.withPropagatedContext(a.headers, () =>
+                aE.trace(
+                  i.BaseServerSpan.handleRequest,
+                  {
+                    spanName: `${aD} ${a.url}`,
+                    kind: g.SpanKind.SERVER,
+                    attributes: { 'http.method': aD, 'http.target': a.url },
+                  },
+                  p,
+                ),
+              )
+            await p(aF)
+          } catch (b) {
+            throw (
+              b instanceof B.NoFallbackError ||
+                (await K.onRequestError(
+                  a,
+                  b,
+                  {
+                    routerKind: 'App Router',
+                    routePath: G,
+                    routeType: 'render',
+                    revalidateReason: (0, f.c)({ isRevalidate: ak, isOnDemandRevalidate: ah }),
+                  },
+                  ac,
+                )),
+              b
+            )
+          }
+        }
+      },
+      63033: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/work-unit-async-storage.external.js')
+      },
+      86439: (a) => {
+        'use strict'
+        a.exports = require('next/dist/shared/lib/no-fallback-error.external')
+      },
+      94308: (a, b, c) => {
+        'use strict'
+        ;(c.r(b), c.d(b, { default: () => d }))
+        let d = (0, c(97954).registerClientReference)(
+          function () {
+            throw Error(
+              'Attempted to call the default export of "C:\\\\Users\\\\Admin\\\\Desktop\\\\sl\\\\saadah-library\\\\app\\\\al-kafi\\\\page.tsx" from the server, but it\'s on the client. It\'s not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.',
+            )
+          },
+          'C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\al-kafi\\page.tsx',
+          'default',
+        )
+      },
+    }))
+  var b = require('../../webpack-runtime.js')
+  b.C(a)
+  var c = b.X(0, [331, 103, 298, 576, 963, 818, 951], () => b((b.s = 56718)))
+  module.exports = c
+})()

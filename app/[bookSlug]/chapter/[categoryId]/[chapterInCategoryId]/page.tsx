@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
 import { getBookIdFromUrlSlug } from '@/lib/books-config'
 import HadithCard from '@/components/HadithCard'
-import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +13,6 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 export default function GenericChapterDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const { settings } = useSettings()
   const { setChapterInfo } = useChapter()
 
   const bookSlug = params.bookSlug as string

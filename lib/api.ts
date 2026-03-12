@@ -1,39 +1,14 @@
 // Thaqalayn API utilities
+import { cacheGet, cacheSet, findHadithInCache } from './hadith-cache'
+
 const BASE_URL = 'https://www.thaqalayn-api.net/api/v2'
 
-// Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
-
-// Cache helper functions
-const getCachedData = (key: string) => {
-  const cached = cache.get(key)
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
-  }
-  return null
-}
-
-const setCachedData = (key: string, data: any) => {
-  cache.set(key, { data, timestamp: Date.now() })
-
-  // Clean old cache entries (simple cleanup)
-  if (cache.size > 100) {
-    const oldestKey = cache.keys().next().value
-    if (oldestKey) {
-      cache.delete(oldestKey)
-    }
-  }
-}
-
-// Enhanced fetch with caching
+// Enhanced fetch with persistent caching
+// Browser: IndexedDB + in-memory (survives navigations, 12-24h TTL)
+// Server:  in-memory Map (per-instance, auto-TTL)
 const cachedFetch = async (url: string, options?: RequestInit) => {
-  const cacheKey = url
-  const cached = getCachedData(cacheKey)
-
-  if (cached) {
-    return cached
-  }
+  const cached = await cacheGet(url)
+  if (cached) return cached
 
   const response = await fetch(url, {
     ...options,
@@ -50,7 +25,7 @@ const cachedFetch = async (url: string, options?: RequestInit) => {
   }
 
   const data = await response.json()
-  setCachedData(cacheKey, data)
+  await cacheSet(url, data)
   return data
 }
 
@@ -133,9 +108,15 @@ export const thaqalaynApi = {
     return await cachedFetch(`${BASE_URL}/allbooks`)
   },
 
-  // Get a random hadith from any book
+  // Get a random hadith from any book (never cached – must be fresh)
   async getRandomHadith(): Promise<Hadith> {
-    return await cachedFetch(`${BASE_URL}/random`)
+    const response = await fetch(`${BASE_URL}/random`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch random hadith: ${response.statusText}`)
+    }
+    return response.json()
   },
 
   // Get a random hadith from a specific book
@@ -161,7 +142,7 @@ export const thaqalaynApi = {
         results: Array.isArray(results) ? results : [],
         total: Array.isArray(results) ? results.length : 0,
       }
-    } catch (err) {
+    } catch {
       // On any error importing/util functions, fall back to raw query
       const encodedQuery = encodeURIComponent(query)
       const results = await cachedFetch(`${BASE_URL}/query?q=${encodedQuery}`)
@@ -183,7 +164,7 @@ export const thaqalaynApi = {
         results: Array.isArray(results) ? results : [],
         total: Array.isArray(results) ? results.length : 0,
       }
-    } catch (err) {
+    } catch {
       const encodedQuery = encodeURIComponent(query)
       const results = await cachedFetch(`${BASE_URL}/query/${bookId}?q=${encodedQuery}`)
       return {
@@ -193,26 +174,65 @@ export const thaqalaynApi = {
     }
   },
 
-  // Get all hadiths from a specific book
+  // Get all hadiths from a specific book (cached 12h)
   async getBookHadiths(bookId: string): Promise<Hadith[]> {
-    const response = await fetch(`${BASE_URL}/${bookId}`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch hadiths from ${bookId}: ${response.statusText}`)
-    }
-    return response.json()
+    return await cachedFetch(`${BASE_URL}/${bookId}`)
   },
 
-  // Get a specific hadith by book and id
+  // Get a specific hadith by book and id (checks volume cache first, then API)
   async getSpecificHadith(bookId: string, hadithId: number): Promise<Hadith> {
-    const response = await fetch(`${BASE_URL}/${bookId}/${hadithId}`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch hadith ${hadithId} from ${bookId}: ${response.statusText}`)
+    // If the full volume is already cached, extract from it (instant)
+    const fromVolume = await findHadithInCache(BASE_URL, bookId, hadithId)
+    if (fromVolume) return fromVolume as Hadith
+
+    // Fetch from the specific-hadith API endpoint (cached 24h)
+    const data = await cachedFetch(`${BASE_URL}/${bookId}/${hadithId}`)
+
+    // The API returns { error: "..." } with status 200 for non-existent IDs
+    if (data && typeof data === 'object' && 'error' in data) {
+      throw new Error((data as { error: string }).error)
     }
-    return response.json()
+
+    return data as Hadith
+  },
+
+  /**
+   * Find a hadith across multiple possible book/volume IDs.
+   * 1. Checks the persistent cache for each bookId (instant if cached)
+   * 2. Falls back to parallel getSpecificHadith calls (~300ms total)
+   *
+   * This replaces the old pattern of downloading entire volumes sequentially.
+   */
+  async findHadithAcrossBooks(bookIds: string[], hadithId: number): Promise<Hadith | null> {
+    // Step 1: Check cache for every possible bookId (instant)
+    for (const bookId of bookIds) {
+      const cached = await findHadithInCache(BASE_URL, bookId, hadithId)
+      if (cached) return cached as Hadith
+    }
+
+    // Step 2: Try the specific-hadith endpoint in parallel for all bookIds
+    // Each request is ~2KB / ~300ms – much faster than downloading full volumes
+    const results = await Promise.allSettled(
+      bookIds.map(async (bookId) => {
+        const data = await cachedFetch(`${BASE_URL}/${bookId}/${hadithId}`)
+        if (data && typeof data === 'object' && 'error' in data) {
+          throw new Error('Not found in this volume')
+        }
+        return data as Hadith
+      }),
+    )
+
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        return result.value
+      }
+    }
+
+    return null
   },
 
   // Get ingredients information
-  async getIngredients(): Promise<any> {
+  async getIngredients(): Promise<unknown> {
     const response = await fetch(`${BASE_URL}/ingredients`)
     if (!response.ok) {
       throw new Error(`Failed to fetch ingredients: ${response.statusText}`)
@@ -266,7 +286,7 @@ export const alKafiApi = {
         results: combinedResults,
         total: combinedResults.length,
       }
-    } catch (error) {
+    } catch {
       // Error occurred during search
       return { results: [], total: 0 }
     }
@@ -330,7 +350,7 @@ export const alKafiApi = {
       })
 
       return structure
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load volume ${volume} structure`)
     }
@@ -355,7 +375,7 @@ export const alKafiApi = {
       return allHadiths.filter(
         (hadith) => hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterId,
       )
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load chapter hadiths`)
     }
@@ -398,7 +418,7 @@ export const uyunApi = {
         results: combinedResults,
         total: combinedResults.length,
       }
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       return { results: [], total: 0 }
     }
@@ -462,7 +482,7 @@ export const uyunApi = {
       })
 
       return structure
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load volume ${volume} structure`)
     }
@@ -487,7 +507,7 @@ export const uyunApi = {
       return allHadiths.filter(
         (hadith) => hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterId,
       )
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load chapter hadiths`)
     }

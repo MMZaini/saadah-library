@@ -31,7 +31,7 @@ export default {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        arabic: ['Amiri', 'Noto Sans Arabic', 'serif'],
+        arabic: ['Uthman Taha', 'Noto Sans Arabic', 'serif'],
         mono: ['"Space Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       keyframes: {
@@ -47,6 +47,12 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+      },
+      transitionDuration: {
+        '1100': '1100ms',
+      },
+      transitionTimingFunction: {
+        'smooth-expand': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
   },

@@ -1,0 +1,18 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/admin/rebuild-arabic-index/route": "/api/admin/rebuild-arabic-index",
+  "/api/search/route": "/api/search",
+  "/api/admin/arabic-index-status/route": "/api/admin/arabic-index-status",
+  "/favicon.ico/route": "/favicon.ico",
+  "/[bookSlug]/hadith/[hadithId]/page": "/[bookSlug]/hadith/[hadithId]",
+  "/[bookSlug]/page": "/[bookSlug]",
+  "/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]/page": "/[bookSlug]/chapter/[categoryId]/[chapterInCategoryId]",
+  "/al-kafi/hadith/[hadithId]/page": "/al-kafi/hadith/[hadithId]",
+  "/al-kafi/page": "/al-kafi",
+  "/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]/page": "/book/[bookId]/chapter/[categoryId]/[chapterInCategoryId]",
+  "/book/[bookId]/page": "/book/[bookId]",
+  "/bookmarks/page": "/bookmarks",
+  "/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]/page": "/al-kafi/volume/[volumeId]/chapter/[categoryId]/[chapterInCategoryId]",
+  "/page": "/",
+  "/uyun-akhbar-al-rida/hadith/[hadithId]/page": "/uyun-akhbar-al-rida/hadith/[hadithId]"
+}

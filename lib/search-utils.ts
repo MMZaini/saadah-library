@@ -450,3 +450,154 @@ export function smartSearch(
 }
 
 // (duplicate simple flexibleArabicWordMatch removed — keeping the improved implementation above)
+
+/**
+ * Splits text into segments indicating which parts match the search query.
+ * Returns an array of { text, highlight } objects.
+ */
+export interface HighlightSegment {
+  text: string
+  highlight: boolean
+}
+
+export function getHighlightSegments(text: string, query: string): HighlightSegment[] {
+  if (!text || !query?.trim()) return [{ text, highlight: false }]
+
+  const trimmed = query.trim()
+  const arabic = isArabicQuery(trimmed)
+
+  if (arabic) {
+    return highlightArabicSegments(text, trimmed)
+  }
+  return highlightEnglishSegments(text, trimmed)
+}
+
+function highlightEnglishSegments(text: string, query: string): HighlightSegment[] {
+  // Escape regex special chars and split query into words
+  const words = query
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+
+  if (words.length === 0) return [{ text, highlight: false }]
+
+  // Try full phrase first, then individual words
+  const patterns = [words.join('\\s+'), ...words.filter((w) => w.length >= 2)]
+  const regex = new RegExp(`(${patterns.join('|')})`, 'gi')
+
+  return splitByRegex(text, regex)
+}
+
+function highlightArabicSegments(text: string, query: string): HighlightSegment[] {
+  const normQuery = normalizeArabic(query)
+  const queryWords = normQuery.split(/\s+/).filter(Boolean)
+  if (queryWords.length === 0) return [{ text, highlight: false }]
+
+  // Build a character-position mapping: for each char in the original text,
+  // its index in the normalized text
+  const normText = normalizeArabic(text)
+
+  // Build mapping from normalized text indices back to original text indices
+  const origIndexForNorm: number[] = []
+  {
+    let normIdx = 0
+    let origIdx = 0
+    const origLen = text.length
+    const normLen = normText.length
+
+    while (normIdx < normLen && origIdx < origLen) {
+      const nc = normText[normIdx]
+      const oc = text[origIdx]
+      const normOc = normalizeArabic(oc)
+
+      if (normOc === '') {
+        // This original char is stripped during normalization (diacritics, etc.)
+        origIdx++
+        continue
+      }
+
+      if (normOc === nc) {
+        origIndexForNorm[normIdx] = origIdx
+        normIdx++
+        origIdx++
+      } else {
+        // Mismatch — advance original
+        origIdx++
+      }
+    }
+  }
+
+  // Find all matches in normalized text
+  const patterns = queryWords
+    .filter((w) => w.length >= 1)
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  // Try full phrase first
+  const allPatterns = [queryWords.join('\\s*'), ...patterns]
+  const regex = new RegExp(`(${allPatterns.join('|')})`, 'gi')
+
+  const matchRanges: Array<[number, number]> = [] // [origStart, origEnd] inclusive
+  let m: RegExpExecArray | null
+  while ((m = regex.exec(normText)) !== null) {
+    const normStart = m.index
+    const normEnd = m.index + m[0].length - 1
+
+    const origStart = origIndexForNorm[normStart]
+    let origEnd = origIndexForNorm[normEnd]
+
+    if (origStart == null || origEnd == null) continue
+
+    // Extend origEnd to include any trailing diacritics
+    while (origEnd + 1 < text.length && normalizeArabic(text[origEnd + 1]) === '') {
+      origEnd++
+    }
+
+    matchRanges.push([origStart, origEnd + 1])
+  }
+
+  if (matchRanges.length === 0) return [{ text, highlight: false }]
+
+  // Merge overlapping ranges and build segments
+  matchRanges.sort((a, b) => a[0] - b[0])
+  const merged: Array<[number, number]> = [matchRanges[0]]
+  for (let i = 1; i < matchRanges.length; i++) {
+    const last = merged[merged.length - 1]
+    if (matchRanges[i][0] <= last[1]) {
+      last[1] = Math.max(last[1], matchRanges[i][1])
+    } else {
+      merged.push(matchRanges[i])
+    }
+  }
+
+  const segments: HighlightSegment[] = []
+  let pos = 0
+  for (const [start, end] of merged) {
+    if (start > pos) segments.push({ text: text.slice(pos, start), highlight: false })
+    segments.push({ text: text.slice(start, end), highlight: true })
+    pos = end
+  }
+  if (pos < text.length) segments.push({ text: text.slice(pos), highlight: false })
+
+  return segments
+}
+
+function splitByRegex(text: string, regex: RegExp): HighlightSegment[] {
+  const segments: HighlightSegment[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index), highlight: false })
+    }
+    segments.push({ text: match[0], highlight: true })
+    lastIndex = regex.lastIndex
+    // Prevent infinite loop on zero-length matches
+    if (match[0].length === 0) regex.lastIndex++
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex), highlight: false })
+  }
+
+  return segments.length > 0 ? segments : [{ text, highlight: false }]
+}
