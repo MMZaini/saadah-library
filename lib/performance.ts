@@ -8,18 +8,32 @@ export const measureAsyncPerformance = async (_name: string, fn: () => Promise<u
   return await fn()
 }
 
-// Debounce utility for search
+// Debounce utility for search (with cancel support)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DebouncedFunction<T extends (...args: any[]) => any> = ((...args: Parameters<T>) => void) & {
+  cancel: () => void
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number,
-): ((...args: Parameters<T>) => void) => {
+): DebouncedFunction<T> => {
   let timeout: NodeJS.Timeout | null = null
 
-  return (...args: Parameters<T>) => {
+  const debounced = (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
+
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+  }
+
+  return debounced as DebouncedFunction<T>
 }
 
 // Throttle utility for scroll events

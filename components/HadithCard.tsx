@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, memo, ReactNode } from 'react'
 import { Hadith } from '@/lib/api'
+import { getHighlightSegments } from '@/lib/search-utils'
 import { useSettings } from '@/lib/settings-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
@@ -37,6 +38,7 @@ interface HadithCardProps {
   notesVisible?: boolean
   onToggleNotes?: () => void
   showArabicByDefault?: boolean
+  highlightQuery?: string
 }
 
 // ── Helpers ──
@@ -145,6 +147,7 @@ const HadithCard = ({
   notesVisible = false,
   onToggleNotes,
   showArabicByDefault = false,
+  highlightQuery,
 }: HadithCardProps) => {
   const { settings } = useSettings()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
@@ -179,6 +182,27 @@ const HadithCard = ({
       isLongText: (processed?.length || 0) > 750,
     }
   }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad])
+
+  // Render text with search highlighting
+  const renderHighlighted = useCallback(
+    (text: string | undefined, truncate?: boolean): ReactNode => {
+      if (!text) return null
+      const display = truncate ? text.slice(0, 750) + '...' : text
+      if (!highlightQuery?.trim()) return display
+      const segments = getHighlightSegments(display, highlightQuery)
+      if (segments.length === 1 && !segments[0].highlight) return display
+      return segments.map((seg, i) =>
+        seg.highlight ? (
+          <mark key={i} className="rounded-sm bg-accent/25 text-inherit">
+            {seg.text}
+          </mark>
+        ) : (
+          seg.text
+        ),
+      )
+    },
+    [highlightQuery],
+  )
 
   // Arabic overflow detection
   useEffect(() => {
@@ -221,7 +245,7 @@ const HadithCard = ({
   }, [])
 
   const handleCopyLink = useCallback(async () => {
-    const url = `${window.location.origin}${getHadithUrl(hadith)}`
+    const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`
     await navigator.clipboard.writeText(url)
     flash('Link copied')
   }, [hadith, flash])
@@ -236,7 +260,7 @@ const HadithCard = ({
   }, [hadith, flash])
 
   const handleCopyBoth = useCallback(async () => {
-    const url = `${window.location.origin}${getHadithUrl(hadith)}`
+    const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`
     const parts = [hadith.book || 'Unknown Book']
     if (hadith.volume) parts.push(`Volume ${hadith.volume}`)
     parts.push(hadith.chapter || 'Unknown Chapter')
@@ -246,7 +270,7 @@ const HadithCard = ({
   }, [hadith, flash])
 
   const handleOpenNewTab = useCallback(() => {
-    window.open(`${window.location.origin}${getHadithUrl(hadith)}`, '_blank', 'noopener')
+    window.open(`${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`, '_blank', 'noopener')
   }, [hadith])
 
   const handleBookmarkToggle = useCallback(() => {
@@ -385,7 +409,7 @@ const HadithCard = ({
               dir="rtl"
               style={{ fontSize: `${settings.arabicFontSize * 1.485}%` }}
             >
-              {arabicOverflow && !arabicExpanded ? <>{arabicText.slice(0, 750)}...</> : arabicText}
+              {arabicOverflow && !arabicExpanded ? renderHighlighted(arabicText, true) : renderHighlighted(arabicText)}
             </div>
             {arabicOverflow && (
               <button
@@ -410,7 +434,7 @@ const HadithCard = ({
               className="hadith-english-text text-sm leading-relaxed text-foreground sm:text-base"
               style={{ fontSize: `${settings.englishFontSize}%` }}
             >
-              {isLongText && !expanded ? <>{englishText.slice(0, 750)}...</> : englishText}
+              {isLongText && !expanded ? renderHighlighted(englishText, true) : renderHighlighted(englishText)}
               {isLongText && (
                 <button
                   onClick={() => setExpanded(!expanded)}

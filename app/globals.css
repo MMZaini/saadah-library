@@ -5,8 +5,8 @@
 @font-face {
   font-family: 'Uthman Taha';
   src:
-    url('/fonts/UthmanicHafs1Ver18.woff2') format('woff2'),
-    url('/fonts/UthmanicHafs1Ver18.ttf') format('truetype');
+    url('/read/fonts/UthmanicHafs1Ver18.woff2') format('woff2'),
+    url('/read/fonts/UthmanicHafs1Ver18.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;

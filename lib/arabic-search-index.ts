@@ -1,10 +1,14 @@
 import { thaqalaynApi, Hadith, BookInfo, QueryResponse } from './api'
-import { normalizeArabic, isArabicQuery } from './search-utils'
+import { normalizeArabic, isArabicQuery, smartSearch } from './search-utils'
 
-// Simple in-memory Arabic search index, built once and reused.
+// Simple in-memory search index, built once and reused.
+// Contains both normalised Arabic and English text for fast local searches.
 // NOTE: On serverless platforms this cache is per-instance and volatile.
 
-type IndexedHadith = Hadith & { normalizedArabicText: string }
+type IndexedHadith = Hadith & {
+  normalizedArabicText: string
+  normalizedEnglishText: string
+}
 
 let indexBuilding: Promise<void> | null = null
 let indexed: IndexedHadith[] | null = null
@@ -90,7 +94,9 @@ async function buildIndex(): Promise<void> {
     indexed = allHadiths.map((h) => {
       const arabic = h.arabicText || h.thaqalaynMatn || ''
       const normalizedArabicText = normalizeArabic(arabic)
-      return { ...h, normalizedArabicText }
+      const english = h.englishText || h.thaqalaynMatn || ''
+      const normalizedEnglishText = english.toLowerCase()
+      return { ...h, normalizedArabicText, normalizedEnglishText }
     })
 
     lastBuilt = Date.now()
@@ -152,26 +158,60 @@ if (typeof window === 'undefined') {
   }
 }
 
-export async function searchArabicLocally(query: string): Promise<QueryResponse> {
+export async function searchArabicLocally(query: string, bookIds?: string[]): Promise<QueryResponse> {
   const q = normalizeArabic(query)
   if (!q) return { results: [], total: 0 }
 
   await ensureArabicIndexReady()
-  const list = indexed || []
+  let list = indexed || []
+
+  // Optionally filter by book IDs for book-specific searches
+  if (bookIds && bookIds.length > 0) {
+    const bookIdSet = new Set(bookIds)
+    list = list.filter((h) => bookIdSet.has(h.bookId))
+  }
 
   // Simple includes matching on normalized Arabic text
   const results = list.filter((h) => h.normalizedArabicText.includes(q))
 
-  // Return as Hadith[] (drop the helper field)
+  // Return as Hadith[] (drop the helper fields)
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    results: results.map(({ normalizedArabicText: _unused, ...rest }) => rest),
+    results: results.map(({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest),
     total: results.length,
   }
 }
 
 export function isArabic(text: string): boolean {
   return isArabicQuery(text)
+}
+
+/**
+ * Search the local English index for matching hadiths.
+ * Uses smart search (stemming + synonyms) for better recall.
+ * Optionally scoped to specific book IDs.
+ */
+export async function searchEnglishLocally(query: string, bookIds?: string[]): Promise<QueryResponse> {
+  const q = query.trim().toLowerCase()
+  if (!q) return { results: [], total: 0 }
+
+  await ensureArabicIndexReady()
+  let list = indexed || []
+
+  if (bookIds && bookIds.length > 0) {
+    const bookIdSet = new Set(bookIds)
+    list = list.filter((h) => bookIdSet.has(h.bookId))
+  }
+
+  const results = list.filter((h) =>
+    smartSearch(h.normalizedEnglishText, q, { caseInsensitive: true }),
+  )
+
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    results: results.map(({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest),
+    total: results.length,
+  }
 }
 
 /**

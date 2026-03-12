@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
 
 interface SearchInterfaceProps {
   searchQuery: string
@@ -23,19 +23,21 @@ interface SearchInterfaceProps {
   onSearch: (query: string) => void
   onClearSearch: () => void
   searchContext?: string
+  searchError?: string | null
+  highlightQuery?: string
 }
 
 const RESULTS_PER_PAGE = 10
 
 const GRADING_OPTIONS = [
   { value: 'all', label: 'All Gradings' },
-  { value: 'sahih', label: 'Sahih (صحيح)', keywords: ['صحيح'] },
-  { value: 'hasan', label: 'Hasan (حسن)', keywords: ['حسن'] },
-  { value: 'muwathaq', label: 'Muwathaq (موثق)', keywords: ['موثق'] },
-  { value: 'qawi', label: 'Qawi (قوي)', keywords: ['قوي'] },
-  { value: 'daif', label: 'Daif (ضعيف)', keywords: ['ضعيف'] },
-  { value: 'majhul', label: 'Majhul (مجهول)', keywords: ['مجهول'] },
-  { value: 'mursal', label: 'Mursal (مرسل)', keywords: ['مرسل'] },
+  { value: 'sahih', label: 'Sahih (صحيح)', keywords: ['صحيح', 'sahih', 'authentic'] },
+  { value: 'hasan', label: 'Hasan (حسن)', keywords: ['حسن', 'hasan', 'good'] },
+  { value: 'muwathaq', label: 'Muwathaq (موثق)', keywords: ['موثق', 'muwathaq', 'reliable'] },
+  { value: 'qawi', label: 'Qawi (قوي)', keywords: ['قوي', 'qawi', 'strong'] },
+  { value: 'daif', label: 'Daif (ضعيف)', keywords: ['ضعيف', 'daif', 'weak'] },
+  { value: 'majhul', label: 'Majhul (مجهول)', keywords: ['مجهول', 'majhul', 'unknown'] },
+  { value: 'mursal', label: 'Mursal (مرسل)', keywords: ['مرسل', 'mursal'] },
   { value: 'lam-yukhrijhu', label: 'Not Included (لم يخرجه)', keywords: ['لم يخرجه'] },
   {
     value: 'other',
@@ -78,17 +80,33 @@ export default function SearchInterface({
   onSearch,
   onClearSearch,
   searchContext = 'all-books',
+  searchError = null,
+  highlightQuery,
 }: SearchInterfaceProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedGradings, setSelectedGradings] = useState<string[]>(['all'])
+  const [selectedBooks, setSelectedBooks] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [activeMode, setActiveMode] = useState<SearchMode | null>(null)
 
-  const shouldShowFilters = searchContext === 'all-books' || searchContext === 'al-kafi'
+  const shouldShowFilters = true
+
+  // Derive unique book names from results for filter chips
+  const availableBooks = useMemo(() => {
+    const bookMap = new Map<string, string>() // bookId -> displayName
+    searchResults.forEach((h) => {
+      if (h.bookId && h.book && !bookMap.has(h.bookId)) {
+        bookMap.set(h.bookId, h.book)
+      }
+    })
+    return Array.from(bookMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [searchResults])
 
   const hasActiveFilters = () => {
     const hasGrading = !selectedGradings.includes('all') && selectedGradings.length > 0
-    return hasGrading || activeMode !== null
+    return hasGrading || activeMode !== null || selectedBooks.length > 0
   }
 
   const handleGradingChange = (value: string, checked: boolean) => {
@@ -105,12 +123,13 @@ export default function SearchInterface({
 
   const clearAllFilters = () => {
     setSelectedGradings(['all'])
+    setSelectedBooks([])
     setActiveMode(null)
   }
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, selectedGradings])
+  }, [searchQuery, selectedGradings, selectedBooks, activeMode])
 
   // ── Filter + sort logic ──
   const filteredResults = useMemo(() => {
@@ -159,6 +178,12 @@ export default function SearchInterface({
       })
     }
 
+    // Apply book filters
+    if (selectedBooks.length > 0) {
+      const bookSet = new Set(selectedBooks)
+      filtered = filtered.filter((h) => bookSet.has(h.bookId))
+    }
+
     // Apply grading filters
     if (shouldShowFilters && !selectedGradings.includes('all')) {
       filtered = filtered.filter((hadith) => {
@@ -196,7 +221,7 @@ export default function SearchInterface({
 
     filtered.sort((a, b) => (a.volume || 0) - (b.volume || 0) || (a.id || 0) - (b.id || 0))
     return filtered
-  }, [searchResults, selectedGradings, activeMode, searchQuery, shouldShowFilters])
+  }, [searchResults, selectedGradings, selectedBooks, activeMode, searchQuery, shouldShowFilters])
 
   const isArabicSearch = useMemo(() => isArabicQuery(searchQuery), [searchQuery])
   const showArabicDefault = useMemo(
@@ -245,6 +270,14 @@ export default function SearchInterface({
         </Button>
       </div>
 
+      {/* ── Error banner ── */}
+      {searchError && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3.5 py-2.5">
+          <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+          <p className="text-sm text-destructive">{searchError}</p>
+        </div>
+      )}
+
       {/* ── Filter toggle ── */}
       {shouldShowFilters && (
         <div className="mb-4 flex items-center gap-2">
@@ -258,7 +291,7 @@ export default function SearchInterface({
             Filters
             {hasActiveFilters() && (
               <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
-                {selectedGradings.filter((g) => g !== 'all').length + (activeMode ? 1 : 0)}
+                {selectedGradings.filter((g) => g !== 'all').length + (activeMode ? 1 : 0) + selectedBooks.length}
               </Badge>
             )}
           </Button>
@@ -278,6 +311,37 @@ export default function SearchInterface({
       {/* ── Filter panel ── */}
       {showFilters && shouldShowFilters && (
         <div className="mb-5 rounded-lg border border-border bg-surface-1 p-4 sm:p-5">
+          {/* Book filter (shown when results from multiple books) */}
+          {availableBooks.length > 1 && (
+            <>
+              <h3 className="mb-3 text-sm font-medium text-foreground">Book</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {availableBooks.map((b) => {
+                  const active = selectedBooks.includes(b.id)
+                  return (
+                    <button
+                      key={b.id}
+                      onClick={() =>
+                        setSelectedBooks((prev) =>
+                          active ? prev.filter((id) => id !== b.id) : [...prev, b.id],
+                        )
+                      }
+                      className={cn(
+                        'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                        active
+                          ? 'bg-accent/10 border-accent text-accent'
+                          : 'border-border text-foreground-muted hover:bg-surface-2',
+                      )}
+                    >
+                      {b.name}
+                    </button>
+                  )
+                })}
+              </div>
+              <Separator className="my-4" />
+            </>
+          )}
+
           {/* Gradings */}
           <div>
             <h3 className="mb-3 text-sm font-medium text-foreground">Grading Classification</h3>
@@ -361,6 +425,20 @@ export default function SearchInterface({
                       </Badge>
                     ) : null
                   })}
+                {selectedBooks.map((bid) => {
+                  const b = availableBooks.find((ab) => ab.id === bid)
+                  return b ? (
+                    <Badge key={bid} variant="outline" className="gap-1 pr-1">
+                      {b.name}
+                      <button
+                        onClick={() => setSelectedBooks((prev) => prev.filter((id) => id !== bid))}
+                        className="rounded-full p-0.5 hover:bg-surface-2"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </Badge>
+                  ) : null
+                })}
                 {activeMode && (
                   <Badge variant="outline" className="gap-1 pr-1">
                     {SEARCH_MODES.find((m) => m.key === activeMode)?.label}
@@ -387,6 +465,7 @@ export default function SearchInterface({
               hadith={hadith}
               showViewChapter
               showArabicByDefault={showArabicDefault(hadith)}
+              highlightQuery={highlightQuery || searchQuery}
             />
           ))
         ) : !isSearching ? (

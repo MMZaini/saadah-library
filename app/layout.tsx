@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href={favicon.src} />
         <link
           rel="preload"
-          href="/fonts/UthmanicHafs1Ver18.woff2"
+          href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/fonts/UthmanicHafs1Ver18.woff2`}
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"
