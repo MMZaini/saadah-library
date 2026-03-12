@@ -5,8 +5,15 @@ import { thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import { BookConfig } from '@/lib/books-config'
 
-export default function GenericVolumeExplorer({ bookConfig, className }: any) {
+export default function GenericVolumeExplorer({
+  bookConfig,
+  className,
+}: {
+  bookConfig: BookConfig
+  className?: string
+}) {
   const [selectedVolume, setSelectedVolume] = useState<string | 'all'>(() => {
     if (bookConfig?.hasMultipleVolumes) return bookConfig?.volumes?.[0] ?? 'all'
     return bookConfig?.volumes?.[0] ?? bookConfig?.bookId ?? 'all'
@@ -41,7 +48,7 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
       }
 
       setRandomHadith(hadith)
-    } catch (err) {
+    } catch {
       // Error logging removed
       setError('Failed to load hadith from this volume')
     } finally {

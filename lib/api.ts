@@ -2,7 +2,7 @@
 const BASE_URL = 'https://www.thaqalayn-api.net/api/v2'
 
 // Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 // Cache helper functions
@@ -14,7 +14,7 @@ const getCachedData = (key: string) => {
   return null
 }
 
-const setCachedData = (key: string, data: any) => {
+const setCachedData = (key: string, data: unknown) => {
   cache.set(key, { data, timestamp: Date.now() })
 
   // Clean old cache entries (simple cleanup)
@@ -161,7 +161,7 @@ export const thaqalaynApi = {
         results: Array.isArray(results) ? results : [],
         total: Array.isArray(results) ? results.length : 0,
       }
-    } catch (err) {
+    } catch {
       // On any error importing/util functions, fall back to raw query
       const encodedQuery = encodeURIComponent(query)
       const results = await cachedFetch(`${BASE_URL}/query?q=${encodedQuery}`)
@@ -183,7 +183,7 @@ export const thaqalaynApi = {
         results: Array.isArray(results) ? results : [],
         total: Array.isArray(results) ? results.length : 0,
       }
-    } catch (err) {
+    } catch {
       const encodedQuery = encodeURIComponent(query)
       const results = await cachedFetch(`${BASE_URL}/query/${bookId}?q=${encodedQuery}`)
       return {
@@ -212,7 +212,7 @@ export const thaqalaynApi = {
   },
 
   // Get ingredients information
-  async getIngredients(): Promise<any> {
+  async getIngredients(): Promise<unknown> {
     const response = await fetch(`${BASE_URL}/ingredients`)
     if (!response.ok) {
       throw new Error(`Failed to fetch ingredients: ${response.statusText}`)
@@ -266,7 +266,7 @@ export const alKafiApi = {
         results: combinedResults,
         total: combinedResults.length,
       }
-    } catch (error) {
+    } catch {
       // Error occurred during search
       return { results: [], total: 0 }
     }
@@ -330,7 +330,7 @@ export const alKafiApi = {
       })
 
       return structure
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load volume ${volume} structure`)
     }
@@ -355,7 +355,7 @@ export const alKafiApi = {
       return allHadiths.filter(
         (hadith) => hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterId,
       )
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load chapter hadiths`)
     }
@@ -398,7 +398,7 @@ export const uyunApi = {
         results: combinedResults,
         total: combinedResults.length,
       }
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       return { results: [], total: 0 }
     }
@@ -462,7 +462,7 @@ export const uyunApi = {
       })
 
       return structure
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load volume ${volume} structure`)
     }
@@ -487,7 +487,7 @@ export const uyunApi = {
       return allHadiths.filter(
         (hadith) => hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterId,
       )
-    } catch (error) {
+    } catch {
       // Error logging removed for production;
       throw new Error(`Failed to load chapter hadiths`)
     }

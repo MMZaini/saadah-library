@@ -1,15 +1,29 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { bookApi, ChapterStructure, Hadith } from '@/lib/api'
+import { bookApi, Hadith } from '@/lib/api'
 import HadithCard from '@/components/HadithCard'
 import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import { BookConfig } from '@/lib/books-config'
+
+interface ChapterSummaryData {
+  chapter: string
+  chapterInCategoryId: number
+  hadithCount: number
+}
+
+interface CategorySummaryData {
+  category: string
+  categoryId: string
+  chapters: Record<string, ChapterSummaryData>
+  totalHadiths: number
+}
 
 interface GenericBookBrowserProps {
   bookId: string
-  bookConfig?: any | null
+  bookConfig?: BookConfig | null
   className?: string
 }
 
@@ -23,7 +37,7 @@ export default function GenericBookBrowser({
     return bookId
   })
 
-  const [volumeSummary, setVolumeSummary] = useState<Record<string, any>>({})
+  const [volumeSummary, setVolumeSummary] = useState<Record<string, CategorySummaryData>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [selectedChapter, setSelectedChapter] = useState<{
     category: string
@@ -37,10 +51,8 @@ export default function GenericBookBrowser({
   const [error, setError] = useState<string | null>(null)
 
   const volumesList = bookConfig?.hasMultipleVolumes ? bookConfig.volumes : [bookId]
-  const isMulti = !!bookConfig?.hasMultipleVolumes
   const volumeOptions = makeVolumeOptions(volumesList)
   const displayTitle = bookConfig?.englishName || bookId
-  const volumesCount = (Array.isArray(volumesList) && volumesList.length) || 1
 
   useEffect(() => {
     const loadVolumeSummary = async () => {
@@ -51,16 +63,16 @@ export default function GenericBookBrowser({
       setChapterHadiths([])
 
       try {
-        const summary: Record<string, any> = {}
+        const summary: Record<string, CategorySummaryData> = {}
 
         if (selectedVolume === 'all') {
-          const promises = (volumesList || []).map(async (vol: any, idx: number) => {
+          const promises = (volumesList || []).map(async (vol: string) => {
             const hadiths = await bookApi.getBookHadiths(vol)
             return { volume: vol, hadiths }
           })
 
           const results = await Promise.all(promises)
-          results.forEach(({ volume, hadiths }: any) => {
+          results.forEach(({ volume, hadiths }) => {
             const volNum = (String(volume).match(/-Volume-(\d+)-/) || [])[1] || ''
             hadiths.forEach((hadith: Hadith) => {
               const categoryKey = `${hadith.category || 'Uncategorized'}${volNum ? ` (Vol ${volNum})` : ''}`
@@ -88,7 +100,7 @@ export default function GenericBookBrowser({
             })
           })
         } else {
-          const hadiths = await bookApi.getBookHadiths(selectedVolume as any)
+          const hadiths = await bookApi.getBookHadiths(selectedVolume)
           hadiths.forEach((hadith: Hadith) => {
             const categoryKey = hadith.category || 'Uncategorized'
             const chapterKey = hadith.chapter || 'No Chapter'
@@ -116,7 +128,7 @@ export default function GenericBookBrowser({
         }
 
         setVolumeSummary(summary)
-      } catch (err) {
+      } catch {
         // Error logging removed
         setError('Failed to load book structure')
       } finally {
@@ -125,6 +137,7 @@ export default function GenericBookBrowser({
     }
 
     loadVolumeSummary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedVolume, bookId, bookConfig])
 
   const toggleCategory = (categoryKey: string) => {
@@ -149,7 +162,7 @@ export default function GenericBookBrowser({
       let hadiths: Hadith[] = []
 
       if (selectedVolume === 'all') {
-        const promises = (volumesList || []).map(async (vol: any) => {
+        const promises = (volumesList || []).map(async (vol: string) => {
           const volHadiths = await bookApi.getBookHadiths(vol)
           return volHadiths.filter(
             (h) => h.categoryId === categoryId && h.chapterInCategoryId === chapterId,
@@ -158,22 +171,17 @@ export default function GenericBookBrowser({
         const results = await Promise.all(promises)
         hadiths = results.flat()
       } else {
-        hadiths = await bookApi.getChapterHadiths(selectedVolume as any, categoryId, chapterId)
+        hadiths = await bookApi.getChapterHadiths(selectedVolume, categoryId, chapterId)
       }
 
       const sorted = hadiths.sort((a, b) => a.id - b.id)
       setChapterHadiths(sorted)
-    } catch (err) {
+    } catch {
       // Error logging removed
       setChapterHadiths([])
     } finally {
       setLoadingChapter(false)
     }
-  }
-
-  const clearChapterSelection = () => {
-    setSelectedChapter(null)
-    setChapterHadiths([])
   }
 
   const selectChapter = (
@@ -188,7 +196,7 @@ export default function GenericBookBrowser({
 
   const getTotalHadithsCount = (): number => {
     return Object.values(volumeSummary).reduce(
-      (total, category: any) => total + (category.totalHadiths || 0),
+      (total, category) => total + (category.totalHadiths || 0),
       0,
     )
   }
@@ -224,11 +232,11 @@ export default function GenericBookBrowser({
           <div className="flex items-center gap-3">
             <div className="relative">
               <select
-                value={selectedVolume as any}
+                value={String(selectedVolume)}
                 onChange={(e) => {
                   const raw = e.target.value
-                  const val = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : Number(raw)
-                  setSelectedVolume(val as any)
+                  const val = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : String(raw)
+                  setSelectedVolume(val)
                 }}
                 disabled={loading}
                 className={cn(
@@ -328,63 +336,65 @@ export default function GenericBookBrowser({
               </div>
 
               <div className="p-1 sm:p-2">
-                {Object.entries(volumeSummary).map(([categoryKey, categoryInfo]: [string, any]) => (
-                  <div key={categoryKey} className="mb-1 sm:mb-2">
-                    {/* Category Header */}
-                    <button
-                      onClick={() => toggleCategory(categoryKey)}
-                      className="hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3"
-                    >
-                      {expandedCategories.has(categoryKey) ? (
-                        <ChevronDown className="text-muted h-4 w-4 flex-shrink-0" />
-                      ) : (
-                        <ChevronRight className="text-muted h-4 w-4 flex-shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="text-primary text-sm font-medium leading-tight">
-                          {categoryInfo.category}
-                        </div>
-                        <div className="text-muted mt-1 text-xs">
-                          {categoryInfo.totalHadiths} hadiths •{' '}
-                          {Object.keys(categoryInfo.chapters).length} chapters
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Chapters */}
-                    {expandedCategories.has(categoryKey) && (
-                      <div className="ml-6 mt-1 space-y-1">
-                        {Object.entries(categoryInfo.chapters).map(
-                          ([chapterKey, chapterInfo]: [string, any]) => (
-                            <button
-                              key={`${categoryKey}-${chapterKey}`}
-                              onClick={() =>
-                                selectChapter(
-                                  categoryKey,
-                                  chapterKey,
-                                  categoryInfo.categoryId,
-                                  chapterInfo.chapterInCategoryId,
-                                )
-                              }
-                              className={cn(
-                                'w-full rounded p-2 text-left text-sm transition-colors',
-                                selectedChapter?.category === categoryKey &&
-                                  selectedChapter?.chapter === chapterKey
-                                  ? 'bg-primary/10 text-primary border-primary/20 border'
-                                  : 'hover:bg-card-hover text-secondary',
-                              )}
-                            >
-                              <div className="leading-tight">{chapterInfo.chapter}</div>
-                              <div className="text-muted mt-1 text-xs">
-                                {chapterInfo.hadithCount} hadiths
-                              </div>
-                            </button>
-                          ),
+                {Object.entries(volumeSummary).map(
+                  ([categoryKey, categoryInfo]: [string, CategorySummaryData]) => (
+                    <div key={categoryKey} className="mb-1 sm:mb-2">
+                      {/* Category Header */}
+                      <button
+                        onClick={() => toggleCategory(categoryKey)}
+                        className="hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3"
+                      >
+                        {expandedCategories.has(categoryKey) ? (
+                          <ChevronDown className="text-muted h-4 w-4 flex-shrink-0" />
+                        ) : (
+                          <ChevronRight className="text-muted h-4 w-4 flex-shrink-0" />
                         )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-primary text-sm font-medium leading-tight">
+                            {categoryInfo.category}
+                          </div>
+                          <div className="text-muted mt-1 text-xs">
+                            {categoryInfo.totalHadiths} hadiths •{' '}
+                            {Object.keys(categoryInfo.chapters).length} chapters
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Chapters */}
+                      {expandedCategories.has(categoryKey) && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {Object.entries(categoryInfo.chapters).map(
+                            ([chapterKey, chapterInfo]: [string, ChapterSummaryData]) => (
+                              <button
+                                key={`${categoryKey}-${chapterKey}`}
+                                onClick={() =>
+                                  selectChapter(
+                                    categoryKey,
+                                    chapterKey,
+                                    categoryInfo.categoryId,
+                                    chapterInfo.chapterInCategoryId,
+                                  )
+                                }
+                                className={cn(
+                                  'w-full rounded p-2 text-left text-sm transition-colors',
+                                  selectedChapter?.category === categoryKey &&
+                                    selectedChapter?.chapter === chapterKey
+                                    ? 'bg-primary/10 text-primary border-primary/20 border'
+                                    : 'hover:bg-card-hover text-secondary',
+                                )}
+                              >
+                                <div className="leading-tight">{chapterInfo.chapter}</div>
+                                <div className="text-muted mt-1 text-xs">
+                                  {chapterInfo.hadithCount} hadiths
+                                </div>
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </div>

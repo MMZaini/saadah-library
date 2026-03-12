@@ -147,7 +147,7 @@ export function stopArabicIndexRefresher(): void {
 if (typeof window === 'undefined') {
   try {
     startArabicIndexRefresher()
-  } catch (e) {
+  } catch {
     // ignore startup failures
   }
 }
@@ -164,7 +164,8 @@ export async function searchArabicLocally(query: string): Promise<QueryResponse>
 
   // Return as Hadith[] (drop the helper field)
   return {
-    results: results.map(({ normalizedArabicText, ...rest }) => rest),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    results: results.map(({ normalizedArabicText: _unused, ...rest }) => rest),
     total: results.length,
   }
 }

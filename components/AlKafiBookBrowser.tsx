@@ -1,15 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  alKafiApi,
-  thaqalaynApi,
-  ChapterStructure,
-  CategoryInfo,
-  ChapterInfo,
-  Hadith,
-  BookInfo,
-} from '@/lib/api'
+import { alKafiApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -131,7 +123,7 @@ export default function AlKafiBookBrowser({
         })
 
         setVolumeSummary(summary)
-      } catch (err) {
+      } catch {
         setError(`Failed to load structure for Volume ${selectedVolume}`)
         // Error logging removed
       } finally {
@@ -140,14 +132,17 @@ export default function AlKafiBookBrowser({
     }
 
     loadVolumeSummary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedVolume])
 
   // Load specific chapter hadiths
   const loadChapterHadiths = async (
     category: string,
     chapter: string,
-    categoryId: string,
-    chapterId: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _categoryId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _chapterId: number,
   ) => {
     setLoadingChapter(true)
     try {
@@ -170,7 +165,7 @@ export default function AlKafiBookBrowser({
       )
 
       setChapterHadiths(chapterHadiths)
-    } catch (err) {
+    } catch {
       // Error logging removed
       setChapterHadiths([])
     } finally {

@@ -1,15 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
-import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi, Hadith, BookInfo } from '@/lib/api'
 import SearchInterface from '@/components/SearchInterface'
-import { useSettings } from '@/lib/settings-context'
 import { useNavigation } from '@/lib/navigation-context'
 import { debounce } from '@/lib/performance'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Search, Loader2 } from 'lucide-react'
 
 const AlKafiVolumeExplorer = lazy(() => import('@/components/AlKafiVolumeExplorer'))
@@ -17,8 +14,6 @@ const BookStructureExplorer = lazy(() => import('@/components/AlKafiVolumeStruct
 const AlKafiBookBrowser = lazy(() => import('@/components/AlKafiBookBrowser'))
 
 export default function AlKafiPage() {
-  const router = useRouter()
-  const { settings } = useSettings()
   const navigation = useNavigation()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -46,7 +41,7 @@ export default function AlKafiPage() {
       setSearchQuery(s.query)
       setSearchResults(s.results)
     }
-  }, [])
+  }, [navigation])
 
   useEffect(() => {
     const save = () => navigation.saveScrollPosition(window.scrollY)
@@ -55,7 +50,7 @@ export default function AlKafiPage() {
       window.removeEventListener('beforeunload', save)
       navigation.saveScrollPosition(window.scrollY)
     }
-  }, [])
+  }, [navigation])
 
   const debouncedSearch = useMemo(
     () =>
@@ -82,7 +77,8 @@ export default function AlKafiPage() {
           setIsSearching(false)
         }
       }, 300),
-    [],
+
+    [navigation],
   )
 
   const handleSearchInput = (value: string) => {
@@ -130,6 +126,7 @@ export default function AlKafiPage() {
         <div className="rounded-lg border border-border bg-surface-1 p-5 sm:p-6">
           <div className="flex items-start gap-5">
             {bookInfo?.bookCover && (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={bookInfo.bookCover}
                 alt="Al-Kāfi"

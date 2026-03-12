@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { alKafiApi, thaqalaynApi, ChapterInfo, BookInfo } from '@/lib/api'
-import HadithCard from './HadithCard'
-import { Book, ChevronDown, ChevronRight } from 'lucide-react'
+import { alKafiApi } from '@/lib/api'
 import { useNavigation } from '@/lib/navigation-context'
 import { cn } from '@/lib/utils'
 
@@ -48,7 +46,6 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   const longPressTriggeredRef = useRef(false)
   // Desktop hover gradient animation control
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
-  const [leavingKey, setLeavingKey] = useState<string | null>(null)
   const leaveTimeoutRef = useRef<number | null>(null)
 
   const alKafiVolumes = Array.from({ length: 8 }, (_, i) => i + 1)
@@ -126,7 +123,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
         })
 
         setVolumeSummary(summary)
-      } catch (err) {
+      } catch {
         setError(`Failed to load structure for selected volume(s)`)
         // Error logging removed
       } finally {
@@ -135,6 +132,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     }
 
     loadVolumeSummary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedVolume])
 
   // Cleanup timers on unmount
@@ -513,7 +511,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                           <div
                             className={cn(
                               'overflow-hidden pr-4',
-                              'duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] md:duration-[1100ms] relative z-10 transition-[max-height]',
+                              'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
                               'max-h-24',
                               'md:group-hover:max-h-[500px]',
                             )}

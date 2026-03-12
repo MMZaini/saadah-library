@@ -4,11 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { thaqalaynApi, Hadith } from '@/lib/api'
-import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
-import HadithCard from '@/components/HadithCard'
 import BookmarkCard from '@/components/BookmarkCard'
 import BookmarkedHadithCard from '@/components/BookmarkedHadithCard'
-import { useSettings } from '@/lib/settings-context'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,8 +29,7 @@ const FILTER_OPTIONS = [
 ]
 
 export default function BookmarksPage() {
-  const { bookmarks, bookmarkCount, addBookmark, removeBookmark, importBookmarks } = useBookmarks()
-  const { settings } = useSettings()
+  const { bookmarks, bookmarkCount, importBookmarks } = useBookmarks()
   const [fullHadiths, setFullHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

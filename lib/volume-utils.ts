@@ -1,9 +1,9 @@
 export interface VolumeOption {
-  value: any
+  value: string | number
   label: string
 }
 
-export function makeVolumeOptions(volumes: any[] | undefined): VolumeOption[] {
+export function makeVolumeOptions(volumes: (string | number)[] | undefined): VolumeOption[] {
   const vols = Array.isArray(volumes) && volumes.length > 0 ? volumes : []
 
   if (vols.length === 0) {
@@ -19,7 +19,10 @@ export function makeVolumeOptions(volumes: any[] | undefined): VolumeOption[] {
   return options
 }
 
-export function getVolumeLabelForValue(volumes: any[] | undefined, value: any): string {
+export function getVolumeLabelForValue(
+  volumes: (string | number)[] | undefined,
+  value: string | number,
+): string {
   const options = makeVolumeOptions(volumes)
   const found = options.find((o) => String(o.value) === String(value))
   return found ? found.label : options[0]?.label || 'Volume 1'

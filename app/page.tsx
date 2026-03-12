@@ -2,16 +2,14 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { books } from '@/lib/books'
-import { thaqalaynApi, Hadith } from '@/lib/api'
+import { Hadith } from '@/lib/api'
 import BookCard from '@/components/BookCard'
 import SearchInterface from '@/components/SearchInterface'
-import { useSettings } from '@/lib/settings-context'
 import { useNavigation } from '@/lib/navigation-context'
 import { debounce } from '@/lib/performance'
 import { Search, Loader2 } from 'lucide-react'
 
 export default function Page() {
-  const { settings } = useSettings()
   const navigation = useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Hadith[]>([])
@@ -26,7 +24,7 @@ export default function Page() {
       setSearchQuery(s.query)
       setSearchResults(s.results)
     }
-  }, [])
+  }, [navigation])
 
   useEffect(() => {
     const handle = () => {
@@ -45,7 +43,7 @@ export default function Page() {
       window.removeEventListener('beforeunload', save)
       navigation.saveScrollPosition(window.scrollY)
     }
-  }, [])
+  }, [navigation])
 
   const debouncedSearch = useMemo(
     () =>
@@ -73,7 +71,7 @@ export default function Page() {
           setIsSearching(false)
         }
       }, 300),
-    [],
+    [navigation],
   )
 
   const handleSearchInput = (value: string) => {

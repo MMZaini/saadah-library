@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
-import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { useNavigation } from '@/lib/navigation-context'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
@@ -28,8 +27,7 @@ interface VolumeSummary {
 interface VolumeStructureProps {
   bookId: string
   bookName: string
-  // volumes may be numeric (1,2,3) or string ids (e.g. 'Book-Volume-1-...')
-  volumes: any[]
+  volumes: (string | number)[]
   baseRoute?: string // e.g., '/al-kafi' or '/book/bookId'
   className?: string
 }
@@ -62,7 +60,6 @@ export default function VolumeStructure({
   const longPressTriggeredRef = useRef(false)
   // Desktop hover gradient animation control
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
-  const [leavingKey, setLeavingKey] = useState<string | null>(null)
   const leaveTimeoutRef = useRef<number | null>(null)
 
   const volumeOptions = makeVolumeOptions(volumes)
@@ -192,7 +189,7 @@ export default function VolumeStructure({
         })
 
         setVolumeSummary(sortedSummary)
-      } catch (err) {
+      } catch {
         setError(`Failed to load structure for selected volume(s)`)
         // Error logging removed
       } finally {
@@ -227,7 +224,7 @@ export default function VolumeStructure({
     navigation.saveScrollPosition(window.scrollY)
 
     // Handle navigation based on book type and baseRoute
-    let volumeForUrl: any
+    let volumeForUrl: string | number
     if (selectedVolume === 'all') {
       volumeForUrl = volumes && volumes.length ? volumes[0] : 1
     } else {
@@ -303,7 +300,6 @@ export default function VolumeStructure({
     onTouchEnd: (e: React.TouchEvent) => {
       const startTime = touchStartTimeRef.current || Date.now()
       const duration = Date.now() - startTime
-      const start = touchStartPosRef.current
       clearLongPressTimer()
       touchStartPosRef.current = null
       touchStartTimeRef.current = null
@@ -616,7 +612,7 @@ export default function VolumeStructure({
                           <div
                             className={cn(
                               'overflow-hidden pr-4',
-                              'duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] md:duration-[1100ms] relative z-10 transition-[max-height]',
+                              'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
                               'max-h-24',
                               'md:group-hover:max-h-[500px]',
                             )}

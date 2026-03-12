@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { thaqalaynApi } from '@/lib/api'
-import { isArabicQuery, normalizeArabic } from '@/lib/search-utils'
+import { isArabicQuery } from '@/lib/search-utils'
 import { searchArabicLocally } from '@/lib/arabic-search-index'
 
 export async function GET(request: NextRequest) {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Non-Arabic: call external API
     const response = await thaqalaynApi.searchAllBooks(query)
     return NextResponse.json(response)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Search failed', results: [], total: 0 }, { status: 500 })
   }
 }

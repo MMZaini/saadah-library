@@ -5,9 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { thaqalaynApi, Hadith, BookInfo } from '@/lib/api'
 import { getBookConfig } from '@/lib/books-config'
 import { books } from '@/lib/books'
-import HadithCard from '@/components/HadithCard'
 import SearchInterface from '@/components/SearchInterface'
-import { useSettings } from '@/lib/settings-context'
 import { debounce } from '@/lib/performance'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -28,7 +26,6 @@ interface BookPageState {
 export default function BookPage() {
   const params = useParams()
   const router = useRouter()
-  const { settings } = useSettings()
   const bookId = params?.bookId as string
 
   const [state, setState] = useState<BookPageState>({
@@ -226,6 +223,7 @@ export default function BookPage() {
         <div className="rounded-lg border border-border bg-surface-1 p-5 sm:p-6">
           <div className="flex items-start gap-5">
             {coverSrc && (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={coverSrc}
                 alt={bookInfo?.englishName || displayTitle}

@@ -73,8 +73,6 @@ export default function TopBar() {
     pathname.includes('/hadith/')
   const isHadithPage = isAlKafiHadithPage || isGenericHadithPage
 
-  const volumeId = isChapterPage ? params.volumeId : null
-
   const displayBookTitle = currentBookId
     ? findTitleFromBooksList(currentBookId) ||
       getBookConfig(currentBookId)?.englishName ||

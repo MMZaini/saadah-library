@@ -32,7 +32,8 @@ export function SteppedSlider({
 
   const stepCount = steps.length - 1
   const currentIndex = steps.indexOf(value)
-  const activeIndex = currentIndex >= 0 ? currentIndex : Math.round(((value - min) / (max - min)) * stepCount)
+  const activeIndex =
+    currentIndex >= 0 ? currentIndex : Math.round(((value - min) / (max - min)) * stepCount)
   const fraction = stepCount > 0 ? activeIndex / stepCount : 0
 
   const resolveFromPointer = React.useCallback(

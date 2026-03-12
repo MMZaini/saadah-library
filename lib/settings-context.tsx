@@ -68,15 +68,25 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           ...parsed,
           theme: 'dark', // Always force dark mode
           // Clamp font sizes to valid 75-150 range (step 5)
-          arabicFontSize: Math.round(Math.min(150, Math.max(75, parsed.arabicFontSize ?? defaultSettings.arabicFontSize)) / 5) * 5,
-          englishFontSize: Math.round(Math.min(150, Math.max(75, parsed.englishFontSize ?? defaultSettings.englishFontSize)) / 5) * 5,
+          arabicFontSize:
+            Math.round(
+              Math.min(150, Math.max(75, parsed.arabicFontSize ?? defaultSettings.arabicFontSize)) /
+                5,
+            ) * 5,
+          englishFontSize:
+            Math.round(
+              Math.min(
+                150,
+                Math.max(75, parsed.englishFontSize ?? defaultSettings.englishFontSize),
+              ) / 5,
+            ) * 5,
         }
 
         setSettings(mergedSettings)
       } else {
         setSettings(defaultSettings)
       }
-    } catch (error) {
+    } catch {
       setSettings(defaultSettings)
     }
   }, [])
@@ -119,13 +129,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (typeof document !== 'undefined') {
             const root = document.documentElement
             if (updated.arabicFontSize !== undefined) {
-              root.style.setProperty('--hadith-arabic-font-size', `${updated.arabicFontSize * 1.485}%`)
+              root.style.setProperty(
+                '--hadith-arabic-font-size',
+                `${updated.arabicFontSize * 1.485}%`,
+              )
             }
             if (updated.englishFontSize !== undefined) {
               root.style.setProperty('--hadith-english-font-size', `${updated.englishFontSize}%`)
             }
           }
-        } catch (e) {
+        } catch {
           // Fail silently — not critical
         }
 
@@ -139,7 +152,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
               try {
                 localStorage.clear()
                 localStorage.setItem('siteSettings', JSON.stringify(updated))
-              } catch (clearError) {
+              } catch {
                 // Silent fail
               }
             }

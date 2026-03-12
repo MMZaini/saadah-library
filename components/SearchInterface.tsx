@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
-import { useSettings } from '@/lib/settings-context'
 import {
   isArabicQuery,
   normalizeArabic,
@@ -75,17 +74,17 @@ export default function SearchInterface({
   searchQuery,
   searchResults,
   isSearching,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onSearch,
   onClearSearch,
   searchContext = 'all-books',
 }: SearchInterfaceProps) {
-  const { settings } = useSettings()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedGradings, setSelectedGradings] = useState<string[]>(['all'])
   const [showFilters, setShowFilters] = useState(false)
   const [activeMode, setActiveMode] = useState<SearchMode | null>(null)
 
-  const shouldShowFilters = () => searchContext === 'all-books' || searchContext === 'al-kafi'
+  const shouldShowFilters = searchContext === 'all-books' || searchContext === 'al-kafi'
 
   const hasActiveFilters = () => {
     const hasGrading = !selectedGradings.includes('all') && selectedGradings.length > 0
@@ -161,7 +160,7 @@ export default function SearchInterface({
     }
 
     // Apply grading filters
-    if (shouldShowFilters() && !selectedGradings.includes('all')) {
+    if (shouldShowFilters && !selectedGradings.includes('all')) {
       filtered = filtered.filter((hadith) => {
         const gradingText = [
           hadith.majlisiGrading,
@@ -197,7 +196,7 @@ export default function SearchInterface({
 
     filtered.sort((a, b) => (a.volume || 0) - (b.volume || 0) || (a.id || 0) - (b.id || 0))
     return filtered
-  }, [searchResults, selectedGradings, activeMode, searchQuery])
+  }, [searchResults, selectedGradings, activeMode, searchQuery, shouldShowFilters])
 
   const isArabicSearch = useMemo(() => isArabicQuery(searchQuery), [searchQuery])
   const showArabicDefault = useMemo(
@@ -235,7 +234,7 @@ export default function SearchInterface({
           <p className="mt-1 text-sm text-foreground-muted">
             <span className="font-medium text-accent">{filteredResults.length}</span>{' '}
             {filteredResults.length === 1 ? 'hadith' : 'hadiths'} found
-            {filteredResults.length !== searchResults.length && shouldShowFilters() && (
+            {filteredResults.length !== searchResults.length && shouldShowFilters && (
               <span className="text-foreground-faint"> (filtered from {searchResults.length})</span>
             )}
           </p>
@@ -247,7 +246,7 @@ export default function SearchInterface({
       </div>
 
       {/* ── Filter toggle ── */}
-      {shouldShowFilters() && (
+      {shouldShowFilters && (
         <div className="mb-4 flex items-center gap-2">
           <Button
             variant={showFilters ? 'default' : 'outline'}
@@ -277,7 +276,7 @@ export default function SearchInterface({
       )}
 
       {/* ── Filter panel ── */}
-      {showFilters && shouldShowFilters() && (
+      {showFilters && shouldShowFilters && (
         <div className="mb-5 rounded-lg border border-border bg-surface-1 p-4 sm:p-5">
           {/* Gradings */}
           <div>

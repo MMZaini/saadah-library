@@ -5,7 +5,7 @@ export async function GET() {
   try {
     await forceRebuild()
     return NextResponse.json({ ok: true, message: 'Arabic index rebuild triggered and completed' })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: 'Rebuild failed' }, { status: 500 })
   }
 }

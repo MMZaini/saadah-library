@@ -7,7 +7,7 @@ interface NavigationState {
   lastPath: string
   searchState: {
     query: string
-    results: any[]
+    results: unknown[]
     page: number
     filters: {
       grading: string

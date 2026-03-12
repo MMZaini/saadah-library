@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation'
 import { thaqalaynApi, Hadith } from '@/lib/api'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import HadithCard from '@/components/HadithCard'
-import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -13,7 +12,6 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 export default function HadithPage() {
   const router = useRouter()
   const params = useParams()
-  const { settings } = useSettings()
   const { setChapterInfo } = useChapter()
 
   const urlSlug = params?.bookSlug as string
@@ -86,7 +84,7 @@ export default function HadithPage() {
     if (hadithId && bookId) loadHadith()
 
     return () => setChapterInfo(null)
-  }, [hadithId, bookId, setChapterInfo])
+  }, [hadithId, bookId, setChapterInfo, urlSlug])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })

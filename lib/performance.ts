@@ -1,29 +1,15 @@
 // Performance monitoring utilities
 
-export const measurePerformance = (name: string, fn: () => void) => {
-  if (typeof performance !== 'undefined') {
-    const start = performance.now()
-    fn()
-    const end = performance.now()
-    // Performance logging removed for production
-  } else {
-    fn()
-  }
+export const measurePerformance = (_name: string, fn: () => void) => {
+  fn()
 }
 
-export const measureAsyncPerformance = async (name: string, fn: () => Promise<any>) => {
-  if (typeof performance !== 'undefined') {
-    const start = performance.now()
-    const result = await fn()
-    const end = performance.now()
-    // Performance logging removed for production
-    return result
-  } else {
-    return await fn()
-  }
+export const measureAsyncPerformance = async (_name: string, fn: () => Promise<unknown>) => {
+  return await fn()
 }
 
 // Debounce utility for search
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number,
@@ -37,6 +23,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 }
 
 // Throttle utility for scroll events
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const throttle = <T extends (...args: any[]) => any>(
   func: T,
   limit: number,

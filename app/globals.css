@@ -4,12 +4,14 @@
 /* Uthman Taha – self-hosted from /public/fonts */
 @font-face {
   font-family: 'Uthman Taha';
-  src: url('/fonts/UthmanicHafs1Ver18.woff2') format('woff2'),
-       url('/fonts/UthmanicHafs1Ver18.ttf') format('truetype');
+  src:
+    url('/fonts/UthmanicHafs1Ver18.woff2') format('woff2'),
+    url('/fonts/UthmanicHafs1Ver18.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2028-202F, U+0020-007E;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2028-202F, U+0020-007E;
 }
 
 @tailwind base;
