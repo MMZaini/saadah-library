@@ -40,6 +40,20 @@ export default function SettingsSidebar() {
             <h3 className="text-sm font-medium text-foreground">Hadith Display</h3>
             <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border px-3 py-3">
               <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">Show Arabic by default</p>
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  Display Arabic text when opening a hadith
+                </p>
+              </div>
+              <Switch
+                checked={settings.defaultLanguage === 'arabic'}
+                onCheckedChange={(checked) =>
+                  updateSettings({ defaultLanguage: checked ? 'arabic' : 'english' })
+                }
+              />
+            </label>
+            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border px-3 py-3">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground">Always show full text</p>
                 <p className="mt-0.5 text-xs text-foreground-muted">
                   Expand all hadith text by default

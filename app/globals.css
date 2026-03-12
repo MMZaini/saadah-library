@@ -10,8 +10,10 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /* Exclude U+060C (Arabic comma ،) and U+061B (Arabic semicolon ؛) so the browser
+     falls through to Noto Sans Arabic instead of rendering them as Quranic ayah symbols. */
   unicode-range:
-    U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2028-202F, U+0020-007E;
+    U+0600-060B, U+060D-061A, U+061C-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2028-202F, U+0020-007E;
 }
 
 @tailwind base;

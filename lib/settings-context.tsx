@@ -20,6 +20,7 @@ type Settings = {
   arabicFontSize: number // slider percentage (100 = default). Actual CSS = value × 1.485
   englishFontSize: number // percentage (100 = 100% = default)
   alwaysShowFullHadith: boolean // whether to show full hadith text by default
+  defaultLanguage: 'english' | 'arabic' // which language to show on hadith open
 }
 
 type SettingsContextType = {
@@ -38,6 +39,7 @@ const defaultSettings: Settings = {
   arabicFontSize: 100,
   englishFontSize: 100,
   alwaysShowFullHadith: false, // false = collapsed by default (current behavior)
+  defaultLanguage: 'english', // english = show English by default (new users)
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null)

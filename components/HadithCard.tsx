@@ -6,7 +6,7 @@ import { getHighlightSegments } from '@/lib/search-utils'
 import { useSettings } from '@/lib/settings-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
-import { cn } from '@/lib/utils'
+import { cn, hasHarakat, removeHarakat } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -15,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -28,6 +29,9 @@ import {
   ClipboardList,
   StickyNote,
   ChevronDown,
+  Languages,
+  ALargeSmall,
+  Type,
 } from 'lucide-react'
 
 interface HadithCardProps {
@@ -146,13 +150,16 @@ const HadithCard = ({
   showNotesToggle = false,
   notesVisible = false,
   onToggleNotes,
-  showArabicByDefault = false,
+  showArabicByDefault,
   highlightQuery,
 }: HadithCardProps) => {
   const { settings } = useSettings()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
 
-  const [showArabic, setShowArabic] = useState(showArabicByDefault)
+  // Resolve initial Arabic visibility: explicit prop wins, otherwise use the global setting
+  const resolvedArabicDefault = showArabicByDefault ?? settings.defaultLanguage === 'arabic'
+
+  const [showArabic, setShowArabic] = useState(resolvedArabicDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
   const arabicRef = useRef<HTMLDivElement | null>(null)
@@ -166,8 +173,8 @@ const HadithCard = ({
   }, [settings.alwaysShowFullHadith])
 
   useEffect(() => {
-    setShowArabic(showArabicByDefault)
-  }, [showArabicByDefault])
+    setShowArabic(showArabicByDefault ?? settings.defaultLanguage === 'arabic')
+  }, [showArabicByDefault, settings.defaultLanguage])
 
   // Memoize text processing
   const { englishText, arabicText, isLongText } = useMemo(() => {
@@ -268,6 +275,22 @@ const HadithCard = ({
     await navigator.clipboard.writeText(`${parts.join(', ')}\n${url}`)
     flash('Copied')
   }, [hadith, flash])
+
+  const handleCopyEnglish = useCallback(async () => {
+    if (!englishText) return
+    await navigator.clipboard.writeText(englishText)
+    flash('English copied')
+  }, [englishText, flash])
+
+  const handleCopyArabic = useCallback(
+    async (withHarakat: boolean) => {
+      if (!arabicText) return
+      const text = withHarakat ? arabicText : removeHarakat(arabicText)
+      await navigator.clipboard.writeText(text)
+      flash('Arabic copied')
+    },
+    [arabicText, flash],
+  )
 
   const handleOpenNewTab = useCallback(() => {
     window.open(
@@ -536,6 +559,34 @@ const HadithCard = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
+              {englishText && (
+                <DropdownMenuItem onClick={handleCopyEnglish}>
+                  <Type className="mr-2 h-3.5 w-3.5" />
+                  Copy English
+                </DropdownMenuItem>
+              )}
+              {arabicText && (
+                <>
+                  {hasHarakat(arabicText) ? (
+                    <>
+                      <DropdownMenuItem onClick={() => handleCopyArabic(true)}>
+                        <Languages className="mr-2 h-3.5 w-3.5" />
+                        Copy Arabic
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleCopyArabic(false)}>
+                        <ALargeSmall className="mr-2 h-3.5 w-3.5" />
+                        Copy Arabic (no harakat)
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <DropdownMenuItem onClick={() => handleCopyArabic(true)}>
+                      <Languages className="mr-2 h-3.5 w-3.5" />
+                      Copy Arabic
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+              {(englishText || arabicText) && <DropdownMenuSeparator />}
               <DropdownMenuItem onClick={handleCopyLink}>
                 <Link2 className="mr-2 h-3.5 w-3.5" />
                 Copy link
