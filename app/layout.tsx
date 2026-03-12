@@ -15,7 +15,7 @@ const inter = Inter({
 })
 
 export const metadata = {
-  title: 'مكتبة السعادة',
+  title: 'Saadah Library',
   description: 'Comprehensive Shia Library – UI recreation',
   robots: { index: true, follow: true },
 }
