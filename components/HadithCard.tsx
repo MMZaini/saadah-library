@@ -193,7 +193,7 @@ const HadithCard = ({
       if (segments.length === 1 && !segments[0].highlight) return display
       return segments.map((seg, i) =>
         seg.highlight ? (
-          <mark key={i} className="rounded-sm bg-accent/25 text-inherit">
+          <mark key={i} className="bg-accent/25 rounded-sm text-inherit">
             {seg.text}
           </mark>
         ) : (
@@ -270,7 +270,11 @@ const HadithCard = ({
   }, [hadith, flash])
 
   const handleOpenNewTab = useCallback(() => {
-    window.open(`${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`, '_blank', 'noopener')
+    window.open(
+      `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`,
+      '_blank',
+      'noopener',
+    )
   }, [hadith])
 
   const handleBookmarkToggle = useCallback(() => {
@@ -409,7 +413,9 @@ const HadithCard = ({
               dir="rtl"
               style={{ fontSize: `${settings.arabicFontSize * 1.485}%` }}
             >
-              {arabicOverflow && !arabicExpanded ? renderHighlighted(arabicText, true) : renderHighlighted(arabicText)}
+              {arabicOverflow && !arabicExpanded
+                ? renderHighlighted(arabicText, true)
+                : renderHighlighted(arabicText)}
             </div>
             {arabicOverflow && (
               <button
@@ -434,7 +440,9 @@ const HadithCard = ({
               className="hadith-english-text text-sm leading-relaxed text-foreground sm:text-base"
               style={{ fontSize: `${settings.englishFontSize}%` }}
             >
-              {isLongText && !expanded ? renderHighlighted(englishText, true) : renderHighlighted(englishText)}
+              {isLongText && !expanded
+                ? renderHighlighted(englishText, true)
+                : renderHighlighted(englishText)}
               {isLongText && (
                 <button
                   onClick={() => setExpanded(!expanded)}

@@ -1,2 +1,1598 @@
-(()=>{var a={};a.id=340,a.ids=[340],a.modules={261:a=>{"use strict";a.exports=require("next/dist/shared/lib/router/utils/app-paths")},3295:a=>{"use strict";a.exports=require("next/dist/server/app-render/after-task-async-storage.external.js")},10554:(a,b,c)=>{"use strict";c.r(b),c.d(b,{default:()=>F});var d=c(21124),e=c(38301),f=c(3991),g=c.n(f),h=c(36164);c(94348);var i=c(21096),j=c(69976),k=c(15514),l=c(22544),m=c(19217),n=c(8044),o=c(88645),p=c(80435),q=c(59405);function r({bookmark:a,className:b}){let{settings:c}=(0,j.t)(),{removeBookmark:f,updateBookmarkNotes:r}=(0,h.T)(),[s,t]=(0,e.useState)(!1),[u,v]=(0,e.useState)(!1),[w,x]=(0,e.useState)(a.notes||"");return(0,d.jsxs)("div",{className:(0,k.cn)("rounded-lg border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2",b),children:[(0,d.jsxs)("div",{className:"mb-3 flex items-start justify-between",children:[(0,d.jsxs)("div",{className:"min-w-0 flex-1",children:[(0,d.jsxs)("div",{className:"mb-1 flex items-center gap-2",children:[(0,d.jsxs)(l.E,{variant:"secondary",children:[a.book,a.volume&&` Vol. ${a.volume}`]}),(0,d.jsxs)("span",{className:"text-xs text-foreground-faint",children:["#",a.id]})]}),(0,d.jsx)("h3",{className:"mb-0.5 line-clamp-2 text-sm font-medium text-foreground",children:a.category}),(0,d.jsx)("p",{className:"line-clamp-2 text-xs text-foreground-muted",children:a.chapter})]}),(0,d.jsxs)("div",{className:"ml-3 flex shrink-0 items-center gap-1.5",children:[(0,d.jsx)(m.$,{variant:"ghost",size:"sm",onClick:()=>f(a.bookId,a.id),title:"Remove bookmark",className:"text-bookmark hover:text-bookmark",children:(0,d.jsx)(o.A,{className:"h-3.5 w-3.5 fill-current"})}),a.arabicPreview&&(0,d.jsx)(m.$,{variant:s?"default":"outline",size:"sm",onClick:()=>t(!s),className:"font-arabic text-xs",children:"ع"})]})]}),s&&a.arabicPreview?(0,d.jsx)("div",{className:"rounded-md border border-border bg-surface-2 p-3",children:(0,d.jsx)("div",{className:"hadith-arabic-text font-arabic text-foreground",dir:"rtl",style:{fontSize:`${1.485*c.arabicFontSize}%`},children:a.arabicPreview})}):(0,d.jsx)("div",{className:"font-mono text-sm leading-relaxed text-foreground",style:{fontSize:`${c.englishFontSize}%`},children:a.preview}),(0,d.jsxs)("div",{className:"mt-3 rounded-md border border-border bg-background p-3",children:[(0,d.jsxs)("div",{className:"mb-2 flex items-center justify-between",children:[(0,d.jsxs)("span",{className:"flex items-center gap-1.5 text-xs font-medium text-foreground-muted",children:[(0,d.jsx)(p.A,{className:"h-3 w-3"}),"Notes"]}),!u&&(0,d.jsx)("button",{onClick:()=>v(!0),className:"text-xs text-accent transition-colors hover:underline",children:a.notes?"Edit":"Add Note"})]}),u?(0,d.jsxs)("div",{className:"space-y-2",children:[(0,d.jsx)("textarea",{value:w,onChange:a=>x(a.target.value),className:"w-full resize-none rounded-md border border-border bg-surface-1 p-2 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600",rows:3,placeholder:"Add your personal notes about this hadith…",autoFocus:!0}),(0,d.jsxs)("div",{className:"flex gap-2",children:[(0,d.jsx)(m.$,{size:"sm",onClick:()=>{r(a.bookId,a.id,w),v(!1)},children:"Save"}),(0,d.jsx)(m.$,{size:"sm",variant:"outline",onClick:()=>{x(a.notes||""),v(!1)},children:"Cancel"})]})]}):(0,d.jsx)("div",{className:"text-sm text-foreground-muted",children:a.notes?(0,d.jsx)("div",{className:"whitespace-pre-wrap leading-relaxed",children:a.notes}):(0,d.jsx)("div",{className:"italic text-foreground-faint",children:"No notes added yet"})})]}),(0,d.jsx)(n.w,{className:"my-3"}),(0,d.jsxs)("div",{className:"flex items-center justify-between text-xs text-foreground-faint",children:[(0,d.jsxs)("span",{children:["Bookmarked: ",new Date(a.timestamp).toLocaleDateString()]}),(0,d.jsxs)(g(),{href:(()=>{try{let b=(0,i.ei)(a.bookId);if(b?.bookId==="Al-Kafi")return`/al-kafi/hadith/${a.id}`;if(a.bookId.includes("Uyun"))return`/Uyun-akhbar-al-Rida/hadith/${a.id}`;return`/${(0,i.yU)(a.bookId)}/hadith/${a.id}`}catch{return`/al-kafi/hadith/${a.id}`}})(),className:"flex items-center gap-0.5 text-foreground-muted transition-colors hover:text-foreground",children:["View Full Hadith",(0,d.jsx)(q.A,{className:"h-3 w-3"})]})]})]})}var s=c(36818),t=c(10708),u=c(14959);let v=(0,u.A)("trash-2",[["path",{d:"M10 11v6",key:"nco0om"}],["path",{d:"M14 11v6",key:"outv1u"}],["path",{d:"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6",key:"miytrc"}],["path",{d:"M3 6h18",key:"d0wm0j"}],["path",{d:"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",key:"e791ji"}]]);function w({hadith:a,bookmark:b,showViewChapter:c=!0,className:f,globalNotesVisible:g=!1}){let{updateBookmarkNotes:i}=(0,h.T)(),[j,k]=(0,e.useState)(!1),[l,o]=(0,e.useState)(b.notes||""),[q,r]=(0,e.useState)(!1),u=async()=>{if(b.notes)try{await navigator.clipboard.writeText(b.notes)}catch(a){console.error("Failed to copy notes:",a)}};return(0,d.jsxs)("div",{className:"space-y-3",children:[(0,d.jsx)(s.A,{hadith:a,showViewChapter:c,className:f,showNotesToggle:!0,notesVisible:q,onToggleNotes:()=>r(!q)}),q&&(0,d.jsxs)("div",{className:"rounded-lg border border-border bg-surface-1 p-4",children:[(0,d.jsxs)("div",{className:"mb-3 flex items-center justify-between",children:[(0,d.jsxs)("span",{className:"flex items-center gap-1.5 text-sm font-medium text-foreground",children:[(0,d.jsx)(p.A,{className:"h-3.5 w-3.5"}),"Personal Notes"]}),(0,d.jsxs)("div",{className:"flex gap-1.5",children:[b.notes&&!j&&(0,d.jsxs)(d.Fragment,{children:[(0,d.jsxs)(m.$,{variant:"ghost",size:"sm",onClick:u,title:"Copy notes",children:[(0,d.jsx)(t.A,{className:"mr-1 h-3 w-3"}),"Copy"]}),(0,d.jsxs)(m.$,{variant:"ghost",size:"sm",onClick:()=>{o(""),i(b.bookId,b.id,""),k(!1)},className:"text-destructive hover:text-destructive",children:[(0,d.jsx)(v,{className:"mr-1 h-3 w-3"}),"Clear"]})]}),!j&&(0,d.jsx)(m.$,{variant:"ghost",size:"sm",onClick:()=>k(!0),children:b.notes?"Edit":"Add Note"})]})]}),j?(0,d.jsxs)("form",{onSubmit:a=>{a.preventDefault(),i(b.bookId,b.id,l),k(!1)},className:"space-y-3",children:[(0,d.jsx)("textarea",{value:l,onChange:a=>o(a.target.value),className:"w-full resize-none rounded-md border border-border bg-background p-3 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600",rows:4,placeholder:"Add your personal notes about this hadith…",autoFocus:!0}),(0,d.jsxs)("div",{className:"flex gap-2",children:[(0,d.jsx)(m.$,{size:"sm",type:"submit",children:"Save"}),(0,d.jsx)(m.$,{size:"sm",variant:"outline",type:"button",onClick:()=>{o(b.notes||""),k(!1)},children:"Cancel"})]})]}):(0,d.jsx)("div",{className:"text-sm text-foreground-muted",children:b.notes?(0,d.jsx)("div",{className:"whitespace-pre-wrap rounded-md border border-border bg-background p-3 leading-relaxed",children:b.notes}):(0,d.jsx)("div",{className:"py-2 italic text-foreground-faint",children:"No notes added yet. Click “Add Note” to start writing your thoughts."})}),(0,d.jsx)(n.w,{className:"my-3"}),(0,d.jsxs)("div",{className:"text-xs text-foreground-faint",children:["Bookmarked:"," ",new Date(b.timestamp).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"})]})]})]})}var x=c(14263);let y=(0,u.A)("upload",[["path",{d:"M12 3v12",key:"1x0j5s"}],["path",{d:"m17 8-5-5-5 5",key:"7q97r8"}],["path",{d:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",key:"ih7n3h"}]]),z=(0,u.A)("refresh-cw",[["path",{d:"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8",key:"v9h5vc"}],["path",{d:"M21 3v5h-5",key:"1q7to0"}],["path",{d:"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16",key:"3uifl3"}],["path",{d:"M8 16H3v5",key:"1cv678"}]]),A=(0,u.A)("download",[["path",{d:"M12 15V3",key:"m9g1x1"}],["path",{d:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",key:"ih7n3h"}],["path",{d:"m7 10 5 5 5-5",key:"brsn70"}]]);var B=c(88285),C=c(85351);let D=(0,u.A)("check",[["path",{d:"M20 6 9 17l-5-5",key:"1gmf2c"}]]),E=[{value:"both",label:"Both"},{value:"hadith",label:"Hadith"},{value:"notes",label:"Notes"}];function F(){let{bookmarks:a,bookmarkCount:b,importBookmarks:c}=(0,h.T)(),[f,i]=(0,e.useState)([]),[j,q]=(0,e.useState)(!1),[s,t]=(0,e.useState)(null),[u,v]=(0,e.useState)(""),[F,G]=(0,e.useState)("both"),[H,I]=(0,e.useState)(!1),[J,K]=(0,e.useState)(!1),[L,M]=(0,e.useState)(null),N=(0,e.useRef)(null),O=(0,e.useRef)(null),P=a.filter(a=>{if(!u.trim())return!0;let b=u.toLowerCase(),c=f.find(b=>b.id===a.id);switch(F){case"hadith":if(c)return c.englishText?.toLowerCase().includes(b)||c.arabicText?.toLowerCase().includes(b)||c.category?.toLowerCase().includes(b)||c.chapter?.toLowerCase().includes(b)||c.book?.toLowerCase().includes(b)||c.author?.toLowerCase().includes(b)||c.translator?.toLowerCase().includes(b)||c.majlisiGrading?.toLowerCase().includes(b)||c.mohseniGrading?.toLowerCase().includes(b)||c.behbudiGrading?.toLowerCase().includes(b);return a.preview.toLowerCase().includes(b)||a.arabicPreview?.toLowerCase().includes(b)||a.category.toLowerCase().includes(b)||a.chapter.toLowerCase().includes(b)||a.book.toLowerCase().includes(b);case"notes":return a.notes?.toLowerCase().includes(b)||!1;default:{let d=c?c.englishText?.toLowerCase().includes(b)||c.arabicText?.toLowerCase().includes(b)||c.category?.toLowerCase().includes(b)||c.chapter?.toLowerCase().includes(b)||c.book?.toLowerCase().includes(b)||c.author?.toLowerCase().includes(b)||c.translator?.toLowerCase().includes(b)||c.majlisiGrading?.toLowerCase().includes(b)||c.mohseniGrading?.toLowerCase().includes(b)||c.behbudiGrading?.toLowerCase().includes(b):a.preview.toLowerCase().includes(b)||a.arabicPreview?.toLowerCase().includes(b)||a.category.toLowerCase().includes(b)||a.chapter.toLowerCase().includes(b)||a.book.toLowerCase().includes(b),e=a.notes?.toLowerCase().includes(b);return d||e}}}),Q=f.filter(a=>P.some(b=>b.id===a.id));return j?(0,d.jsxs)("div",{className:"mx-auto max-w-5xl px-4 py-8 sm:px-6",children:[(0,d.jsxs)("div",{className:"mb-6 flex items-center gap-3",children:[(0,d.jsx)(o.A,{className:"h-5 w-5 text-bookmark"}),(0,d.jsx)("h1",{className:"text-xl font-bold text-foreground",children:"Bookmarks"})]}),(0,d.jsxs)("div",{className:"flex items-center justify-center py-12",children:[(0,d.jsx)(x.A,{className:"h-6 w-6 animate-spin text-foreground-muted"}),(0,d.jsx)("span",{className:"ml-3 text-sm text-foreground-muted",children:"Loading bookmarks…"})]})]}):(0,d.jsxs)("div",{className:"mx-auto max-w-5xl px-4 py-8 sm:px-6",children:[(0,d.jsxs)("div",{className:"mb-6 flex items-center gap-3",children:[(0,d.jsx)(o.A,{className:"h-5 w-5 text-bookmark"}),(0,d.jsx)("h1",{className:"text-xl font-bold text-foreground",children:"Bookmarks"}),b>0&&(0,d.jsx)(l.E,{variant:"secondary",children:b})]}),(0,d.jsxs)("div",{className:"mb-6 flex flex-wrap gap-2",children:[b>0&&(0,d.jsxs)(m.$,{variant:J?"default":"outline",size:"sm",onClick:()=>K(!J),children:[(0,d.jsx)(p.A,{className:"mr-1.5 h-3.5 w-3.5"}),J?"Hide All Notes":"Show All Notes"]}),(0,d.jsxs)(m.$,{variant:"outline",size:"sm",onClick:()=>{O.current?.click()},children:[(0,d.jsx)(y,{className:"mr-1.5 h-3.5 w-3.5"}),"Import"]}),(0,d.jsxs)(m.$,{variant:"outline",size:"sm",onClick:()=>window.location.reload(),children:[(0,d.jsx)(z,{className:"mr-1.5 h-3.5 w-3.5"}),"Refresh"]}),b>0&&(0,d.jsxs)(m.$,{variant:"outline",size:"sm",onClick:()=>{try{let b=a.map(a=>({id:a.id,bookId:a.bookId,book:a.book,category:a.category,chapter:a.chapter,volume:a.volume,timestamp:a.timestamp,notes:a.notes||""})),c=JSON.stringify({version:"1.0",bookmarks:b},null,2),d=new Blob([c],{type:"application/json"}),e=URL.createObjectURL(d),f=document.createElement("a");f.href=e,f.download=`saadah-bookmarks-${new Date().toISOString().split("T")[0]}.json`,document.body.appendChild(f),f.click(),document.body.removeChild(f),URL.revokeObjectURL(e)}catch(a){console.error("Failed to export bookmarks:",a),t("Failed to export bookmarks. Please try again.")}},children:[(0,d.jsx)(A,{className:"mr-1.5 h-3.5 w-3.5"}),"Export"]}),(0,d.jsx)("input",{ref:O,type:"file",accept:".json",onChange:a=>{let b=a.target.files?.[0];if(!b)return;let d=new FileReader;d.onload=a=>{try{let b=a.target?.result,d=JSON.parse(b);if(!d.bookmarks||!Array.isArray(d.bookmarks))throw Error("Invalid bookmark file format");let{imported:e,duplicates:f}=c(d.bookmarks),g=`Successfully imported ${e} bookmark${1!==e?"s":""}.`;f>0&&(g+=` ${f} duplicate${1!==f?"s":""} were skipped.`),M(g),setTimeout(()=>M(null),5e3)}catch(a){console.error("Failed to import bookmarks:",a),t("Failed to import bookmarks. Please check the file format and try again.")}},d.readAsText(b),a.target.value=""},className:"hidden"})]}),b>0&&(0,d.jsxs)("div",{className:"mb-6 flex flex-col gap-3 sm:flex-row",children:[(0,d.jsxs)("div",{className:"flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5",children:[(0,d.jsx)(B.A,{className:"h-4 w-4 shrink-0 text-foreground-faint"}),(0,d.jsx)("input",{type:"text",value:u,onChange:a=>v(a.target.value),className:"w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint",placeholder:"Search through your bookmarks…"})]}),(0,d.jsxs)("div",{className:"relative min-w-[130px]",ref:N,children:[(0,d.jsxs)("button",{type:"button",onClick:()=>I(!H),className:"flex w-full items-center justify-between rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 text-sm text-foreground transition-colors hover:bg-surface-2",children:[(0,d.jsx)("span",{children:E.find(a=>a.value===F)?.label}),(0,d.jsx)(C.A,{className:(0,k.cn)("ml-2 h-3.5 w-3.5 text-foreground-muted transition-transform",H&&"rotate-180")})]}),H&&(0,d.jsx)("div",{className:"absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-surface-1 shadow-lg",children:E.map(a=>(0,d.jsxs)("button",{type:"button",onClick:()=>{G(a.value),I(!1)},className:(0,k.cn)("flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors",F===a.value?"bg-accent text-accent-foreground":"text-foreground hover:bg-surface-2"),children:[(0,d.jsx)("span",{children:a.label}),F===a.value&&(0,d.jsx)(D,{className:"h-3.5 w-3.5"})]},a.value))})]}),u.trim()&&(0,d.jsx)("p",{className:"self-center text-xs text-foreground-muted sm:hidden",children:P.length===b?`Showing all ${b} bookmarks`:`Found ${P.length} of ${b}`})]}),u.trim()&&(0,d.jsx)("p",{className:"mb-4 hidden text-xs text-foreground-muted sm:block",children:P.length===b?`Showing all ${b} bookmarks`:`Found ${P.length} of ${b} bookmarks`}),L&&(0,d.jsx)("div",{className:"border-accent/30 bg-accent/10 mb-6 rounded-lg border p-3",children:(0,d.jsx)("p",{className:"text-sm text-foreground",children:L})}),s&&(0,d.jsx)("div",{className:"border-destructive/30 bg-destructive/10 mb-6 rounded-lg border p-3",children:(0,d.jsx)("p",{className:"text-sm text-destructive",children:s})}),0===b?(0,d.jsxs)("div",{className:"py-16 text-center",children:[(0,d.jsx)(o.A,{className:"mx-auto mb-3 h-12 w-12 text-foreground-faint"}),(0,d.jsx)("h2",{className:"mb-1 text-lg font-semibold text-foreground",children:"No bookmarks yet"}),(0,d.jsx)("p",{className:"mb-5 text-sm text-foreground-muted",children:"Start bookmarking your favorite hadiths to see them here."}),(0,d.jsx)(m.$,{asChild:!0,children:(0,d.jsx)(g(),{href:"/",children:"Browse Hadiths"})})]}):0===P.length&&u.trim()?(0,d.jsxs)("div",{className:"py-16 text-center",children:[(0,d.jsx)(B.A,{className:"mx-auto mb-3 h-12 w-12 text-foreground-faint"}),(0,d.jsx)("h2",{className:"mb-1 text-lg font-semibold text-foreground",children:"No results found"}),(0,d.jsx)("p",{className:"mb-4 text-sm text-foreground-muted",children:"No bookmarks match your search criteria."}),(0,d.jsx)(m.$,{variant:"ghost",onClick:()=>v(""),children:"Clear search"})]}):(0,d.jsxs)("div",{className:"space-y-6",children:[(0,d.jsxs)("div",{className:"rounded-lg border border-border bg-surface-1 p-4",children:[(0,d.jsxs)("div",{className:"flex items-center justify-between text-sm",children:[(0,d.jsx)("span",{className:"text-foreground-muted",children:"Total bookmarks"}),(0,d.jsx)("span",{className:"font-medium text-foreground",children:b})]}),u.trim()&&(0,d.jsxs)(d.Fragment,{children:[(0,d.jsx)(n.w,{className:"my-2"}),(0,d.jsxs)("div",{className:"flex items-center justify-between text-sm",children:[(0,d.jsx)("span",{className:"text-foreground-muted",children:"Showing results"}),(0,d.jsx)("span",{className:"font-medium text-foreground",children:P.length})]})]})]}),0===Q.length&&P.length>0&&(0,d.jsxs)("div",{className:"space-y-4",children:[(0,d.jsx)("h2",{className:"text-base font-semibold text-foreground",children:"Bookmark Previews"}),(0,d.jsx)("p",{className:"text-xs text-foreground-muted",children:"Full content could not be loaded. Here are your bookmark previews:"}),P.map(a=>(0,d.jsx)(r,{bookmark:a},a.bookId+":"+a.id))]}),Q.length>0&&(0,d.jsxs)("div",{className:"space-y-5",children:[(0,d.jsx)("h2",{className:"text-base font-semibold text-foreground",children:"Your Bookmarked Hadiths"}),Q.map((a,b)=>{let c=P.find(b=>b.id===a.id&&b.bookId===a.bookId);return c?(0,d.jsxs)("div",{className:"relative",children:[(0,d.jsx)("div",{className:"absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground",children:b+1}),(0,d.jsx)("div",{className:"ml-6",children:(0,d.jsx)(w,{hadith:a,bookmark:c,showViewChapter:!1,globalNotesVisible:J})})]},a.bookId+":"+a.id):null})]})]})]})}},10846:a=>{"use strict";a.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},19121:a=>{"use strict";a.exports=require("next/dist/server/app-render/action-async-storage.external.js")},26713:a=>{"use strict";a.exports=require("next/dist/shared/lib/router/utils/is-bot")},28354:a=>{"use strict";a.exports=require("util")},29294:a=>{"use strict";a.exports=require("next/dist/server/app-render/work-async-storage.external.js")},33873:a=>{"use strict";a.exports=require("path")},34444:(a,b,c)=>{"use strict";c.r(b),c.d(b,{default:()=>d});let d=(0,c(97954).registerClientReference)(function(){throw Error("Attempted to call the default export of \"C:\\\\Users\\\\Admin\\\\Desktop\\\\sl\\\\saadah-library\\\\app\\\\bookmarks\\\\page.tsx\" from the server, but it's on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\bookmarks\\page.tsx","default")},41025:a=>{"use strict";a.exports=require("next/dist/server/app-render/dynamic-access-async-storage.external.js")},50798:(a,b,c)=>{Promise.resolve().then(c.bind(c,34444))},63033:a=>{"use strict";a.exports=require("next/dist/server/app-render/work-unit-async-storage.external.js")},80810:(a,b,c)=>{"use strict";c.r(b),c.d(b,{GlobalError:()=>D.a,__next_app__:()=>J,handler:()=>L,pages:()=>I,routeModule:()=>K,tree:()=>H});var d=c(49754),e=c(9117),f=c(46595),g=c(32324),h=c(39326),i=c(38928),j=c(20175),k=c(12),l=c(54290),m=c(12696),n=c(82802),o=c(77533),p=c(45229),q=c(32822),r=c(261),s=c(26453),t=c(52474),u=c(26713),v=c(51356),w=c(62685),x=c(36225),y=c(63446),z=c(2762),A=c(45742),B=c(86439),C=c(81170),D=c.n(C),E=c(62506),F=c(91203),G={};for(let a in E)0>["default","tree","pages","GlobalError","__next_app__","routeModule","handler"].indexOf(a)&&(G[a]=()=>E[a]);c.d(b,G);let H={children:["",{children:["bookmarks",{children:["__PAGE__",{},{page:[()=>Promise.resolve().then(c.bind(c,34444)),"C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\bookmarks\\page.tsx"]}]},{metadata:{icon:[async a=>(await Promise.resolve().then(c.bind(c,36014))).default(a)],apple:[],openGraph:[],twitter:[],manifest:void 0}}]},{layout:[()=>Promise.resolve().then(c.bind(c,16953)),"C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\layout.tsx"],"global-error":[()=>Promise.resolve().then(c.t.bind(c,81170,23)),"next/dist/client/components/builtin/global-error.js"],"not-found":[()=>Promise.resolve().then(c.t.bind(c,87028,23)),"next/dist/client/components/builtin/not-found.js"],forbidden:[()=>Promise.resolve().then(c.t.bind(c,90461,23)),"next/dist/client/components/builtin/forbidden.js"],unauthorized:[()=>Promise.resolve().then(c.t.bind(c,32768,23)),"next/dist/client/components/builtin/unauthorized.js"],metadata:{icon:[async a=>(await Promise.resolve().then(c.bind(c,36014))).default(a)],apple:[],openGraph:[],twitter:[],manifest:void 0}}]}.children,I=["C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\bookmarks\\page.tsx"],J={require:c,loadChunk:()=>Promise.resolve()},K=new d.AppPageRouteModule({definition:{kind:e.RouteKind.APP_PAGE,page:"/bookmarks/page",pathname:"/bookmarks",bundlePath:"",filename:"",appPaths:[]},userland:{loaderTree:H},distDir:".next-build",relativeProjectDir:""});async function L(a,b,d){var C;let G="/bookmarks/page";"/index"===G&&(G="/");let M=(0,h.getRequestMeta)(a,"postponed"),N=(0,h.getRequestMeta)(a,"minimalMode"),O=await K.prepare(a,b,{srcPage:G,multiZoneDraftMode:!1});if(!O)return b.statusCode=400,b.end("Bad Request"),null==d.waitUntil||d.waitUntil.call(d,Promise.resolve()),null;let{buildId:P,query:Q,params:R,parsedUrl:S,pageIsDynamic:T,buildManifest:U,nextFontManifest:V,reactLoadableManifest:W,serverActionsManifest:X,clientReferenceManifest:Y,subresourceIntegrityManifest:Z,prerenderManifest:$,isDraftMode:_,resolvedPathname:aa,revalidateOnlyGenerated:ab,routerServerContext:ac,nextConfig:ad,interceptionRoutePatterns:ae}=O,af=S.pathname||"/",ag=(0,r.normalizeAppPath)(G),{isOnDemandRevalidate:ah}=O,ai=K.match(af,$),aj=!!$.routes[aa],ak=!!(ai||aj||$.routes[ag]),al=a.headers["user-agent"]||"",am=(0,u.getBotType)(al),an=(0,p.isHtmlBotRequest)(a),ao=(0,h.getRequestMeta)(a,"isPrefetchRSCRequest")??"1"===a.headers[t.NEXT_ROUTER_PREFETCH_HEADER],ap=(0,h.getRequestMeta)(a,"isRSCRequest")??!!a.headers[t.RSC_HEADER],aq=(0,s.getIsPossibleServerAction)(a),ar=(0,m.checkIsAppPPREnabled)(ad.experimental.ppr)&&(null==(C=$.routes[ag]??$.dynamicRoutes[ag])?void 0:C.renderingMode)==="PARTIALLY_STATIC",as=!1,at=!1,au=ar?M:void 0,av=ar&&ap&&!ao,aw=(0,h.getRequestMeta)(a,"segmentPrefetchRSCRequest"),ax=!al||(0,p.shouldServeStreamingMetadata)(al,ad.htmlLimitedBots);an&&ar&&(ak=!1,ax=!1);let ay=!0===K.isDev||!ak||"string"==typeof M||av,az=an&&ar,aA=null;_||!ak||ay||aq||au||av||(aA=aa);let aB=aA;!aB&&K.isDev&&(aB=aa),K.isDev||_||!ak||!ap||av||(0,k.d)(a.headers);let aC={...E,tree:H,pages:I,GlobalError:D(),handler:L,routeModule:K,__next_app__:J};X&&Y&&(0,o.setReferenceManifestsSingleton)({page:G,clientReferenceManifest:Y,serverActionsManifest:X,serverModuleMap:(0,q.createServerModuleMap)({serverActionsManifest:X})});let aD=a.method||"GET",aE=(0,g.getTracer)(),aF=aE.getActiveScopeSpan();try{let f=K.getVaryHeader(aa,ae);b.setHeader("Vary",f);let k=async(c,d)=>{let e=new l.NodeNextRequest(a),f=new l.NodeNextResponse(b);return K.render(e,f,d).finally(()=>{if(!c)return;c.setAttributes({"http.status_code":b.statusCode,"next.rsc":!1});let d=aE.getRootSpanAttributes();if(!d)return;if(d.get("next.span_type")!==i.BaseServerSpan.handleRequest)return void console.warn(`Unexpected root span type '${d.get("next.span_type")}'. Please report this Next.js issue https://github.com/vercel/next.js`);let e=d.get("next.route");if(e){let a=`${aD} ${e}`;c.setAttributes({"next.route":e,"http.route":e,"next.span_name":a}),c.updateName(a)}else c.updateName(`${aD} ${a.url}`)})},m=async({span:e,postponed:f,fallbackRouteParams:g})=>{let i={query:Q,params:R,page:ag,sharedContext:{buildId:P},serverComponentsHmrCache:(0,h.getRequestMeta)(a,"serverComponentsHmrCache"),fallbackRouteParams:g,renderOpts:{App:()=>null,Document:()=>null,pageConfig:{},ComponentMod:aC,Component:(0,j.T)(aC),params:R,routeModule:K,page:G,postponed:f,shouldWaitOnAllReady:az,serveStreamingMetadata:ax,supportsDynamicResponse:"string"==typeof f||ay,buildManifest:U,nextFontManifest:V,reactLoadableManifest:W,subresourceIntegrityManifest:Z,serverActionsManifest:X,clientReferenceManifest:Y,setIsrStatus:null==ac?void 0:ac.setIsrStatus,dir:c(33873).join(process.cwd(),K.relativeProjectDir),isDraftMode:_,isRevalidate:ak&&!f&&!av,botType:am,isOnDemandRevalidate:ah,isPossibleServerAction:aq,assetPrefix:ad.assetPrefix,nextConfigOutput:ad.output,crossOrigin:ad.crossOrigin,trailingSlash:ad.trailingSlash,previewProps:$.preview,deploymentId:ad.deploymentId,enableTainting:ad.experimental.taint,htmlLimitedBots:ad.htmlLimitedBots,devtoolSegmentExplorer:ad.experimental.devtoolSegmentExplorer,reactMaxHeadersLength:ad.reactMaxHeadersLength,multiZoneDraftMode:!1,incrementalCache:(0,h.getRequestMeta)(a,"incrementalCache"),cacheLifeProfiles:ad.experimental.cacheLife,basePath:ad.basePath,serverActions:ad.experimental.serverActions,...as?{nextExport:!0,supportsDynamicResponse:!1,isStaticGeneration:!0,isRevalidate:!0,isDebugDynamicAccesses:as}:{},experimental:{isRoutePPREnabled:ar,expireTime:ad.expireTime,staleTimes:ad.experimental.staleTimes,cacheComponents:!!ad.experimental.cacheComponents,clientSegmentCache:!!ad.experimental.clientSegmentCache,clientParamParsing:!!ad.experimental.clientParamParsing,dynamicOnHover:!!ad.experimental.dynamicOnHover,inlineCss:!!ad.experimental.inlineCss,authInterrupts:!!ad.experimental.authInterrupts,clientTraceMetadata:ad.experimental.clientTraceMetadata||[]},waitUntil:d.waitUntil,onClose:a=>{b.on("close",a)},onAfterTaskError:()=>{},onInstrumentationRequestError:(b,c,d)=>K.onRequestError(a,b,d,ac),err:(0,h.getRequestMeta)(a,"invokeError"),dev:K.isDev}},l=await k(e,i),{metadata:m}=l,{cacheControl:n,headers:o={},fetchTags:p}=m;if(p&&(o[y.NEXT_CACHE_TAGS_HEADER]=p),a.fetchMetrics=m.fetchMetrics,ak&&(null==n?void 0:n.revalidate)===0&&!K.isDev&&!ar){let a=m.staticBailoutInfo,b=Object.defineProperty(Error(`Page changed from static to dynamic at runtime ${aa}${(null==a?void 0:a.description)?`, reason: ${a.description}`:""}
-see more here https://nextjs.org/docs/messages/app-static-to-dynamic-error`),"__NEXT_ERROR_CODE",{value:"E132",enumerable:!1,configurable:!0});if(null==a?void 0:a.stack){let c=a.stack;b.stack=b.message+c.substring(c.indexOf("\n"))}throw b}return{value:{kind:v.CachedRouteKind.APP_PAGE,html:l,headers:o,rscData:m.flightData,postponed:m.postponed,status:m.statusCode,segmentData:m.segmentData},cacheControl:n}},o=async({hasResolved:c,previousCacheEntry:f,isRevalidating:g,span:i})=>{let j,k=!1===K.isDev,l=c||b.writableEnded;if(ah&&ab&&!f&&!N)return(null==ac?void 0:ac.render404)?await ac.render404(a,b):(b.statusCode=404,b.end("This page could not be found")),null;if(ai&&(j=(0,w.parseFallbackField)(ai.fallback)),j===w.FallbackMode.PRERENDER&&(0,u.isBot)(al)&&(!ar||an)&&(j=w.FallbackMode.BLOCKING_STATIC_RENDER),(null==f?void 0:f.isStale)===-1&&(ah=!0),ah&&(j!==w.FallbackMode.NOT_FOUND||f)&&(j=w.FallbackMode.BLOCKING_STATIC_RENDER),!N&&j!==w.FallbackMode.BLOCKING_STATIC_RENDER&&aB&&!l&&!_&&T&&(k||!aj)){let b;if((k||ai)&&j===w.FallbackMode.NOT_FOUND)throw new B.NoFallbackError;if(ar&&!ap){let c="string"==typeof(null==ai?void 0:ai.fallback)?ai.fallback:k?ag:null;if(b=await K.handleResponse({cacheKey:c,req:a,nextConfig:ad,routeKind:e.RouteKind.APP_PAGE,isFallback:!0,prerenderManifest:$,isRoutePPREnabled:ar,responseGenerator:async()=>m({span:i,postponed:void 0,fallbackRouteParams:k||at?(0,n.u)(ag):null}),waitUntil:d.waitUntil}),null===b)return null;if(b)return delete b.cacheControl,b}}let o=ah||g||!au?void 0:au;if(as&&void 0!==o)return{cacheControl:{revalidate:1,expire:void 0},value:{kind:v.CachedRouteKind.PAGES,html:x.default.EMPTY,pageData:{},headers:void 0,status:void 0}};let p=T&&ar&&((0,h.getRequestMeta)(a,"renderFallbackShell")||at)?(0,n.u)(af):null;return m({span:i,postponed:o,fallbackRouteParams:p})},p=async c=>{var f,g,i,j,k;let l,n=await K.handleResponse({cacheKey:aA,responseGenerator:a=>o({span:c,...a}),routeKind:e.RouteKind.APP_PAGE,isOnDemandRevalidate:ah,isRoutePPREnabled:ar,req:a,nextConfig:ad,prerenderManifest:$,waitUntil:d.waitUntil});if(_&&b.setHeader("Cache-Control","private, no-cache, no-store, max-age=0, must-revalidate"),K.isDev&&b.setHeader("Cache-Control","no-store, must-revalidate"),!n){if(aA)throw Object.defineProperty(Error("invariant: cache entry required but not generated"),"__NEXT_ERROR_CODE",{value:"E62",enumerable:!1,configurable:!0});return null}if((null==(f=n.value)?void 0:f.kind)!==v.CachedRouteKind.APP_PAGE)throw Object.defineProperty(Error(`Invariant app-page handler received invalid cache entry ${null==(i=n.value)?void 0:i.kind}`),"__NEXT_ERROR_CODE",{value:"E707",enumerable:!1,configurable:!0});let p="string"==typeof n.value.postponed;ak&&!av&&(!p||ao)&&(N||b.setHeader("x-nextjs-cache",ah?"REVALIDATED":n.isMiss?"MISS":n.isStale?"STALE":"HIT"),b.setHeader(t.NEXT_IS_PRERENDER_HEADER,"1"));let{value:q}=n;if(au)l={revalidate:0,expire:void 0};else if(N&&ap&&!ao&&ar)l={revalidate:0,expire:void 0};else if(!K.isDev)if(_)l={revalidate:0,expire:void 0};else if(ak){if(n.cacheControl)if("number"==typeof n.cacheControl.revalidate){if(n.cacheControl.revalidate<1)throw Object.defineProperty(Error(`Invalid revalidate configuration provided: ${n.cacheControl.revalidate} < 1`),"__NEXT_ERROR_CODE",{value:"E22",enumerable:!1,configurable:!0});l={revalidate:n.cacheControl.revalidate,expire:(null==(j=n.cacheControl)?void 0:j.expire)??ad.expireTime}}else l={revalidate:y.CACHE_ONE_YEAR,expire:void 0}}else b.getHeader("Cache-Control")||(l={revalidate:0,expire:void 0});if(n.cacheControl=l,"string"==typeof aw&&(null==q?void 0:q.kind)===v.CachedRouteKind.APP_PAGE&&q.segmentData){b.setHeader(t.NEXT_DID_POSTPONE_HEADER,"2");let c=null==(k=q.headers)?void 0:k[y.NEXT_CACHE_TAGS_HEADER];N&&ak&&c&&"string"==typeof c&&b.setHeader(y.NEXT_CACHE_TAGS_HEADER,c);let d=q.segmentData.get(aw);return void 0!==d?(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:x.default.fromStatic(d,t.RSC_CONTENT_TYPE_HEADER),cacheControl:n.cacheControl}):(b.statusCode=204,(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:x.default.EMPTY,cacheControl:n.cacheControl}))}let r=(0,h.getRequestMeta)(a,"onCacheEntry");if(r&&await r({...n,value:{...n.value,kind:"PAGE"}},{url:(0,h.getRequestMeta)(a,"initURL")}))return null;if(p&&au)throw Object.defineProperty(Error("Invariant: postponed state should not be present on a resume request"),"__NEXT_ERROR_CODE",{value:"E396",enumerable:!1,configurable:!0});if(q.headers){let a={...q.headers};for(let[c,d]of(N&&ak||delete a[y.NEXT_CACHE_TAGS_HEADER],Object.entries(a)))if(void 0!==d)if(Array.isArray(d))for(let a of d)b.appendHeader(c,a);else"number"==typeof d&&(d=d.toString()),b.appendHeader(c,d)}let s=null==(g=q.headers)?void 0:g[y.NEXT_CACHE_TAGS_HEADER];if(N&&ak&&s&&"string"==typeof s&&b.setHeader(y.NEXT_CACHE_TAGS_HEADER,s),!q.status||ap&&ar||(b.statusCode=q.status),!N&&q.status&&F.RedirectStatusCode[q.status]&&ap&&(b.statusCode=200),p&&b.setHeader(t.NEXT_DID_POSTPONE_HEADER,"1"),ap&&!_){if(void 0===q.rscData){if(q.postponed)throw Object.defineProperty(Error("Invariant: Expected postponed to be undefined"),"__NEXT_ERROR_CODE",{value:"E372",enumerable:!1,configurable:!0});return(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:q.html,cacheControl:av?{revalidate:0,expire:void 0}:n.cacheControl})}return(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:x.default.fromStatic(q.rscData,t.RSC_CONTENT_TYPE_HEADER),cacheControl:n.cacheControl})}let u=q.html;if(!p||N||ap)return(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:u,cacheControl:n.cacheControl});if(as)return u.push(new ReadableStream({start(a){a.enqueue(z.ENCODED_TAGS.CLOSED.BODY_AND_HTML),a.close()}})),(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:u,cacheControl:{revalidate:0,expire:void 0}});let w=new TransformStream;return u.push(w.readable),m({span:c,postponed:q.postponed,fallbackRouteParams:null}).then(async a=>{var b,c;if(!a)throw Object.defineProperty(Error("Invariant: expected a result to be returned"),"__NEXT_ERROR_CODE",{value:"E463",enumerable:!1,configurable:!0});if((null==(b=a.value)?void 0:b.kind)!==v.CachedRouteKind.APP_PAGE)throw Object.defineProperty(Error(`Invariant: expected a page response, got ${null==(c=a.value)?void 0:c.kind}`),"__NEXT_ERROR_CODE",{value:"E305",enumerable:!1,configurable:!0});await a.value.html.pipeTo(w.writable)}).catch(a=>{w.writable.abort(a).catch(a=>{console.error("couldn't abort transformer",a)})}),(0,A.sendRenderResult)({req:a,res:b,generateEtags:ad.generateEtags,poweredByHeader:ad.poweredByHeader,result:u,cacheControl:{revalidate:0,expire:void 0}})};if(!aF)return await aE.withPropagatedContext(a.headers,()=>aE.trace(i.BaseServerSpan.handleRequest,{spanName:`${aD} ${a.url}`,kind:g.SpanKind.SERVER,attributes:{"http.method":aD,"http.target":a.url}},p));await p(aF)}catch(b){throw b instanceof B.NoFallbackError||await K.onRequestError(a,b,{routerKind:"App Router",routePath:G,routeType:"render",revalidateReason:(0,f.c)({isRevalidate:ak,isOnDemandRevalidate:ah})},ac),b}}},86439:a=>{"use strict";a.exports=require("next/dist/shared/lib/no-fallback-error.external")},88285:(a,b,c)=>{"use strict";c.d(b,{A:()=>d});let d=(0,c(14959).A)("search",[["path",{d:"m21 21-4.34-4.34",key:"14j7rj"}],["circle",{cx:"11",cy:"11",r:"8",key:"4ej97u"}]])},90550:(a,b,c)=>{Promise.resolve().then(c.bind(c,10554))}};var b=require("../../webpack-runtime.js");b.C(a);var c=b.X(0,[331,103,298,576,963,818],()=>b(b.s=80810));module.exports=c})();
+;(() => {
+  var a = {}
+  ;((a.id = 340),
+    (a.ids = [340]),
+    (a.modules = {
+      261: (a) => {
+        'use strict'
+        a.exports = require('next/dist/shared/lib/router/utils/app-paths')
+      },
+      3295: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/after-task-async-storage.external.js')
+      },
+      10554: (a, b, c) => {
+        'use strict'
+        ;(c.r(b), c.d(b, { default: () => F }))
+        var d = c(21124),
+          e = c(38301),
+          f = c(3991),
+          g = c.n(f),
+          h = c(36164)
+        c(94348)
+        var i = c(21096),
+          j = c(69976),
+          k = c(15514),
+          l = c(22544),
+          m = c(19217),
+          n = c(8044),
+          o = c(88645),
+          p = c(80435),
+          q = c(59405)
+        function r({ bookmark: a, className: b }) {
+          let { settings: c } = (0, j.t)(),
+            { removeBookmark: f, updateBookmarkNotes: r } = (0, h.T)(),
+            [s, t] = (0, e.useState)(!1),
+            [u, v] = (0, e.useState)(!1),
+            [w, x] = (0, e.useState)(a.notes || '')
+          return (0, d.jsxs)('div', {
+            className: (0, k.cn)(
+              'rounded-lg border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2',
+              b,
+            ),
+            children: [
+              (0, d.jsxs)('div', {
+                className: 'mb-3 flex items-start justify-between',
+                children: [
+                  (0, d.jsxs)('div', {
+                    className: 'min-w-0 flex-1',
+                    children: [
+                      (0, d.jsxs)('div', {
+                        className: 'mb-1 flex items-center gap-2',
+                        children: [
+                          (0, d.jsxs)(l.E, {
+                            variant: 'secondary',
+                            children: [a.book, a.volume && ` Vol. ${a.volume}`],
+                          }),
+                          (0, d.jsxs)('span', {
+                            className: 'text-xs text-foreground-faint',
+                            children: ['#', a.id],
+                          }),
+                        ],
+                      }),
+                      (0, d.jsx)('h3', {
+                        className: 'mb-0.5 line-clamp-2 text-sm font-medium text-foreground',
+                        children: a.category,
+                      }),
+                      (0, d.jsx)('p', {
+                        className: 'line-clamp-2 text-xs text-foreground-muted',
+                        children: a.chapter,
+                      }),
+                    ],
+                  }),
+                  (0, d.jsxs)('div', {
+                    className: 'ml-3 flex shrink-0 items-center gap-1.5',
+                    children: [
+                      (0, d.jsx)(m.$, {
+                        variant: 'ghost',
+                        size: 'sm',
+                        onClick: () => f(a.bookId, a.id),
+                        title: 'Remove bookmark',
+                        className: 'text-bookmark hover:text-bookmark',
+                        children: (0, d.jsx)(o.A, { className: 'h-3.5 w-3.5 fill-current' }),
+                      }),
+                      a.arabicPreview &&
+                        (0, d.jsx)(m.$, {
+                          variant: s ? 'default' : 'outline',
+                          size: 'sm',
+                          onClick: () => t(!s),
+                          className: 'font-arabic text-xs',
+                          children: 'ع',
+                        }),
+                    ],
+                  }),
+                ],
+              }),
+              s && a.arabicPreview
+                ? (0, d.jsx)('div', {
+                    className: 'rounded-md border border-border bg-surface-2 p-3',
+                    children: (0, d.jsx)('div', {
+                      className: 'hadith-arabic-text font-arabic text-foreground',
+                      dir: 'rtl',
+                      style: { fontSize: `${1.485 * c.arabicFontSize}%` },
+                      children: a.arabicPreview,
+                    }),
+                  })
+                : (0, d.jsx)('div', {
+                    className: 'font-mono text-sm leading-relaxed text-foreground',
+                    style: { fontSize: `${c.englishFontSize}%` },
+                    children: a.preview,
+                  }),
+              (0, d.jsxs)('div', {
+                className: 'mt-3 rounded-md border border-border bg-background p-3',
+                children: [
+                  (0, d.jsxs)('div', {
+                    className: 'mb-2 flex items-center justify-between',
+                    children: [
+                      (0, d.jsxs)('span', {
+                        className:
+                          'flex items-center gap-1.5 text-xs font-medium text-foreground-muted',
+                        children: [(0, d.jsx)(p.A, { className: 'h-3 w-3' }), 'Notes'],
+                      }),
+                      !u &&
+                        (0, d.jsx)('button', {
+                          onClick: () => v(!0),
+                          className: 'text-xs text-accent transition-colors hover:underline',
+                          children: a.notes ? 'Edit' : 'Add Note',
+                        }),
+                    ],
+                  }),
+                  u
+                    ? (0, d.jsxs)('div', {
+                        className: 'space-y-2',
+                        children: [
+                          (0, d.jsx)('textarea', {
+                            value: w,
+                            onChange: (a) => x(a.target.value),
+                            className:
+                              'w-full resize-none rounded-md border border-border bg-surface-1 p-2 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600',
+                            rows: 3,
+                            placeholder: 'Add your personal notes about this hadith…',
+                            autoFocus: !0,
+                          }),
+                          (0, d.jsxs)('div', {
+                            className: 'flex gap-2',
+                            children: [
+                              (0, d.jsx)(m.$, {
+                                size: 'sm',
+                                onClick: () => {
+                                  ;(r(a.bookId, a.id, w), v(!1))
+                                },
+                                children: 'Save',
+                              }),
+                              (0, d.jsx)(m.$, {
+                                size: 'sm',
+                                variant: 'outline',
+                                onClick: () => {
+                                  ;(x(a.notes || ''), v(!1))
+                                },
+                                children: 'Cancel',
+                              }),
+                            ],
+                          }),
+                        ],
+                      })
+                    : (0, d.jsx)('div', {
+                        className: 'text-sm text-foreground-muted',
+                        children: a.notes
+                          ? (0, d.jsx)('div', {
+                              className: 'whitespace-pre-wrap leading-relaxed',
+                              children: a.notes,
+                            })
+                          : (0, d.jsx)('div', {
+                              className: 'italic text-foreground-faint',
+                              children: 'No notes added yet',
+                            }),
+                      }),
+                ],
+              }),
+              (0, d.jsx)(n.w, { className: 'my-3' }),
+              (0, d.jsxs)('div', {
+                className: 'flex items-center justify-between text-xs text-foreground-faint',
+                children: [
+                  (0, d.jsxs)('span', {
+                    children: ['Bookmarked: ', new Date(a.timestamp).toLocaleDateString()],
+                  }),
+                  (0, d.jsxs)(g(), {
+                    href: (() => {
+                      try {
+                        let b = (0, i.ei)(a.bookId)
+                        if (b?.bookId === 'Al-Kafi') return `/al-kafi/hadith/${a.id}`
+                        if (a.bookId.includes('Uyun')) return `/Uyun-akhbar-al-Rida/hadith/${a.id}`
+                        return `/${(0, i.yU)(a.bookId)}/hadith/${a.id}`
+                      } catch {
+                        return `/al-kafi/hadith/${a.id}`
+                      }
+                    })(),
+                    className:
+                      'flex items-center gap-0.5 text-foreground-muted transition-colors hover:text-foreground',
+                    children: ['View Full Hadith', (0, d.jsx)(q.A, { className: 'h-3 w-3' })],
+                  }),
+                ],
+              }),
+            ],
+          })
+        }
+        var s = c(36818),
+          t = c(10708),
+          u = c(14959)
+        let v = (0, u.A)('trash-2', [
+          ['path', { d: 'M10 11v6', key: 'nco0om' }],
+          ['path', { d: 'M14 11v6', key: 'outv1u' }],
+          ['path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6', key: 'miytrc' }],
+          ['path', { d: 'M3 6h18', key: 'd0wm0j' }],
+          ['path', { d: 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', key: 'e791ji' }],
+        ])
+        function w({
+          hadith: a,
+          bookmark: b,
+          showViewChapter: c = !0,
+          className: f,
+          globalNotesVisible: g = !1,
+        }) {
+          let { updateBookmarkNotes: i } = (0, h.T)(),
+            [j, k] = (0, e.useState)(!1),
+            [l, o] = (0, e.useState)(b.notes || ''),
+            [q, r] = (0, e.useState)(!1),
+            u = async () => {
+              if (b.notes)
+                try {
+                  await navigator.clipboard.writeText(b.notes)
+                } catch (a) {
+                  console.error('Failed to copy notes:', a)
+                }
+            }
+          return (0, d.jsxs)('div', {
+            className: 'space-y-3',
+            children: [
+              (0, d.jsx)(s.A, {
+                hadith: a,
+                showViewChapter: c,
+                className: f,
+                showNotesToggle: !0,
+                notesVisible: q,
+                onToggleNotes: () => r(!q),
+              }),
+              q &&
+                (0, d.jsxs)('div', {
+                  className: 'rounded-lg border border-border bg-surface-1 p-4',
+                  children: [
+                    (0, d.jsxs)('div', {
+                      className: 'mb-3 flex items-center justify-between',
+                      children: [
+                        (0, d.jsxs)('span', {
+                          className:
+                            'flex items-center gap-1.5 text-sm font-medium text-foreground',
+                          children: [
+                            (0, d.jsx)(p.A, { className: 'h-3.5 w-3.5' }),
+                            'Personal Notes',
+                          ],
+                        }),
+                        (0, d.jsxs)('div', {
+                          className: 'flex gap-1.5',
+                          children: [
+                            b.notes &&
+                              !j &&
+                              (0, d.jsxs)(d.Fragment, {
+                                children: [
+                                  (0, d.jsxs)(m.$, {
+                                    variant: 'ghost',
+                                    size: 'sm',
+                                    onClick: u,
+                                    title: 'Copy notes',
+                                    children: [
+                                      (0, d.jsx)(t.A, { className: 'mr-1 h-3 w-3' }),
+                                      'Copy',
+                                    ],
+                                  }),
+                                  (0, d.jsxs)(m.$, {
+                                    variant: 'ghost',
+                                    size: 'sm',
+                                    onClick: () => {
+                                      ;(o(''), i(b.bookId, b.id, ''), k(!1))
+                                    },
+                                    className: 'text-destructive hover:text-destructive',
+                                    children: [
+                                      (0, d.jsx)(v, { className: 'mr-1 h-3 w-3' }),
+                                      'Clear',
+                                    ],
+                                  }),
+                                ],
+                              }),
+                            !j &&
+                              (0, d.jsx)(m.$, {
+                                variant: 'ghost',
+                                size: 'sm',
+                                onClick: () => k(!0),
+                                children: b.notes ? 'Edit' : 'Add Note',
+                              }),
+                          ],
+                        }),
+                      ],
+                    }),
+                    j
+                      ? (0, d.jsxs)('form', {
+                          onSubmit: (a) => {
+                            ;(a.preventDefault(), i(b.bookId, b.id, l), k(!1))
+                          },
+                          className: 'space-y-3',
+                          children: [
+                            (0, d.jsx)('textarea', {
+                              value: l,
+                              onChange: (a) => o(a.target.value),
+                              className:
+                                'w-full resize-none rounded-md border border-border bg-background p-3 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600',
+                              rows: 4,
+                              placeholder: 'Add your personal notes about this hadith…',
+                              autoFocus: !0,
+                            }),
+                            (0, d.jsxs)('div', {
+                              className: 'flex gap-2',
+                              children: [
+                                (0, d.jsx)(m.$, { size: 'sm', type: 'submit', children: 'Save' }),
+                                (0, d.jsx)(m.$, {
+                                  size: 'sm',
+                                  variant: 'outline',
+                                  type: 'button',
+                                  onClick: () => {
+                                    ;(o(b.notes || ''), k(!1))
+                                  },
+                                  children: 'Cancel',
+                                }),
+                              ],
+                            }),
+                          ],
+                        })
+                      : (0, d.jsx)('div', {
+                          className: 'text-sm text-foreground-muted',
+                          children: b.notes
+                            ? (0, d.jsx)('div', {
+                                className:
+                                  'whitespace-pre-wrap rounded-md border border-border bg-background p-3 leading-relaxed',
+                                children: b.notes,
+                              })
+                            : (0, d.jsx)('div', {
+                                className: 'py-2 italic text-foreground-faint',
+                                children:
+                                  'No notes added yet. Click “Add Note” to start writing your thoughts.',
+                              }),
+                        }),
+                    (0, d.jsx)(n.w, { className: 'my-3' }),
+                    (0, d.jsxs)('div', {
+                      className: 'text-xs text-foreground-faint',
+                      children: [
+                        'Bookmarked:',
+                        ' ',
+                        new Date(b.timestamp).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+            ],
+          })
+        }
+        var x = c(14263)
+        let y = (0, u.A)('upload', [
+            ['path', { d: 'M12 3v12', key: '1x0j5s' }],
+            ['path', { d: 'm17 8-5-5-5 5', key: '7q97r8' }],
+            ['path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', key: 'ih7n3h' }],
+          ]),
+          z = (0, u.A)('refresh-cw', [
+            ['path', { d: 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8', key: 'v9h5vc' }],
+            ['path', { d: 'M21 3v5h-5', key: '1q7to0' }],
+            ['path', { d: 'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16', key: '3uifl3' }],
+            ['path', { d: 'M8 16H3v5', key: '1cv678' }],
+          ]),
+          A = (0, u.A)('download', [
+            ['path', { d: 'M12 15V3', key: 'm9g1x1' }],
+            ['path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', key: 'ih7n3h' }],
+            ['path', { d: 'm7 10 5 5 5-5', key: 'brsn70' }],
+          ])
+        var B = c(88285),
+          C = c(85351)
+        let D = (0, u.A)('check', [['path', { d: 'M20 6 9 17l-5-5', key: '1gmf2c' }]]),
+          E = [
+            { value: 'both', label: 'Both' },
+            { value: 'hadith', label: 'Hadith' },
+            { value: 'notes', label: 'Notes' },
+          ]
+        function F() {
+          let { bookmarks: a, bookmarkCount: b, importBookmarks: c } = (0, h.T)(),
+            [f, i] = (0, e.useState)([]),
+            [j, q] = (0, e.useState)(!1),
+            [s, t] = (0, e.useState)(null),
+            [u, v] = (0, e.useState)(''),
+            [F, G] = (0, e.useState)('both'),
+            [H, I] = (0, e.useState)(!1),
+            [J, K] = (0, e.useState)(!1),
+            [L, M] = (0, e.useState)(null),
+            N = (0, e.useRef)(null),
+            O = (0, e.useRef)(null),
+            P = a.filter((a) => {
+              if (!u.trim()) return !0
+              let b = u.toLowerCase(),
+                c = f.find((b) => b.id === a.id)
+              switch (F) {
+                case 'hadith':
+                  if (c)
+                    return (
+                      c.englishText?.toLowerCase().includes(b) ||
+                      c.arabicText?.toLowerCase().includes(b) ||
+                      c.category?.toLowerCase().includes(b) ||
+                      c.chapter?.toLowerCase().includes(b) ||
+                      c.book?.toLowerCase().includes(b) ||
+                      c.author?.toLowerCase().includes(b) ||
+                      c.translator?.toLowerCase().includes(b) ||
+                      c.majlisiGrading?.toLowerCase().includes(b) ||
+                      c.mohseniGrading?.toLowerCase().includes(b) ||
+                      c.behbudiGrading?.toLowerCase().includes(b)
+                    )
+                  return (
+                    a.preview.toLowerCase().includes(b) ||
+                    a.arabicPreview?.toLowerCase().includes(b) ||
+                    a.category.toLowerCase().includes(b) ||
+                    a.chapter.toLowerCase().includes(b) ||
+                    a.book.toLowerCase().includes(b)
+                  )
+                case 'notes':
+                  return a.notes?.toLowerCase().includes(b) || !1
+                default: {
+                  let d = c
+                      ? c.englishText?.toLowerCase().includes(b) ||
+                        c.arabicText?.toLowerCase().includes(b) ||
+                        c.category?.toLowerCase().includes(b) ||
+                        c.chapter?.toLowerCase().includes(b) ||
+                        c.book?.toLowerCase().includes(b) ||
+                        c.author?.toLowerCase().includes(b) ||
+                        c.translator?.toLowerCase().includes(b) ||
+                        c.majlisiGrading?.toLowerCase().includes(b) ||
+                        c.mohseniGrading?.toLowerCase().includes(b) ||
+                        c.behbudiGrading?.toLowerCase().includes(b)
+                      : a.preview.toLowerCase().includes(b) ||
+                        a.arabicPreview?.toLowerCase().includes(b) ||
+                        a.category.toLowerCase().includes(b) ||
+                        a.chapter.toLowerCase().includes(b) ||
+                        a.book.toLowerCase().includes(b),
+                    e = a.notes?.toLowerCase().includes(b)
+                  return d || e
+                }
+              }
+            }),
+            Q = f.filter((a) => P.some((b) => b.id === a.id))
+          return j
+            ? (0, d.jsxs)('div', {
+                className: 'mx-auto max-w-5xl px-4 py-8 sm:px-6',
+                children: [
+                  (0, d.jsxs)('div', {
+                    className: 'mb-6 flex items-center gap-3',
+                    children: [
+                      (0, d.jsx)(o.A, { className: 'h-5 w-5 text-bookmark' }),
+                      (0, d.jsx)('h1', {
+                        className: 'text-xl font-bold text-foreground',
+                        children: 'Bookmarks',
+                      }),
+                    ],
+                  }),
+                  (0, d.jsxs)('div', {
+                    className: 'flex items-center justify-center py-12',
+                    children: [
+                      (0, d.jsx)(x.A, { className: 'h-6 w-6 animate-spin text-foreground-muted' }),
+                      (0, d.jsx)('span', {
+                        className: 'ml-3 text-sm text-foreground-muted',
+                        children: 'Loading bookmarks…',
+                      }),
+                    ],
+                  }),
+                ],
+              })
+            : (0, d.jsxs)('div', {
+                className: 'mx-auto max-w-5xl px-4 py-8 sm:px-6',
+                children: [
+                  (0, d.jsxs)('div', {
+                    className: 'mb-6 flex items-center gap-3',
+                    children: [
+                      (0, d.jsx)(o.A, { className: 'h-5 w-5 text-bookmark' }),
+                      (0, d.jsx)('h1', {
+                        className: 'text-xl font-bold text-foreground',
+                        children: 'Bookmarks',
+                      }),
+                      b > 0 && (0, d.jsx)(l.E, { variant: 'secondary', children: b }),
+                    ],
+                  }),
+                  (0, d.jsxs)('div', {
+                    className: 'mb-6 flex flex-wrap gap-2',
+                    children: [
+                      b > 0 &&
+                        (0, d.jsxs)(m.$, {
+                          variant: J ? 'default' : 'outline',
+                          size: 'sm',
+                          onClick: () => K(!J),
+                          children: [
+                            (0, d.jsx)(p.A, { className: 'mr-1.5 h-3.5 w-3.5' }),
+                            J ? 'Hide All Notes' : 'Show All Notes',
+                          ],
+                        }),
+                      (0, d.jsxs)(m.$, {
+                        variant: 'outline',
+                        size: 'sm',
+                        onClick: () => {
+                          O.current?.click()
+                        },
+                        children: [(0, d.jsx)(y, { className: 'mr-1.5 h-3.5 w-3.5' }), 'Import'],
+                      }),
+                      (0, d.jsxs)(m.$, {
+                        variant: 'outline',
+                        size: 'sm',
+                        onClick: () => window.location.reload(),
+                        children: [(0, d.jsx)(z, { className: 'mr-1.5 h-3.5 w-3.5' }), 'Refresh'],
+                      }),
+                      b > 0 &&
+                        (0, d.jsxs)(m.$, {
+                          variant: 'outline',
+                          size: 'sm',
+                          onClick: () => {
+                            try {
+                              let b = a.map((a) => ({
+                                  id: a.id,
+                                  bookId: a.bookId,
+                                  book: a.book,
+                                  category: a.category,
+                                  chapter: a.chapter,
+                                  volume: a.volume,
+                                  timestamp: a.timestamp,
+                                  notes: a.notes || '',
+                                })),
+                                c = JSON.stringify({ version: '1.0', bookmarks: b }, null, 2),
+                                d = new Blob([c], { type: 'application/json' }),
+                                e = URL.createObjectURL(d),
+                                f = document.createElement('a')
+                              ;((f.href = e),
+                                (f.download = `saadah-bookmarks-${new Date().toISOString().split('T')[0]}.json`),
+                                document.body.appendChild(f),
+                                f.click(),
+                                document.body.removeChild(f),
+                                URL.revokeObjectURL(e))
+                            } catch (a) {
+                              ;(console.error('Failed to export bookmarks:', a),
+                                t('Failed to export bookmarks. Please try again.'))
+                            }
+                          },
+                          children: [(0, d.jsx)(A, { className: 'mr-1.5 h-3.5 w-3.5' }), 'Export'],
+                        }),
+                      (0, d.jsx)('input', {
+                        ref: O,
+                        type: 'file',
+                        accept: '.json',
+                        onChange: (a) => {
+                          let b = a.target.files?.[0]
+                          if (!b) return
+                          let d = new FileReader()
+                          ;((d.onload = (a) => {
+                            try {
+                              let b = a.target?.result,
+                                d = JSON.parse(b)
+                              if (!d.bookmarks || !Array.isArray(d.bookmarks))
+                                throw Error('Invalid bookmark file format')
+                              let { imported: e, duplicates: f } = c(d.bookmarks),
+                                g = `Successfully imported ${e} bookmark${1 !== e ? 's' : ''}.`
+                              ;(f > 0 &&
+                                (g += ` ${f} duplicate${1 !== f ? 's' : ''} were skipped.`),
+                                M(g),
+                                setTimeout(() => M(null), 5e3))
+                            } catch (a) {
+                              ;(console.error('Failed to import bookmarks:', a),
+                                t(
+                                  'Failed to import bookmarks. Please check the file format and try again.',
+                                ))
+                            }
+                          }),
+                            d.readAsText(b),
+                            (a.target.value = ''))
+                        },
+                        className: 'hidden',
+                      }),
+                    ],
+                  }),
+                  b > 0 &&
+                    (0, d.jsxs)('div', {
+                      className: 'mb-6 flex flex-col gap-3 sm:flex-row',
+                      children: [
+                        (0, d.jsxs)('div', {
+                          className:
+                            'flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5',
+                          children: [
+                            (0, d.jsx)(B.A, {
+                              className: 'h-4 w-4 shrink-0 text-foreground-faint',
+                            }),
+                            (0, d.jsx)('input', {
+                              type: 'text',
+                              value: u,
+                              onChange: (a) => v(a.target.value),
+                              className:
+                                'w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint',
+                              placeholder: 'Search through your bookmarks…',
+                            }),
+                          ],
+                        }),
+                        (0, d.jsxs)('div', {
+                          className: 'relative min-w-[130px]',
+                          ref: N,
+                          children: [
+                            (0, d.jsxs)('button', {
+                              type: 'button',
+                              onClick: () => I(!H),
+                              className:
+                                'flex w-full items-center justify-between rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 text-sm text-foreground transition-colors hover:bg-surface-2',
+                              children: [
+                                (0, d.jsx)('span', {
+                                  children: E.find((a) => a.value === F)?.label,
+                                }),
+                                (0, d.jsx)(C.A, {
+                                  className: (0, k.cn)(
+                                    'ml-2 h-3.5 w-3.5 text-foreground-muted transition-transform',
+                                    H && 'rotate-180',
+                                  ),
+                                }),
+                              ],
+                            }),
+                            H &&
+                              (0, d.jsx)('div', {
+                                className:
+                                  'absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-surface-1 shadow-lg',
+                                children: E.map((a) =>
+                                  (0, d.jsxs)(
+                                    'button',
+                                    {
+                                      type: 'button',
+                                      onClick: () => {
+                                        ;(G(a.value), I(!1))
+                                      },
+                                      className: (0, k.cn)(
+                                        'flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors',
+                                        F === a.value
+                                          ? 'bg-accent text-accent-foreground'
+                                          : 'text-foreground hover:bg-surface-2',
+                                      ),
+                                      children: [
+                                        (0, d.jsx)('span', { children: a.label }),
+                                        F === a.value &&
+                                          (0, d.jsx)(D, { className: 'h-3.5 w-3.5' }),
+                                      ],
+                                    },
+                                    a.value,
+                                  ),
+                                ),
+                              }),
+                          ],
+                        }),
+                        u.trim() &&
+                          (0, d.jsx)('p', {
+                            className: 'self-center text-xs text-foreground-muted sm:hidden',
+                            children:
+                              P.length === b
+                                ? `Showing all ${b} bookmarks`
+                                : `Found ${P.length} of ${b}`,
+                          }),
+                      ],
+                    }),
+                  u.trim() &&
+                    (0, d.jsx)('p', {
+                      className: 'mb-4 hidden text-xs text-foreground-muted sm:block',
+                      children:
+                        P.length === b
+                          ? `Showing all ${b} bookmarks`
+                          : `Found ${P.length} of ${b} bookmarks`,
+                    }),
+                  L &&
+                    (0, d.jsx)('div', {
+                      className: 'border-accent/30 bg-accent/10 mb-6 rounded-lg border p-3',
+                      children: (0, d.jsx)('p', {
+                        className: 'text-sm text-foreground',
+                        children: L,
+                      }),
+                    }),
+                  s &&
+                    (0, d.jsx)('div', {
+                      className:
+                        'border-destructive/30 bg-destructive/10 mb-6 rounded-lg border p-3',
+                      children: (0, d.jsx)('p', {
+                        className: 'text-sm text-destructive',
+                        children: s,
+                      }),
+                    }),
+                  0 === b
+                    ? (0, d.jsxs)('div', {
+                        className: 'py-16 text-center',
+                        children: [
+                          (0, d.jsx)(o.A, {
+                            className: 'mx-auto mb-3 h-12 w-12 text-foreground-faint',
+                          }),
+                          (0, d.jsx)('h2', {
+                            className: 'mb-1 text-lg font-semibold text-foreground',
+                            children: 'No bookmarks yet',
+                          }),
+                          (0, d.jsx)('p', {
+                            className: 'mb-5 text-sm text-foreground-muted',
+                            children: 'Start bookmarking your favorite hadiths to see them here.',
+                          }),
+                          (0, d.jsx)(m.$, {
+                            asChild: !0,
+                            children: (0, d.jsx)(g(), { href: '/', children: 'Browse Hadiths' }),
+                          }),
+                        ],
+                      })
+                    : 0 === P.length && u.trim()
+                      ? (0, d.jsxs)('div', {
+                          className: 'py-16 text-center',
+                          children: [
+                            (0, d.jsx)(B.A, {
+                              className: 'mx-auto mb-3 h-12 w-12 text-foreground-faint',
+                            }),
+                            (0, d.jsx)('h2', {
+                              className: 'mb-1 text-lg font-semibold text-foreground',
+                              children: 'No results found',
+                            }),
+                            (0, d.jsx)('p', {
+                              className: 'mb-4 text-sm text-foreground-muted',
+                              children: 'No bookmarks match your search criteria.',
+                            }),
+                            (0, d.jsx)(m.$, {
+                              variant: 'ghost',
+                              onClick: () => v(''),
+                              children: 'Clear search',
+                            }),
+                          ],
+                        })
+                      : (0, d.jsxs)('div', {
+                          className: 'space-y-6',
+                          children: [
+                            (0, d.jsxs)('div', {
+                              className: 'rounded-lg border border-border bg-surface-1 p-4',
+                              children: [
+                                (0, d.jsxs)('div', {
+                                  className: 'flex items-center justify-between text-sm',
+                                  children: [
+                                    (0, d.jsx)('span', {
+                                      className: 'text-foreground-muted',
+                                      children: 'Total bookmarks',
+                                    }),
+                                    (0, d.jsx)('span', {
+                                      className: 'font-medium text-foreground',
+                                      children: b,
+                                    }),
+                                  ],
+                                }),
+                                u.trim() &&
+                                  (0, d.jsxs)(d.Fragment, {
+                                    children: [
+                                      (0, d.jsx)(n.w, { className: 'my-2' }),
+                                      (0, d.jsxs)('div', {
+                                        className: 'flex items-center justify-between text-sm',
+                                        children: [
+                                          (0, d.jsx)('span', {
+                                            className: 'text-foreground-muted',
+                                            children: 'Showing results',
+                                          }),
+                                          (0, d.jsx)('span', {
+                                            className: 'font-medium text-foreground',
+                                            children: P.length,
+                                          }),
+                                        ],
+                                      }),
+                                    ],
+                                  }),
+                              ],
+                            }),
+                            0 === Q.length &&
+                              P.length > 0 &&
+                              (0, d.jsxs)('div', {
+                                className: 'space-y-4',
+                                children: [
+                                  (0, d.jsx)('h2', {
+                                    className: 'text-base font-semibold text-foreground',
+                                    children: 'Bookmark Previews',
+                                  }),
+                                  (0, d.jsx)('p', {
+                                    className: 'text-xs text-foreground-muted',
+                                    children:
+                                      'Full content could not be loaded. Here are your bookmark previews:',
+                                  }),
+                                  P.map((a) =>
+                                    (0, d.jsx)(r, { bookmark: a }, a.bookId + ':' + a.id),
+                                  ),
+                                ],
+                              }),
+                            Q.length > 0 &&
+                              (0, d.jsxs)('div', {
+                                className: 'space-y-5',
+                                children: [
+                                  (0, d.jsx)('h2', {
+                                    className: 'text-base font-semibold text-foreground',
+                                    children: 'Your Bookmarked Hadiths',
+                                  }),
+                                  Q.map((a, b) => {
+                                    let c = P.find((b) => b.id === a.id && b.bookId === a.bookId)
+                                    return c
+                                      ? (0, d.jsxs)(
+                                          'div',
+                                          {
+                                            className: 'relative',
+                                            children: [
+                                              (0, d.jsx)('div', {
+                                                className:
+                                                  'absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground',
+                                                children: b + 1,
+                                              }),
+                                              (0, d.jsx)('div', {
+                                                className: 'ml-6',
+                                                children: (0, d.jsx)(w, {
+                                                  hadith: a,
+                                                  bookmark: c,
+                                                  showViewChapter: !1,
+                                                  globalNotesVisible: J,
+                                                }),
+                                              }),
+                                            ],
+                                          },
+                                          a.bookId + ':' + a.id,
+                                        )
+                                      : null
+                                  }),
+                                ],
+                              }),
+                          ],
+                        }),
+                ],
+              })
+        }
+      },
+      10846: (a) => {
+        'use strict'
+        a.exports = require('next/dist/compiled/next-server/app-page.runtime.prod.js')
+      },
+      19121: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/action-async-storage.external.js')
+      },
+      26713: (a) => {
+        'use strict'
+        a.exports = require('next/dist/shared/lib/router/utils/is-bot')
+      },
+      28354: (a) => {
+        'use strict'
+        a.exports = require('util')
+      },
+      29294: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/work-async-storage.external.js')
+      },
+      33873: (a) => {
+        'use strict'
+        a.exports = require('path')
+      },
+      34444: (a, b, c) => {
+        'use strict'
+        ;(c.r(b), c.d(b, { default: () => d }))
+        let d = (0, c(97954).registerClientReference)(
+          function () {
+            throw Error(
+              'Attempted to call the default export of "C:\\\\Users\\\\Admin\\\\Desktop\\\\sl\\\\saadah-library\\\\app\\\\bookmarks\\\\page.tsx" from the server, but it\'s on the client. It\'s not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.',
+            )
+          },
+          'C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\bookmarks\\page.tsx',
+          'default',
+        )
+      },
+      41025: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/dynamic-access-async-storage.external.js')
+      },
+      50798: (a, b, c) => {
+        Promise.resolve().then(c.bind(c, 34444))
+      },
+      63033: (a) => {
+        'use strict'
+        a.exports = require('next/dist/server/app-render/work-unit-async-storage.external.js')
+      },
+      80810: (a, b, c) => {
+        'use strict'
+        ;(c.r(b),
+          c.d(b, {
+            GlobalError: () => D.a,
+            __next_app__: () => J,
+            handler: () => L,
+            pages: () => I,
+            routeModule: () => K,
+            tree: () => H,
+          }))
+        var d = c(49754),
+          e = c(9117),
+          f = c(46595),
+          g = c(32324),
+          h = c(39326),
+          i = c(38928),
+          j = c(20175),
+          k = c(12),
+          l = c(54290),
+          m = c(12696),
+          n = c(82802),
+          o = c(77533),
+          p = c(45229),
+          q = c(32822),
+          r = c(261),
+          s = c(26453),
+          t = c(52474),
+          u = c(26713),
+          v = c(51356),
+          w = c(62685),
+          x = c(36225),
+          y = c(63446),
+          z = c(2762),
+          A = c(45742),
+          B = c(86439),
+          C = c(81170),
+          D = c.n(C),
+          E = c(62506),
+          F = c(91203),
+          G = {}
+        for (let a in E)
+          0 >
+            [
+              'default',
+              'tree',
+              'pages',
+              'GlobalError',
+              '__next_app__',
+              'routeModule',
+              'handler',
+            ].indexOf(a) && (G[a] = () => E[a])
+        c.d(b, G)
+        let H = {
+            children: [
+              '',
+              {
+                children: [
+                  'bookmarks',
+                  {
+                    children: [
+                      '__PAGE__',
+                      {},
+                      {
+                        page: [
+                          () => Promise.resolve().then(c.bind(c, 34444)),
+                          'C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\bookmarks\\page.tsx',
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    metadata: {
+                      icon: [
+                        async (a) => (await Promise.resolve().then(c.bind(c, 36014))).default(a),
+                      ],
+                      apple: [],
+                      openGraph: [],
+                      twitter: [],
+                      manifest: void 0,
+                    },
+                  },
+                ],
+              },
+              {
+                layout: [
+                  () => Promise.resolve().then(c.bind(c, 16953)),
+                  'C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\layout.tsx',
+                ],
+                'global-error': [
+                  () => Promise.resolve().then(c.t.bind(c, 81170, 23)),
+                  'next/dist/client/components/builtin/global-error.js',
+                ],
+                'not-found': [
+                  () => Promise.resolve().then(c.t.bind(c, 87028, 23)),
+                  'next/dist/client/components/builtin/not-found.js',
+                ],
+                forbidden: [
+                  () => Promise.resolve().then(c.t.bind(c, 90461, 23)),
+                  'next/dist/client/components/builtin/forbidden.js',
+                ],
+                unauthorized: [
+                  () => Promise.resolve().then(c.t.bind(c, 32768, 23)),
+                  'next/dist/client/components/builtin/unauthorized.js',
+                ],
+                metadata: {
+                  icon: [async (a) => (await Promise.resolve().then(c.bind(c, 36014))).default(a)],
+                  apple: [],
+                  openGraph: [],
+                  twitter: [],
+                  manifest: void 0,
+                },
+              },
+            ],
+          }.children,
+          I = ['C:\\Users\\Admin\\Desktop\\sl\\saadah-library\\app\\bookmarks\\page.tsx'],
+          J = { require: c, loadChunk: () => Promise.resolve() },
+          K = new d.AppPageRouteModule({
+            definition: {
+              kind: e.RouteKind.APP_PAGE,
+              page: '/bookmarks/page',
+              pathname: '/bookmarks',
+              bundlePath: '',
+              filename: '',
+              appPaths: [],
+            },
+            userland: { loaderTree: H },
+            distDir: '.next-build',
+            relativeProjectDir: '',
+          })
+        async function L(a, b, d) {
+          var C
+          let G = '/bookmarks/page'
+          '/index' === G && (G = '/')
+          let M = (0, h.getRequestMeta)(a, 'postponed'),
+            N = (0, h.getRequestMeta)(a, 'minimalMode'),
+            O = await K.prepare(a, b, { srcPage: G, multiZoneDraftMode: !1 })
+          if (!O)
+            return (
+              (b.statusCode = 400),
+              b.end('Bad Request'),
+              null == d.waitUntil || d.waitUntil.call(d, Promise.resolve()),
+              null
+            )
+          let {
+              buildId: P,
+              query: Q,
+              params: R,
+              parsedUrl: S,
+              pageIsDynamic: T,
+              buildManifest: U,
+              nextFontManifest: V,
+              reactLoadableManifest: W,
+              serverActionsManifest: X,
+              clientReferenceManifest: Y,
+              subresourceIntegrityManifest: Z,
+              prerenderManifest: $,
+              isDraftMode: _,
+              resolvedPathname: aa,
+              revalidateOnlyGenerated: ab,
+              routerServerContext: ac,
+              nextConfig: ad,
+              interceptionRoutePatterns: ae,
+            } = O,
+            af = S.pathname || '/',
+            ag = (0, r.normalizeAppPath)(G),
+            { isOnDemandRevalidate: ah } = O,
+            ai = K.match(af, $),
+            aj = !!$.routes[aa],
+            ak = !!(ai || aj || $.routes[ag]),
+            al = a.headers['user-agent'] || '',
+            am = (0, u.getBotType)(al),
+            an = (0, p.isHtmlBotRequest)(a),
+            ao =
+              (0, h.getRequestMeta)(a, 'isPrefetchRSCRequest') ??
+              '1' === a.headers[t.NEXT_ROUTER_PREFETCH_HEADER],
+            ap = (0, h.getRequestMeta)(a, 'isRSCRequest') ?? !!a.headers[t.RSC_HEADER],
+            aq = (0, s.getIsPossibleServerAction)(a),
+            ar =
+              (0, m.checkIsAppPPREnabled)(ad.experimental.ppr) &&
+              (null == (C = $.routes[ag] ?? $.dynamicRoutes[ag]) ? void 0 : C.renderingMode) ===
+                'PARTIALLY_STATIC',
+            as = !1,
+            at = !1,
+            au = ar ? M : void 0,
+            av = ar && ap && !ao,
+            aw = (0, h.getRequestMeta)(a, 'segmentPrefetchRSCRequest'),
+            ax = !al || (0, p.shouldServeStreamingMetadata)(al, ad.htmlLimitedBots)
+          an && ar && ((ak = !1), (ax = !1))
+          let ay = !0 === K.isDev || !ak || 'string' == typeof M || av,
+            az = an && ar,
+            aA = null
+          _ || !ak || ay || aq || au || av || (aA = aa)
+          let aB = aA
+          ;(!aB && K.isDev && (aB = aa), K.isDev || _ || !ak || !ap || av || (0, k.d)(a.headers))
+          let aC = {
+            ...E,
+            tree: H,
+            pages: I,
+            GlobalError: D(),
+            handler: L,
+            routeModule: K,
+            __next_app__: J,
+          }
+          X &&
+            Y &&
+            (0, o.setReferenceManifestsSingleton)({
+              page: G,
+              clientReferenceManifest: Y,
+              serverActionsManifest: X,
+              serverModuleMap: (0, q.createServerModuleMap)({ serverActionsManifest: X }),
+            })
+          let aD = a.method || 'GET',
+            aE = (0, g.getTracer)(),
+            aF = aE.getActiveScopeSpan()
+          try {
+            let f = K.getVaryHeader(aa, ae)
+            b.setHeader('Vary', f)
+            let k = async (c, d) => {
+                let e = new l.NodeNextRequest(a),
+                  f = new l.NodeNextResponse(b)
+                return K.render(e, f, d).finally(() => {
+                  if (!c) return
+                  c.setAttributes({ 'http.status_code': b.statusCode, 'next.rsc': !1 })
+                  let d = aE.getRootSpanAttributes()
+                  if (!d) return
+                  if (d.get('next.span_type') !== i.BaseServerSpan.handleRequest)
+                    return void console.warn(
+                      `Unexpected root span type '${d.get('next.span_type')}'. Please report this Next.js issue https://github.com/vercel/next.js`,
+                    )
+                  let e = d.get('next.route')
+                  if (e) {
+                    let a = `${aD} ${e}`
+                    ;(c.setAttributes({ 'next.route': e, 'http.route': e, 'next.span_name': a }),
+                      c.updateName(a))
+                  } else c.updateName(`${aD} ${a.url}`)
+                })
+              },
+              m = async ({ span: e, postponed: f, fallbackRouteParams: g }) => {
+                let i = {
+                    query: Q,
+                    params: R,
+                    page: ag,
+                    sharedContext: { buildId: P },
+                    serverComponentsHmrCache: (0, h.getRequestMeta)(a, 'serverComponentsHmrCache'),
+                    fallbackRouteParams: g,
+                    renderOpts: {
+                      App: () => null,
+                      Document: () => null,
+                      pageConfig: {},
+                      ComponentMod: aC,
+                      Component: (0, j.T)(aC),
+                      params: R,
+                      routeModule: K,
+                      page: G,
+                      postponed: f,
+                      shouldWaitOnAllReady: az,
+                      serveStreamingMetadata: ax,
+                      supportsDynamicResponse: 'string' == typeof f || ay,
+                      buildManifest: U,
+                      nextFontManifest: V,
+                      reactLoadableManifest: W,
+                      subresourceIntegrityManifest: Z,
+                      serverActionsManifest: X,
+                      clientReferenceManifest: Y,
+                      setIsrStatus: null == ac ? void 0 : ac.setIsrStatus,
+                      dir: c(33873).join(process.cwd(), K.relativeProjectDir),
+                      isDraftMode: _,
+                      isRevalidate: ak && !f && !av,
+                      botType: am,
+                      isOnDemandRevalidate: ah,
+                      isPossibleServerAction: aq,
+                      assetPrefix: ad.assetPrefix,
+                      nextConfigOutput: ad.output,
+                      crossOrigin: ad.crossOrigin,
+                      trailingSlash: ad.trailingSlash,
+                      previewProps: $.preview,
+                      deploymentId: ad.deploymentId,
+                      enableTainting: ad.experimental.taint,
+                      htmlLimitedBots: ad.htmlLimitedBots,
+                      devtoolSegmentExplorer: ad.experimental.devtoolSegmentExplorer,
+                      reactMaxHeadersLength: ad.reactMaxHeadersLength,
+                      multiZoneDraftMode: !1,
+                      incrementalCache: (0, h.getRequestMeta)(a, 'incrementalCache'),
+                      cacheLifeProfiles: ad.experimental.cacheLife,
+                      basePath: ad.basePath,
+                      serverActions: ad.experimental.serverActions,
+                      ...(as
+                        ? {
+                            nextExport: !0,
+                            supportsDynamicResponse: !1,
+                            isStaticGeneration: !0,
+                            isRevalidate: !0,
+                            isDebugDynamicAccesses: as,
+                          }
+                        : {}),
+                      experimental: {
+                        isRoutePPREnabled: ar,
+                        expireTime: ad.expireTime,
+                        staleTimes: ad.experimental.staleTimes,
+                        cacheComponents: !!ad.experimental.cacheComponents,
+                        clientSegmentCache: !!ad.experimental.clientSegmentCache,
+                        clientParamParsing: !!ad.experimental.clientParamParsing,
+                        dynamicOnHover: !!ad.experimental.dynamicOnHover,
+                        inlineCss: !!ad.experimental.inlineCss,
+                        authInterrupts: !!ad.experimental.authInterrupts,
+                        clientTraceMetadata: ad.experimental.clientTraceMetadata || [],
+                      },
+                      waitUntil: d.waitUntil,
+                      onClose: (a) => {
+                        b.on('close', a)
+                      },
+                      onAfterTaskError: () => {},
+                      onInstrumentationRequestError: (b, c, d) => K.onRequestError(a, b, d, ac),
+                      err: (0, h.getRequestMeta)(a, 'invokeError'),
+                      dev: K.isDev,
+                    },
+                  },
+                  l = await k(e, i),
+                  { metadata: m } = l,
+                  { cacheControl: n, headers: o = {}, fetchTags: p } = m
+                if (
+                  (p && (o[y.NEXT_CACHE_TAGS_HEADER] = p),
+                  (a.fetchMetrics = m.fetchMetrics),
+                  ak && (null == n ? void 0 : n.revalidate) === 0 && !K.isDev && !ar)
+                ) {
+                  let a = m.staticBailoutInfo,
+                    b = Object.defineProperty(
+                      Error(`Page changed from static to dynamic at runtime ${aa}${(null == a ? void 0 : a.description) ? `, reason: ${a.description}` : ''}
+see more here https://nextjs.org/docs/messages/app-static-to-dynamic-error`),
+                      '__NEXT_ERROR_CODE',
+                      { value: 'E132', enumerable: !1, configurable: !0 },
+                    )
+                  if (null == a ? void 0 : a.stack) {
+                    let c = a.stack
+                    b.stack = b.message + c.substring(c.indexOf('\n'))
+                  }
+                  throw b
+                }
+                return {
+                  value: {
+                    kind: v.CachedRouteKind.APP_PAGE,
+                    html: l,
+                    headers: o,
+                    rscData: m.flightData,
+                    postponed: m.postponed,
+                    status: m.statusCode,
+                    segmentData: m.segmentData,
+                  },
+                  cacheControl: n,
+                }
+              },
+              o = async ({ hasResolved: c, previousCacheEntry: f, isRevalidating: g, span: i }) => {
+                let j,
+                  k = !1 === K.isDev,
+                  l = c || b.writableEnded
+                if (ah && ab && !f && !N)
+                  return (
+                    (null == ac ? void 0 : ac.render404)
+                      ? await ac.render404(a, b)
+                      : ((b.statusCode = 404), b.end('This page could not be found')),
+                    null
+                  )
+                if (
+                  (ai && (j = (0, w.parseFallbackField)(ai.fallback)),
+                  j === w.FallbackMode.PRERENDER &&
+                    (0, u.isBot)(al) &&
+                    (!ar || an) &&
+                    (j = w.FallbackMode.BLOCKING_STATIC_RENDER),
+                  (null == f ? void 0 : f.isStale) === -1 && (ah = !0),
+                  ah &&
+                    (j !== w.FallbackMode.NOT_FOUND || f) &&
+                    (j = w.FallbackMode.BLOCKING_STATIC_RENDER),
+                  !N &&
+                    j !== w.FallbackMode.BLOCKING_STATIC_RENDER &&
+                    aB &&
+                    !l &&
+                    !_ &&
+                    T &&
+                    (k || !aj))
+                ) {
+                  let b
+                  if ((k || ai) && j === w.FallbackMode.NOT_FOUND) throw new B.NoFallbackError()
+                  if (ar && !ap) {
+                    let c =
+                      'string' == typeof (null == ai ? void 0 : ai.fallback)
+                        ? ai.fallback
+                        : k
+                          ? ag
+                          : null
+                    if (
+                      ((b = await K.handleResponse({
+                        cacheKey: c,
+                        req: a,
+                        nextConfig: ad,
+                        routeKind: e.RouteKind.APP_PAGE,
+                        isFallback: !0,
+                        prerenderManifest: $,
+                        isRoutePPREnabled: ar,
+                        responseGenerator: async () =>
+                          m({
+                            span: i,
+                            postponed: void 0,
+                            fallbackRouteParams: k || at ? (0, n.u)(ag) : null,
+                          }),
+                        waitUntil: d.waitUntil,
+                      })),
+                      null === b)
+                    )
+                      return null
+                    if (b) return (delete b.cacheControl, b)
+                  }
+                }
+                let o = ah || g || !au ? void 0 : au
+                if (as && void 0 !== o)
+                  return {
+                    cacheControl: { revalidate: 1, expire: void 0 },
+                    value: {
+                      kind: v.CachedRouteKind.PAGES,
+                      html: x.default.EMPTY,
+                      pageData: {},
+                      headers: void 0,
+                      status: void 0,
+                    },
+                  }
+                let p =
+                  T && ar && ((0, h.getRequestMeta)(a, 'renderFallbackShell') || at)
+                    ? (0, n.u)(af)
+                    : null
+                return m({ span: i, postponed: o, fallbackRouteParams: p })
+              },
+              p = async (c) => {
+                var f, g, i, j, k
+                let l,
+                  n = await K.handleResponse({
+                    cacheKey: aA,
+                    responseGenerator: (a) => o({ span: c, ...a }),
+                    routeKind: e.RouteKind.APP_PAGE,
+                    isOnDemandRevalidate: ah,
+                    isRoutePPREnabled: ar,
+                    req: a,
+                    nextConfig: ad,
+                    prerenderManifest: $,
+                    waitUntil: d.waitUntil,
+                  })
+                if (
+                  (_ &&
+                    b.setHeader(
+                      'Cache-Control',
+                      'private, no-cache, no-store, max-age=0, must-revalidate',
+                    ),
+                  K.isDev && b.setHeader('Cache-Control', 'no-store, must-revalidate'),
+                  !n)
+                ) {
+                  if (aA)
+                    throw Object.defineProperty(
+                      Error('invariant: cache entry required but not generated'),
+                      '__NEXT_ERROR_CODE',
+                      { value: 'E62', enumerable: !1, configurable: !0 },
+                    )
+                  return null
+                }
+                if ((null == (f = n.value) ? void 0 : f.kind) !== v.CachedRouteKind.APP_PAGE)
+                  throw Object.defineProperty(
+                    Error(
+                      `Invariant app-page handler received invalid cache entry ${null == (i = n.value) ? void 0 : i.kind}`,
+                    ),
+                    '__NEXT_ERROR_CODE',
+                    { value: 'E707', enumerable: !1, configurable: !0 },
+                  )
+                let p = 'string' == typeof n.value.postponed
+                ak &&
+                  !av &&
+                  (!p || ao) &&
+                  (N ||
+                    b.setHeader(
+                      'x-nextjs-cache',
+                      ah ? 'REVALIDATED' : n.isMiss ? 'MISS' : n.isStale ? 'STALE' : 'HIT',
+                    ),
+                  b.setHeader(t.NEXT_IS_PRERENDER_HEADER, '1'))
+                let { value: q } = n
+                if (au) l = { revalidate: 0, expire: void 0 }
+                else if (N && ap && !ao && ar) l = { revalidate: 0, expire: void 0 }
+                else if (!K.isDev)
+                  if (_) l = { revalidate: 0, expire: void 0 }
+                  else if (ak) {
+                    if (n.cacheControl)
+                      if ('number' == typeof n.cacheControl.revalidate) {
+                        if (n.cacheControl.revalidate < 1)
+                          throw Object.defineProperty(
+                            Error(
+                              `Invalid revalidate configuration provided: ${n.cacheControl.revalidate} < 1`,
+                            ),
+                            '__NEXT_ERROR_CODE',
+                            { value: 'E22', enumerable: !1, configurable: !0 },
+                          )
+                        l = {
+                          revalidate: n.cacheControl.revalidate,
+                          expire:
+                            (null == (j = n.cacheControl) ? void 0 : j.expire) ?? ad.expireTime,
+                        }
+                      } else l = { revalidate: y.CACHE_ONE_YEAR, expire: void 0 }
+                  } else b.getHeader('Cache-Control') || (l = { revalidate: 0, expire: void 0 })
+                if (
+                  ((n.cacheControl = l),
+                  'string' == typeof aw &&
+                    (null == q ? void 0 : q.kind) === v.CachedRouteKind.APP_PAGE &&
+                    q.segmentData)
+                ) {
+                  b.setHeader(t.NEXT_DID_POSTPONE_HEADER, '2')
+                  let c = null == (k = q.headers) ? void 0 : k[y.NEXT_CACHE_TAGS_HEADER]
+                  N && ak && c && 'string' == typeof c && b.setHeader(y.NEXT_CACHE_TAGS_HEADER, c)
+                  let d = q.segmentData.get(aw)
+                  return void 0 !== d
+                    ? (0, A.sendRenderResult)({
+                        req: a,
+                        res: b,
+                        generateEtags: ad.generateEtags,
+                        poweredByHeader: ad.poweredByHeader,
+                        result: x.default.fromStatic(d, t.RSC_CONTENT_TYPE_HEADER),
+                        cacheControl: n.cacheControl,
+                      })
+                    : ((b.statusCode = 204),
+                      (0, A.sendRenderResult)({
+                        req: a,
+                        res: b,
+                        generateEtags: ad.generateEtags,
+                        poweredByHeader: ad.poweredByHeader,
+                        result: x.default.EMPTY,
+                        cacheControl: n.cacheControl,
+                      }))
+                }
+                let r = (0, h.getRequestMeta)(a, 'onCacheEntry')
+                if (
+                  r &&
+                  (await r(
+                    { ...n, value: { ...n.value, kind: 'PAGE' } },
+                    { url: (0, h.getRequestMeta)(a, 'initURL') },
+                  ))
+                )
+                  return null
+                if (p && au)
+                  throw Object.defineProperty(
+                    Error('Invariant: postponed state should not be present on a resume request'),
+                    '__NEXT_ERROR_CODE',
+                    { value: 'E396', enumerable: !1, configurable: !0 },
+                  )
+                if (q.headers) {
+                  let a = { ...q.headers }
+                  for (let [c, d] of ((N && ak) || delete a[y.NEXT_CACHE_TAGS_HEADER],
+                  Object.entries(a)))
+                    if (void 0 !== d)
+                      if (Array.isArray(d)) for (let a of d) b.appendHeader(c, a)
+                      else ('number' == typeof d && (d = d.toString()), b.appendHeader(c, d))
+                }
+                let s = null == (g = q.headers) ? void 0 : g[y.NEXT_CACHE_TAGS_HEADER]
+                if (
+                  (N && ak && s && 'string' == typeof s && b.setHeader(y.NEXT_CACHE_TAGS_HEADER, s),
+                  !q.status || (ap && ar) || (b.statusCode = q.status),
+                  !N && q.status && F.RedirectStatusCode[q.status] && ap && (b.statusCode = 200),
+                  p && b.setHeader(t.NEXT_DID_POSTPONE_HEADER, '1'),
+                  ap && !_)
+                ) {
+                  if (void 0 === q.rscData) {
+                    if (q.postponed)
+                      throw Object.defineProperty(
+                        Error('Invariant: Expected postponed to be undefined'),
+                        '__NEXT_ERROR_CODE',
+                        { value: 'E372', enumerable: !1, configurable: !0 },
+                      )
+                    return (0, A.sendRenderResult)({
+                      req: a,
+                      res: b,
+                      generateEtags: ad.generateEtags,
+                      poweredByHeader: ad.poweredByHeader,
+                      result: q.html,
+                      cacheControl: av ? { revalidate: 0, expire: void 0 } : n.cacheControl,
+                    })
+                  }
+                  return (0, A.sendRenderResult)({
+                    req: a,
+                    res: b,
+                    generateEtags: ad.generateEtags,
+                    poweredByHeader: ad.poweredByHeader,
+                    result: x.default.fromStatic(q.rscData, t.RSC_CONTENT_TYPE_HEADER),
+                    cacheControl: n.cacheControl,
+                  })
+                }
+                let u = q.html
+                if (!p || N || ap)
+                  return (0, A.sendRenderResult)({
+                    req: a,
+                    res: b,
+                    generateEtags: ad.generateEtags,
+                    poweredByHeader: ad.poweredByHeader,
+                    result: u,
+                    cacheControl: n.cacheControl,
+                  })
+                if (as)
+                  return (
+                    u.push(
+                      new ReadableStream({
+                        start(a) {
+                          ;(a.enqueue(z.ENCODED_TAGS.CLOSED.BODY_AND_HTML), a.close())
+                        },
+                      }),
+                    ),
+                    (0, A.sendRenderResult)({
+                      req: a,
+                      res: b,
+                      generateEtags: ad.generateEtags,
+                      poweredByHeader: ad.poweredByHeader,
+                      result: u,
+                      cacheControl: { revalidate: 0, expire: void 0 },
+                    })
+                  )
+                let w = new TransformStream()
+                return (
+                  u.push(w.readable),
+                  m({ span: c, postponed: q.postponed, fallbackRouteParams: null })
+                    .then(async (a) => {
+                      var b, c
+                      if (!a)
+                        throw Object.defineProperty(
+                          Error('Invariant: expected a result to be returned'),
+                          '__NEXT_ERROR_CODE',
+                          { value: 'E463', enumerable: !1, configurable: !0 },
+                        )
+                      if ((null == (b = a.value) ? void 0 : b.kind) !== v.CachedRouteKind.APP_PAGE)
+                        throw Object.defineProperty(
+                          Error(
+                            `Invariant: expected a page response, got ${null == (c = a.value) ? void 0 : c.kind}`,
+                          ),
+                          '__NEXT_ERROR_CODE',
+                          { value: 'E305', enumerable: !1, configurable: !0 },
+                        )
+                      await a.value.html.pipeTo(w.writable)
+                    })
+                    .catch((a) => {
+                      w.writable.abort(a).catch((a) => {
+                        console.error("couldn't abort transformer", a)
+                      })
+                    }),
+                  (0, A.sendRenderResult)({
+                    req: a,
+                    res: b,
+                    generateEtags: ad.generateEtags,
+                    poweredByHeader: ad.poweredByHeader,
+                    result: u,
+                    cacheControl: { revalidate: 0, expire: void 0 },
+                  })
+                )
+              }
+            if (!aF)
+              return await aE.withPropagatedContext(a.headers, () =>
+                aE.trace(
+                  i.BaseServerSpan.handleRequest,
+                  {
+                    spanName: `${aD} ${a.url}`,
+                    kind: g.SpanKind.SERVER,
+                    attributes: { 'http.method': aD, 'http.target': a.url },
+                  },
+                  p,
+                ),
+              )
+            await p(aF)
+          } catch (b) {
+            throw (
+              b instanceof B.NoFallbackError ||
+                (await K.onRequestError(
+                  a,
+                  b,
+                  {
+                    routerKind: 'App Router',
+                    routePath: G,
+                    routeType: 'render',
+                    revalidateReason: (0, f.c)({ isRevalidate: ak, isOnDemandRevalidate: ah }),
+                  },
+                  ac,
+                )),
+              b
+            )
+          }
+        }
+      },
+      86439: (a) => {
+        'use strict'
+        a.exports = require('next/dist/shared/lib/no-fallback-error.external')
+      },
+      88285: (a, b, c) => {
+        'use strict'
+        c.d(b, { A: () => d })
+        let d = (0, c(14959).A)('search', [
+          ['path', { d: 'm21 21-4.34-4.34', key: '14j7rj' }],
+          ['circle', { cx: '11', cy: '11', r: '8', key: '4ej97u' }],
+        ])
+      },
+      90550: (a, b, c) => {
+        Promise.resolve().then(c.bind(c, 10554))
+      },
+    }))
+  var b = require('../../webpack-runtime.js')
+  b.C(a)
+  var c = b.X(0, [331, 103, 298, 576, 963, 818], () => b((b.s = 80810)))
+  module.exports = c
+})()

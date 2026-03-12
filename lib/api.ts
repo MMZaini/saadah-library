@@ -203,10 +203,7 @@ export const thaqalaynApi = {
    *
    * This replaces the old pattern of downloading entire volumes sequentially.
    */
-  async findHadithAcrossBooks(
-    bookIds: string[],
-    hadithId: number,
-  ): Promise<Hadith | null> {
+  async findHadithAcrossBooks(bookIds: string[], hadithId: number): Promise<Hadith | null> {
     // Step 1: Check cache for every possible bookId (instant)
     for (const bookId of bookIds) {
       const cached = await findHadithInCache(BASE_URL, bookId, hadithId)

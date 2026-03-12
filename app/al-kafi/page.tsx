@@ -15,7 +15,8 @@ const BookStructureExplorer = lazy(() => import('@/components/AlKafiVolumeStruct
 const AlKafiBookBrowser = lazy(() => import('@/components/AlKafiBookBrowser'))
 
 export default function AlKafiPage() {
-  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } = useNavigation()
+  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } =
+    useNavigation()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const { history, addToHistory, clearHistory } = useSearchShortcuts(searchInputRef)
   const [showHistory, setShowHistory] = useState(false)
@@ -71,7 +72,9 @@ export default function AlKafiPage() {
         try {
           // Route all queries through server API for consistent local index search
           const alKafiVolumes = alKafiApi.getAlKafiVolumes().join(',')
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}&book=${alKafiVolumes}`)
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}&book=${alKafiVolumes}`,
+          )
           const data = await res.json()
           if (!res.ok || data.error) throw new Error(data.error || 'Search failed')
           const results: Hadith[] = data.results
@@ -145,11 +148,16 @@ export default function AlKafiPage() {
               placeholder="Search across all Al-Kāfi volumes… (Ctrl+K)"
               value={searchQuery}
               onChange={(e) => handleSearchInput(e.target.value)}
-              onFocus={() => { if (!searchQuery && history.length > 0) setShowHistory(true) }}
+              onFocus={() => {
+                if (!searchQuery && history.length > 0) setShowHistory(true)
+              }}
               onBlur={() => setTimeout(() => setShowHistory(false), 200)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearchSubmit()
-                if (e.key === 'Escape') { setShowHistory(false); searchInputRef.current?.blur() }
+                if (e.key === 'Escape') {
+                  setShowHistory(false)
+                  searchInputRef.current?.blur()
+                }
               }}
               className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint"
             />

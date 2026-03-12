@@ -10,7 +10,9 @@ export const measureAsyncPerformance = async (_name: string, fn: () => Promise<u
 
 // Debounce utility for search (with cancel support)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type DebouncedFunction<T extends (...args: any[]) => any> = ((...args: Parameters<T>) => void) & {
+export type DebouncedFunction<T extends (...args: any[]) => any> = ((
+  ...args: Parameters<T>
+) => void) & {
   cancel: () => void
 }
 

@@ -79,14 +79,18 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       getSearchState,
       clearNavigationState,
     }),
-    [navigationState, saveScrollPosition, saveSearchState, savePath, restoreScrollPosition, getSearchState, clearNavigationState],
+    [
+      navigationState,
+      saveScrollPosition,
+      saveSearchState,
+      savePath,
+      restoreScrollPosition,
+      getSearchState,
+      clearNavigationState,
+    ],
   )
 
-  return (
-    <NavigationContext.Provider value={value}>
-      {children}
-    </NavigationContext.Provider>
-  )
+  return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>
 }
 
 export function useNavigation() {

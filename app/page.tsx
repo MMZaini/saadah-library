@@ -11,7 +11,8 @@ import { debounce } from '@/lib/performance'
 import { Search, Loader2, Clock } from 'lucide-react'
 
 export default function Page() {
-  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } = useNavigation()
+  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } =
+    useNavigation()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const { history, addToHistory, clearHistory } = useSearchShortcuts(searchInputRef)
   const [showHistory, setShowHistory] = useState(false)
@@ -62,7 +63,9 @@ export default function Page() {
         setIsSearching(true)
         setSearchError(null)
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}`)
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}`,
+          )
           if (!res.ok) throw new Error('Search request failed')
           const data = await res.json()
           if (data.error) throw new Error(data.error)
@@ -129,11 +132,16 @@ export default function Page() {
               placeholder="Search hadith across all books… (Ctrl+K)"
               value={searchQuery}
               onChange={(e) => handleSearchInput(e.target.value)}
-              onFocus={() => { if (!searchQuery && history.length > 0) setShowHistory(true) }}
+              onFocus={() => {
+                if (!searchQuery && history.length > 0) setShowHistory(true)
+              }}
               onBlur={() => setTimeout(() => setShowHistory(false), 200)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearchSubmit()
-                if (e.key === 'Escape') { setShowHistory(false); searchInputRef.current?.blur() }
+                if (e.key === 'Escape') {
+                  setShowHistory(false)
+                  searchInputRef.current?.blur()
+                }
               }}
               className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint"
             />

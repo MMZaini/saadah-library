@@ -1,1 +1,899 @@
-(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[340],{2427:(e,t,s)=>{"use strict";s.r(t),s.d(t,{default:()=>$});var a=s(5155),o=s(2115),r=s(2619),l=s.n(r),n=s(916),i=s(9445),d=s(2740),c=s(6198),u=s(5016),m=s(7812),h=s(7003),x=s(4664),f=s(235),b=s(1047),g=s(7937);function v(e){let{bookmark:t,className:s}=e,{settings:r}=(0,c.t)(),{removeBookmark:i,updateBookmarkNotes:v}=(0,n.T)(),[p,k]=(0,o.useState)(!1),[j,w]=(0,o.useState)(!1),[N,y]=(0,o.useState)(t.notes||"");return(0,a.jsxs)("div",{className:(0,u.cn)("rounded-lg border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2",s),children:[(0,a.jsxs)("div",{className:"mb-3 flex items-start justify-between",children:[(0,a.jsxs)("div",{className:"min-w-0 flex-1",children:[(0,a.jsxs)("div",{className:"mb-1 flex items-center gap-2",children:[(0,a.jsxs)(m.E,{variant:"secondary",children:[t.book,t.volume&&" Vol. ".concat(t.volume)]}),(0,a.jsxs)("span",{className:"text-xs text-foreground-faint",children:["#",t.id]})]}),(0,a.jsx)("h3",{className:"mb-0.5 line-clamp-2 text-sm font-medium text-foreground",children:t.category}),(0,a.jsx)("p",{className:"line-clamp-2 text-xs text-foreground-muted",children:t.chapter})]}),(0,a.jsxs)("div",{className:"ml-3 flex shrink-0 items-center gap-1.5",children:[(0,a.jsx)(h.$,{variant:"ghost",size:"sm",onClick:()=>i(t.bookId,t.id),title:"Remove bookmark",className:"text-bookmark hover:text-bookmark",children:(0,a.jsx)(f.A,{className:"h-3.5 w-3.5 fill-current"})}),t.arabicPreview&&(0,a.jsx)(h.$,{variant:p?"default":"outline",size:"sm",onClick:()=>k(!p),className:"font-arabic text-xs",children:"ع"})]})]}),p&&t.arabicPreview?(0,a.jsx)("div",{className:"rounded-md border border-border bg-surface-2 p-3",children:(0,a.jsx)("div",{className:"hadith-arabic-text font-arabic text-foreground",dir:"rtl",style:{fontSize:"".concat(1.485*r.arabicFontSize,"%")},children:t.arabicPreview})}):(0,a.jsx)("div",{className:"font-mono text-sm leading-relaxed text-foreground",style:{fontSize:"".concat(r.englishFontSize,"%")},children:t.preview}),(0,a.jsxs)("div",{className:"mt-3 rounded-md border border-border bg-background p-3",children:[(0,a.jsxs)("div",{className:"mb-2 flex items-center justify-between",children:[(0,a.jsxs)("span",{className:"flex items-center gap-1.5 text-xs font-medium text-foreground-muted",children:[(0,a.jsx)(b.A,{className:"h-3 w-3"}),"Notes"]}),!j&&(0,a.jsx)("button",{onClick:()=>w(!0),className:"text-xs text-accent transition-colors hover:underline",children:t.notes?"Edit":"Add Note"})]}),j?(0,a.jsxs)("div",{className:"space-y-2",children:[(0,a.jsx)("textarea",{value:N,onChange:e=>y(e.target.value),className:"w-full resize-none rounded-md border border-border bg-surface-1 p-2 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600",rows:3,placeholder:"Add your personal notes about this hadith…",autoFocus:!0}),(0,a.jsxs)("div",{className:"flex gap-2",children:[(0,a.jsx)(h.$,{size:"sm",onClick:()=>{v(t.bookId,t.id,N),w(!1)},children:"Save"}),(0,a.jsx)(h.$,{size:"sm",variant:"outline",onClick:()=>{y(t.notes||""),w(!1)},children:"Cancel"})]})]}):(0,a.jsx)("div",{className:"text-sm text-foreground-muted",children:t.notes?(0,a.jsx)("div",{className:"whitespace-pre-wrap leading-relaxed",children:t.notes}):(0,a.jsx)("div",{className:"italic text-foreground-faint",children:"No notes added yet"})})]}),(0,a.jsx)(x.w,{className:"my-3"}),(0,a.jsxs)("div",{className:"flex items-center justify-between text-xs text-foreground-faint",children:[(0,a.jsxs)("span",{children:["Bookmarked: ",new Date(t.timestamp).toLocaleDateString()]}),(0,a.jsxs)(l(),{href:(()=>{try{let e=(0,d.ei)(t.bookId);if((null==e?void 0:e.bookId)==="Al-Kafi")return"/al-kafi/hadith/".concat(t.id);if(t.bookId.includes("Uyun"))return"/Uyun-akhbar-al-Rida/hadith/".concat(t.id);return"/".concat((0,d.yU)(t.bookId),"/hadith/").concat(t.id)}catch(e){return"/al-kafi/hadith/".concat(t.id)}})(),className:"flex items-center gap-0.5 text-foreground-muted transition-colors hover:text-foreground",children:["View Full Hadith",(0,a.jsx)(g.A,{className:"h-3 w-3"})]})]})]})}var p=s(3962),k=s(5426),j=s(5121);let w=(0,j.A)("trash-2",[["path",{d:"M10 11v6",key:"nco0om"}],["path",{d:"M14 11v6",key:"outv1u"}],["path",{d:"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6",key:"miytrc"}],["path",{d:"M3 6h18",key:"d0wm0j"}],["path",{d:"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",key:"e791ji"}]]);function N(e){let{hadith:t,bookmark:s,showViewChapter:r=!0,className:l,globalNotesVisible:i=!1}=e,{updateBookmarkNotes:d}=(0,n.T)(),[c,u]=(0,o.useState)(!1),[m,f]=(0,o.useState)(s.notes||""),[g,v]=(0,o.useState)(!1);(0,o.useEffect)(()=>{void 0!==i&&v(i)},[i]);let j=async()=>{if(s.notes)try{await navigator.clipboard.writeText(s.notes)}catch(e){console.error("Failed to copy notes:",e)}};return(0,a.jsxs)("div",{className:"space-y-3",children:[(0,a.jsx)(p.A,{hadith:t,showViewChapter:r,className:l,showNotesToggle:!0,notesVisible:g,onToggleNotes:()=>v(!g)}),g&&(0,a.jsxs)("div",{className:"rounded-lg border border-border bg-surface-1 p-4",children:[(0,a.jsxs)("div",{className:"mb-3 flex items-center justify-between",children:[(0,a.jsxs)("span",{className:"flex items-center gap-1.5 text-sm font-medium text-foreground",children:[(0,a.jsx)(b.A,{className:"h-3.5 w-3.5"}),"Personal Notes"]}),(0,a.jsxs)("div",{className:"flex gap-1.5",children:[s.notes&&!c&&(0,a.jsxs)(a.Fragment,{children:[(0,a.jsxs)(h.$,{variant:"ghost",size:"sm",onClick:j,title:"Copy notes",children:[(0,a.jsx)(k.A,{className:"mr-1 h-3 w-3"}),"Copy"]}),(0,a.jsxs)(h.$,{variant:"ghost",size:"sm",onClick:()=>{f(""),d(s.bookId,s.id,""),u(!1)},className:"text-destructive hover:text-destructive",children:[(0,a.jsx)(w,{className:"mr-1 h-3 w-3"}),"Clear"]})]}),!c&&(0,a.jsx)(h.$,{variant:"ghost",size:"sm",onClick:()=>u(!0),children:s.notes?"Edit":"Add Note"})]})]}),c?(0,a.jsxs)("form",{onSubmit:e=>{e.preventDefault(),d(s.bookId,s.id,m),u(!1)},className:"space-y-3",children:[(0,a.jsx)("textarea",{value:m,onChange:e=>f(e.target.value),className:"w-full resize-none rounded-md border border-border bg-background p-3 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600",rows:4,placeholder:"Add your personal notes about this hadith…",autoFocus:!0}),(0,a.jsxs)("div",{className:"flex gap-2",children:[(0,a.jsx)(h.$,{size:"sm",type:"submit",children:"Save"}),(0,a.jsx)(h.$,{size:"sm",variant:"outline",type:"button",onClick:()=>{f(s.notes||""),u(!1)},children:"Cancel"})]})]}):(0,a.jsx)("div",{className:"text-sm text-foreground-muted",children:s.notes?(0,a.jsx)("div",{className:"whitespace-pre-wrap rounded-md border border-border bg-background p-3 leading-relaxed",children:s.notes}):(0,a.jsx)("div",{className:"py-2 italic text-foreground-faint",children:"No notes added yet. Click “Add Note” to start writing your thoughts."})}),(0,a.jsx)(x.w,{className:"my-3"}),(0,a.jsxs)("div",{className:"text-xs text-foreground-faint",children:["Bookmarked:"," ",new Date(s.timestamp).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"})]})]})]})}var y=s(5299);let C=(0,j.A)("upload",[["path",{d:"M12 3v12",key:"1x0j5s"}],["path",{d:"m17 8-5-5-5 5",key:"7q97r8"}],["path",{d:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",key:"ih7n3h"}]]),L=(0,j.A)("refresh-cw",[["path",{d:"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8",key:"v9h5vc"}],["path",{d:"M21 3v5h-5",key:"1q7to0"}],["path",{d:"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16",key:"3uifl3"}],["path",{d:"M8 16H3v5",key:"1cv678"}]]),S=(0,j.A)("download",[["path",{d:"M12 15V3",key:"m9g1x1"}],["path",{d:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",key:"ih7n3h"}],["path",{d:"m7 10 5 5 5-5",key:"brsn70"}]]);var A=s(6651),z=s(4033);let I=(0,j.A)("check",[["path",{d:"M20 6 9 17l-5-5",key:"1gmf2c"}]]),F=[{value:"both",label:"Both"},{value:"hadith",label:"Hadith"},{value:"notes",label:"Notes"}];function $(){var e;let{bookmarks:t,bookmarkCount:s,importBookmarks:r}=(0,n.T)(),[d,c]=(0,o.useState)([]),[g,p]=(0,o.useState)(!1),[k,j]=(0,o.useState)(null),[w,$]=(0,o.useState)(""),[E,T]=(0,o.useState)("both"),[M,P]=(0,o.useState)(!1),[H,B]=(0,o.useState)(!1),[R,V]=(0,o.useState)(null),U=(0,o.useRef)(null),O=(0,o.useRef)(null);(0,o.useEffect)(()=>{function e(e){U.current&&!U.current.contains(e.target)&&P(!1)}return document.addEventListener("mousedown",e),()=>document.removeEventListener("mousedown",e)},[]),(0,o.useEffect)(()=>{if(0===t.length)return void c([]);(async()=>{p(!0),j(null);try{let e=t.map(async e=>{try{if(e.bookId)return await i.C$.getSpecificHadith(e.bookId,e.id);return(await i.C$.searchAllBooks("#".concat(e.id))).results.find(t=>t.id===e.id)||null}catch(e){return null}}),s=(await Promise.all(e)).filter(e=>null!==e);c(s),s.length<t.length&&j("Could not load ".concat(t.length-s.length," bookmark(s). They may no longer exist."))}catch(e){j("Failed to load bookmarks. Please check your connection and try again.")}finally{p(!1)}})()},[t]);let D=t.filter(e=>{var t,s,a,o,r,l,n,i,c,u,m,h,x,f,b,g,v,p,k,j,N,y,C,L;if(!w.trim())return!0;let S=w.toLowerCase(),A=d.find(t=>t.id===e.id);switch(E){case"hadith":if(A)return(null==(s=A.englishText)?void 0:s.toLowerCase().includes(S))||(null==(a=A.arabicText)?void 0:a.toLowerCase().includes(S))||(null==(o=A.category)?void 0:o.toLowerCase().includes(S))||(null==(r=A.chapter)?void 0:r.toLowerCase().includes(S))||(null==(l=A.book)?void 0:l.toLowerCase().includes(S))||(null==(n=A.author)?void 0:n.toLowerCase().includes(S))||(null==(i=A.translator)?void 0:i.toLowerCase().includes(S))||(null==(c=A.majlisiGrading)?void 0:c.toLowerCase().includes(S))||(null==(u=A.mohseniGrading)?void 0:u.toLowerCase().includes(S))||(null==(m=A.behbudiGrading)?void 0:m.toLowerCase().includes(S));return e.preview.toLowerCase().includes(S)||(null==(t=e.arabicPreview)?void 0:t.toLowerCase().includes(S))||e.category.toLowerCase().includes(S)||e.chapter.toLowerCase().includes(S)||e.book.toLowerCase().includes(S);case"notes":return(null==(h=e.notes)?void 0:h.toLowerCase().includes(S))||!1;default:{let t=A?(null==(x=A.englishText)?void 0:x.toLowerCase().includes(S))||(null==(f=A.arabicText)?void 0:f.toLowerCase().includes(S))||(null==(b=A.category)?void 0:b.toLowerCase().includes(S))||(null==(g=A.chapter)?void 0:g.toLowerCase().includes(S))||(null==(v=A.book)?void 0:v.toLowerCase().includes(S))||(null==(p=A.author)?void 0:p.toLowerCase().includes(S))||(null==(k=A.translator)?void 0:k.toLowerCase().includes(S))||(null==(j=A.majlisiGrading)?void 0:j.toLowerCase().includes(S))||(null==(N=A.mohseniGrading)?void 0:N.toLowerCase().includes(S))||(null==(y=A.behbudiGrading)?void 0:y.toLowerCase().includes(S)):e.preview.toLowerCase().includes(S)||(null==(C=e.arabicPreview)?void 0:C.toLowerCase().includes(S))||e.category.toLowerCase().includes(S)||e.chapter.toLowerCase().includes(S)||e.book.toLowerCase().includes(S),s=null==(L=e.notes)?void 0:L.toLowerCase().includes(S);return t||s}}}),G=d.filter(e=>D.some(t=>t.id===e.id));return g?(0,a.jsxs)("div",{className:"mx-auto max-w-5xl px-4 py-8 sm:px-6",children:[(0,a.jsxs)("div",{className:"mb-6 flex items-center gap-3",children:[(0,a.jsx)(f.A,{className:"h-5 w-5 text-bookmark"}),(0,a.jsx)("h1",{className:"text-xl font-bold text-foreground",children:"Bookmarks"})]}),(0,a.jsxs)("div",{className:"flex items-center justify-center py-12",children:[(0,a.jsx)(y.A,{className:"h-6 w-6 animate-spin text-foreground-muted"}),(0,a.jsx)("span",{className:"ml-3 text-sm text-foreground-muted",children:"Loading bookmarks…"})]})]}):(0,a.jsxs)("div",{className:"mx-auto max-w-5xl px-4 py-8 sm:px-6",children:[(0,a.jsxs)("div",{className:"mb-6 flex items-center gap-3",children:[(0,a.jsx)(f.A,{className:"h-5 w-5 text-bookmark"}),(0,a.jsx)("h1",{className:"text-xl font-bold text-foreground",children:"Bookmarks"}),s>0&&(0,a.jsx)(m.E,{variant:"secondary",children:s})]}),(0,a.jsxs)("div",{className:"mb-6 flex flex-wrap gap-2",children:[s>0&&(0,a.jsxs)(h.$,{variant:H?"default":"outline",size:"sm",onClick:()=>B(!H),children:[(0,a.jsx)(b.A,{className:"mr-1.5 h-3.5 w-3.5"}),H?"Hide All Notes":"Show All Notes"]}),(0,a.jsxs)(h.$,{variant:"outline",size:"sm",onClick:()=>{var e;null==(e=O.current)||e.click()},children:[(0,a.jsx)(C,{className:"mr-1.5 h-3.5 w-3.5"}),"Import"]}),(0,a.jsxs)(h.$,{variant:"outline",size:"sm",onClick:()=>window.location.reload(),children:[(0,a.jsx)(L,{className:"mr-1.5 h-3.5 w-3.5"}),"Refresh"]}),s>0&&(0,a.jsxs)(h.$,{variant:"outline",size:"sm",onClick:()=>{try{let e=t.map(e=>({id:e.id,bookId:e.bookId,book:e.book,category:e.category,chapter:e.chapter,volume:e.volume,timestamp:e.timestamp,notes:e.notes||""})),s=JSON.stringify({version:"1.0",bookmarks:e},null,2),a=new Blob([s],{type:"application/json"}),o=URL.createObjectURL(a),r=document.createElement("a");r.href=o,r.download="saadah-bookmarks-".concat(new Date().toISOString().split("T")[0],".json"),document.body.appendChild(r),r.click(),document.body.removeChild(r),URL.revokeObjectURL(o)}catch(e){console.error("Failed to export bookmarks:",e),j("Failed to export bookmarks. Please try again.")}},children:[(0,a.jsx)(S,{className:"mr-1.5 h-3.5 w-3.5"}),"Export"]}),(0,a.jsx)("input",{ref:O,type:"file",accept:".json",onChange:e=>{var t;let s=null==(t=e.target.files)?void 0:t[0];if(!s)return;let a=new FileReader;a.onload=e=>{try{var t;let s=null==(t=e.target)?void 0:t.result,a=JSON.parse(s);if(!a.bookmarks||!Array.isArray(a.bookmarks))throw Error("Invalid bookmark file format");let{imported:o,duplicates:l}=r(a.bookmarks),n="Successfully imported ".concat(o," bookmark").concat(1!==o?"s":"",".");l>0&&(n+=" ".concat(l," duplicate").concat(1!==l?"s":""," were skipped.")),V(n),setTimeout(()=>V(null),5e3)}catch(e){console.error("Failed to import bookmarks:",e),j("Failed to import bookmarks. Please check the file format and try again.")}},a.readAsText(s),e.target.value=""},className:"hidden"})]}),s>0&&(0,a.jsxs)("div",{className:"mb-6 flex flex-col gap-3 sm:flex-row",children:[(0,a.jsxs)("div",{className:"flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5",children:[(0,a.jsx)(A.A,{className:"h-4 w-4 shrink-0 text-foreground-faint"}),(0,a.jsx)("input",{type:"text",value:w,onChange:e=>$(e.target.value),className:"w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint",placeholder:"Search through your bookmarks…"})]}),(0,a.jsxs)("div",{className:"relative min-w-[130px]",ref:U,children:[(0,a.jsxs)("button",{type:"button",onClick:()=>P(!M),className:"flex w-full items-center justify-between rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 text-sm text-foreground transition-colors hover:bg-surface-2",children:[(0,a.jsx)("span",{children:null==(e=F.find(e=>e.value===E))?void 0:e.label}),(0,a.jsx)(z.A,{className:(0,u.cn)("ml-2 h-3.5 w-3.5 text-foreground-muted transition-transform",M&&"rotate-180")})]}),M&&(0,a.jsx)("div",{className:"absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-surface-1 shadow-lg",children:F.map(e=>(0,a.jsxs)("button",{type:"button",onClick:()=>{T(e.value),P(!1)},className:(0,u.cn)("flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors",E===e.value?"bg-accent text-accent-foreground":"text-foreground hover:bg-surface-2"),children:[(0,a.jsx)("span",{children:e.label}),E===e.value&&(0,a.jsx)(I,{className:"h-3.5 w-3.5"})]},e.value))})]}),w.trim()&&(0,a.jsx)("p",{className:"self-center text-xs text-foreground-muted sm:hidden",children:D.length===s?"Showing all ".concat(s," bookmarks"):"Found ".concat(D.length," of ").concat(s)})]}),w.trim()&&(0,a.jsx)("p",{className:"mb-4 hidden text-xs text-foreground-muted sm:block",children:D.length===s?"Showing all ".concat(s," bookmarks"):"Found ".concat(D.length," of ").concat(s," bookmarks")}),R&&(0,a.jsx)("div",{className:"border-accent/30 bg-accent/10 mb-6 rounded-lg border p-3",children:(0,a.jsx)("p",{className:"text-sm text-foreground",children:R})}),k&&(0,a.jsx)("div",{className:"border-destructive/30 bg-destructive/10 mb-6 rounded-lg border p-3",children:(0,a.jsx)("p",{className:"text-sm text-destructive",children:k})}),0===s?(0,a.jsxs)("div",{className:"py-16 text-center",children:[(0,a.jsx)(f.A,{className:"mx-auto mb-3 h-12 w-12 text-foreground-faint"}),(0,a.jsx)("h2",{className:"mb-1 text-lg font-semibold text-foreground",children:"No bookmarks yet"}),(0,a.jsx)("p",{className:"mb-5 text-sm text-foreground-muted",children:"Start bookmarking your favorite hadiths to see them here."}),(0,a.jsx)(h.$,{asChild:!0,children:(0,a.jsx)(l(),{href:"/",children:"Browse Hadiths"})})]}):0===D.length&&w.trim()?(0,a.jsxs)("div",{className:"py-16 text-center",children:[(0,a.jsx)(A.A,{className:"mx-auto mb-3 h-12 w-12 text-foreground-faint"}),(0,a.jsx)("h2",{className:"mb-1 text-lg font-semibold text-foreground",children:"No results found"}),(0,a.jsx)("p",{className:"mb-4 text-sm text-foreground-muted",children:"No bookmarks match your search criteria."}),(0,a.jsx)(h.$,{variant:"ghost",onClick:()=>$(""),children:"Clear search"})]}):(0,a.jsxs)("div",{className:"space-y-6",children:[(0,a.jsxs)("div",{className:"rounded-lg border border-border bg-surface-1 p-4",children:[(0,a.jsxs)("div",{className:"flex items-center justify-between text-sm",children:[(0,a.jsx)("span",{className:"text-foreground-muted",children:"Total bookmarks"}),(0,a.jsx)("span",{className:"font-medium text-foreground",children:s})]}),w.trim()&&(0,a.jsxs)(a.Fragment,{children:[(0,a.jsx)(x.w,{className:"my-2"}),(0,a.jsxs)("div",{className:"flex items-center justify-between text-sm",children:[(0,a.jsx)("span",{className:"text-foreground-muted",children:"Showing results"}),(0,a.jsx)("span",{className:"font-medium text-foreground",children:D.length})]})]})]}),0===G.length&&D.length>0&&(0,a.jsxs)("div",{className:"space-y-4",children:[(0,a.jsx)("h2",{className:"text-base font-semibold text-foreground",children:"Bookmark Previews"}),(0,a.jsx)("p",{className:"text-xs text-foreground-muted",children:"Full content could not be loaded. Here are your bookmark previews:"}),D.map(e=>(0,a.jsx)(v,{bookmark:e},e.bookId+":"+e.id))]}),G.length>0&&(0,a.jsxs)("div",{className:"space-y-5",children:[(0,a.jsx)("h2",{className:"text-base font-semibold text-foreground",children:"Your Bookmarked Hadiths"}),G.map((e,t)=>{let s=D.find(t=>t.id===e.id&&t.bookId===e.bookId);return s?(0,a.jsxs)("div",{className:"relative",children:[(0,a.jsx)("div",{className:"absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground",children:t+1}),(0,a.jsx)("div",{className:"ml-6",children:(0,a.jsx)(N,{hadith:e,bookmark:s,showViewChapter:!1,globalNotesVisible:H})})]},e.bookId+":"+e.id):null})]})]})]})}},6651:(e,t,s)=>{"use strict";s.d(t,{A:()=>a});let a=(0,s(5121).A)("search",[["path",{d:"m21 21-4.34-4.34",key:"14j7rj"}],["circle",{cx:"11",cy:"11",r:"8",key:"4ej97u"}]])},9410:(e,t,s)=>{Promise.resolve().then(s.bind(s,2427))}},e=>{e.O(0,[307,346,619,952,579,962,441,255,358],()=>e(e.s=9410)),_N_E=e.O()}]);
+;(self.webpackChunk_N_E = self.webpackChunk_N_E || []).push([
+  [340],
+  {
+    2427: (e, t, s) => {
+      'use strict'
+      ;(s.r(t), s.d(t, { default: () => $ }))
+      var a = s(5155),
+        o = s(2115),
+        r = s(2619),
+        l = s.n(r),
+        n = s(916),
+        i = s(9445),
+        d = s(2740),
+        c = s(6198),
+        u = s(5016),
+        m = s(7812),
+        h = s(7003),
+        x = s(4664),
+        f = s(235),
+        b = s(1047),
+        g = s(7937)
+      function v(e) {
+        let { bookmark: t, className: s } = e,
+          { settings: r } = (0, c.t)(),
+          { removeBookmark: i, updateBookmarkNotes: v } = (0, n.T)(),
+          [p, k] = (0, o.useState)(!1),
+          [j, w] = (0, o.useState)(!1),
+          [N, y] = (0, o.useState)(t.notes || '')
+        return (0, a.jsxs)('div', {
+          className: (0, u.cn)(
+            'rounded-lg border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2',
+            s,
+          ),
+          children: [
+            (0, a.jsxs)('div', {
+              className: 'mb-3 flex items-start justify-between',
+              children: [
+                (0, a.jsxs)('div', {
+                  className: 'min-w-0 flex-1',
+                  children: [
+                    (0, a.jsxs)('div', {
+                      className: 'mb-1 flex items-center gap-2',
+                      children: [
+                        (0, a.jsxs)(m.E, {
+                          variant: 'secondary',
+                          children: [t.book, t.volume && ' Vol. '.concat(t.volume)],
+                        }),
+                        (0, a.jsxs)('span', {
+                          className: 'text-xs text-foreground-faint',
+                          children: ['#', t.id],
+                        }),
+                      ],
+                    }),
+                    (0, a.jsx)('h3', {
+                      className: 'mb-0.5 line-clamp-2 text-sm font-medium text-foreground',
+                      children: t.category,
+                    }),
+                    (0, a.jsx)('p', {
+                      className: 'line-clamp-2 text-xs text-foreground-muted',
+                      children: t.chapter,
+                    }),
+                  ],
+                }),
+                (0, a.jsxs)('div', {
+                  className: 'ml-3 flex shrink-0 items-center gap-1.5',
+                  children: [
+                    (0, a.jsx)(h.$, {
+                      variant: 'ghost',
+                      size: 'sm',
+                      onClick: () => i(t.bookId, t.id),
+                      title: 'Remove bookmark',
+                      className: 'text-bookmark hover:text-bookmark',
+                      children: (0, a.jsx)(f.A, { className: 'h-3.5 w-3.5 fill-current' }),
+                    }),
+                    t.arabicPreview &&
+                      (0, a.jsx)(h.$, {
+                        variant: p ? 'default' : 'outline',
+                        size: 'sm',
+                        onClick: () => k(!p),
+                        className: 'font-arabic text-xs',
+                        children: 'ع',
+                      }),
+                  ],
+                }),
+              ],
+            }),
+            p && t.arabicPreview
+              ? (0, a.jsx)('div', {
+                  className: 'rounded-md border border-border bg-surface-2 p-3',
+                  children: (0, a.jsx)('div', {
+                    className: 'hadith-arabic-text font-arabic text-foreground',
+                    dir: 'rtl',
+                    style: { fontSize: ''.concat(1.485 * r.arabicFontSize, '%') },
+                    children: t.arabicPreview,
+                  }),
+                })
+              : (0, a.jsx)('div', {
+                  className: 'font-mono text-sm leading-relaxed text-foreground',
+                  style: { fontSize: ''.concat(r.englishFontSize, '%') },
+                  children: t.preview,
+                }),
+            (0, a.jsxs)('div', {
+              className: 'mt-3 rounded-md border border-border bg-background p-3',
+              children: [
+                (0, a.jsxs)('div', {
+                  className: 'mb-2 flex items-center justify-between',
+                  children: [
+                    (0, a.jsxs)('span', {
+                      className:
+                        'flex items-center gap-1.5 text-xs font-medium text-foreground-muted',
+                      children: [(0, a.jsx)(b.A, { className: 'h-3 w-3' }), 'Notes'],
+                    }),
+                    !j &&
+                      (0, a.jsx)('button', {
+                        onClick: () => w(!0),
+                        className: 'text-xs text-accent transition-colors hover:underline',
+                        children: t.notes ? 'Edit' : 'Add Note',
+                      }),
+                  ],
+                }),
+                j
+                  ? (0, a.jsxs)('div', {
+                      className: 'space-y-2',
+                      children: [
+                        (0, a.jsx)('textarea', {
+                          value: N,
+                          onChange: (e) => y(e.target.value),
+                          className:
+                            'w-full resize-none rounded-md border border-border bg-surface-1 p-2 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600',
+                          rows: 3,
+                          placeholder: 'Add your personal notes about this hadith…',
+                          autoFocus: !0,
+                        }),
+                        (0, a.jsxs)('div', {
+                          className: 'flex gap-2',
+                          children: [
+                            (0, a.jsx)(h.$, {
+                              size: 'sm',
+                              onClick: () => {
+                                ;(v(t.bookId, t.id, N), w(!1))
+                              },
+                              children: 'Save',
+                            }),
+                            (0, a.jsx)(h.$, {
+                              size: 'sm',
+                              variant: 'outline',
+                              onClick: () => {
+                                ;(y(t.notes || ''), w(!1))
+                              },
+                              children: 'Cancel',
+                            }),
+                          ],
+                        }),
+                      ],
+                    })
+                  : (0, a.jsx)('div', {
+                      className: 'text-sm text-foreground-muted',
+                      children: t.notes
+                        ? (0, a.jsx)('div', {
+                            className: 'whitespace-pre-wrap leading-relaxed',
+                            children: t.notes,
+                          })
+                        : (0, a.jsx)('div', {
+                            className: 'italic text-foreground-faint',
+                            children: 'No notes added yet',
+                          }),
+                    }),
+              ],
+            }),
+            (0, a.jsx)(x.w, { className: 'my-3' }),
+            (0, a.jsxs)('div', {
+              className: 'flex items-center justify-between text-xs text-foreground-faint',
+              children: [
+                (0, a.jsxs)('span', {
+                  children: ['Bookmarked: ', new Date(t.timestamp).toLocaleDateString()],
+                }),
+                (0, a.jsxs)(l(), {
+                  href: (() => {
+                    try {
+                      let e = (0, d.ei)(t.bookId)
+                      if ((null == e ? void 0 : e.bookId) === 'Al-Kafi')
+                        return '/al-kafi/hadith/'.concat(t.id)
+                      if (t.bookId.includes('Uyun'))
+                        return '/Uyun-akhbar-al-Rida/hadith/'.concat(t.id)
+                      return '/'.concat((0, d.yU)(t.bookId), '/hadith/').concat(t.id)
+                    } catch (e) {
+                      return '/al-kafi/hadith/'.concat(t.id)
+                    }
+                  })(),
+                  className:
+                    'flex items-center gap-0.5 text-foreground-muted transition-colors hover:text-foreground',
+                  children: ['View Full Hadith', (0, a.jsx)(g.A, { className: 'h-3 w-3' })],
+                }),
+              ],
+            }),
+          ],
+        })
+      }
+      var p = s(3962),
+        k = s(5426),
+        j = s(5121)
+      let w = (0, j.A)('trash-2', [
+        ['path', { d: 'M10 11v6', key: 'nco0om' }],
+        ['path', { d: 'M14 11v6', key: 'outv1u' }],
+        ['path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6', key: 'miytrc' }],
+        ['path', { d: 'M3 6h18', key: 'd0wm0j' }],
+        ['path', { d: 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', key: 'e791ji' }],
+      ])
+      function N(e) {
+        let {
+            hadith: t,
+            bookmark: s,
+            showViewChapter: r = !0,
+            className: l,
+            globalNotesVisible: i = !1,
+          } = e,
+          { updateBookmarkNotes: d } = (0, n.T)(),
+          [c, u] = (0, o.useState)(!1),
+          [m, f] = (0, o.useState)(s.notes || ''),
+          [g, v] = (0, o.useState)(!1)
+        ;(0, o.useEffect)(() => {
+          void 0 !== i && v(i)
+        }, [i])
+        let j = async () => {
+          if (s.notes)
+            try {
+              await navigator.clipboard.writeText(s.notes)
+            } catch (e) {
+              console.error('Failed to copy notes:', e)
+            }
+        }
+        return (0, a.jsxs)('div', {
+          className: 'space-y-3',
+          children: [
+            (0, a.jsx)(p.A, {
+              hadith: t,
+              showViewChapter: r,
+              className: l,
+              showNotesToggle: !0,
+              notesVisible: g,
+              onToggleNotes: () => v(!g),
+            }),
+            g &&
+              (0, a.jsxs)('div', {
+                className: 'rounded-lg border border-border bg-surface-1 p-4',
+                children: [
+                  (0, a.jsxs)('div', {
+                    className: 'mb-3 flex items-center justify-between',
+                    children: [
+                      (0, a.jsxs)('span', {
+                        className: 'flex items-center gap-1.5 text-sm font-medium text-foreground',
+                        children: [(0, a.jsx)(b.A, { className: 'h-3.5 w-3.5' }), 'Personal Notes'],
+                      }),
+                      (0, a.jsxs)('div', {
+                        className: 'flex gap-1.5',
+                        children: [
+                          s.notes &&
+                            !c &&
+                            (0, a.jsxs)(a.Fragment, {
+                              children: [
+                                (0, a.jsxs)(h.$, {
+                                  variant: 'ghost',
+                                  size: 'sm',
+                                  onClick: j,
+                                  title: 'Copy notes',
+                                  children: [
+                                    (0, a.jsx)(k.A, { className: 'mr-1 h-3 w-3' }),
+                                    'Copy',
+                                  ],
+                                }),
+                                (0, a.jsxs)(h.$, {
+                                  variant: 'ghost',
+                                  size: 'sm',
+                                  onClick: () => {
+                                    ;(f(''), d(s.bookId, s.id, ''), u(!1))
+                                  },
+                                  className: 'text-destructive hover:text-destructive',
+                                  children: [(0, a.jsx)(w, { className: 'mr-1 h-3 w-3' }), 'Clear'],
+                                }),
+                              ],
+                            }),
+                          !c &&
+                            (0, a.jsx)(h.$, {
+                              variant: 'ghost',
+                              size: 'sm',
+                              onClick: () => u(!0),
+                              children: s.notes ? 'Edit' : 'Add Note',
+                            }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  c
+                    ? (0, a.jsxs)('form', {
+                        onSubmit: (e) => {
+                          ;(e.preventDefault(), d(s.bookId, s.id, m), u(!1))
+                        },
+                        className: 'space-y-3',
+                        children: [
+                          (0, a.jsx)('textarea', {
+                            value: m,
+                            onChange: (e) => f(e.target.value),
+                            className:
+                              'w-full resize-none rounded-md border border-border bg-background p-3 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600',
+                            rows: 4,
+                            placeholder: 'Add your personal notes about this hadith…',
+                            autoFocus: !0,
+                          }),
+                          (0, a.jsxs)('div', {
+                            className: 'flex gap-2',
+                            children: [
+                              (0, a.jsx)(h.$, { size: 'sm', type: 'submit', children: 'Save' }),
+                              (0, a.jsx)(h.$, {
+                                size: 'sm',
+                                variant: 'outline',
+                                type: 'button',
+                                onClick: () => {
+                                  ;(f(s.notes || ''), u(!1))
+                                },
+                                children: 'Cancel',
+                              }),
+                            ],
+                          }),
+                        ],
+                      })
+                    : (0, a.jsx)('div', {
+                        className: 'text-sm text-foreground-muted',
+                        children: s.notes
+                          ? (0, a.jsx)('div', {
+                              className:
+                                'whitespace-pre-wrap rounded-md border border-border bg-background p-3 leading-relaxed',
+                              children: s.notes,
+                            })
+                          : (0, a.jsx)('div', {
+                              className: 'py-2 italic text-foreground-faint',
+                              children:
+                                'No notes added yet. Click “Add Note” to start writing your thoughts.',
+                            }),
+                      }),
+                  (0, a.jsx)(x.w, { className: 'my-3' }),
+                  (0, a.jsxs)('div', {
+                    className: 'text-xs text-foreground-faint',
+                    children: [
+                      'Bookmarked:',
+                      ' ',
+                      new Date(s.timestamp).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+          ],
+        })
+      }
+      var y = s(5299)
+      let C = (0, j.A)('upload', [
+          ['path', { d: 'M12 3v12', key: '1x0j5s' }],
+          ['path', { d: 'm17 8-5-5-5 5', key: '7q97r8' }],
+          ['path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', key: 'ih7n3h' }],
+        ]),
+        L = (0, j.A)('refresh-cw', [
+          ['path', { d: 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8', key: 'v9h5vc' }],
+          ['path', { d: 'M21 3v5h-5', key: '1q7to0' }],
+          ['path', { d: 'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16', key: '3uifl3' }],
+          ['path', { d: 'M8 16H3v5', key: '1cv678' }],
+        ]),
+        S = (0, j.A)('download', [
+          ['path', { d: 'M12 15V3', key: 'm9g1x1' }],
+          ['path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', key: 'ih7n3h' }],
+          ['path', { d: 'm7 10 5 5 5-5', key: 'brsn70' }],
+        ])
+      var A = s(6651),
+        z = s(4033)
+      let I = (0, j.A)('check', [['path', { d: 'M20 6 9 17l-5-5', key: '1gmf2c' }]]),
+        F = [
+          { value: 'both', label: 'Both' },
+          { value: 'hadith', label: 'Hadith' },
+          { value: 'notes', label: 'Notes' },
+        ]
+      function $() {
+        var e
+        let { bookmarks: t, bookmarkCount: s, importBookmarks: r } = (0, n.T)(),
+          [d, c] = (0, o.useState)([]),
+          [g, p] = (0, o.useState)(!1),
+          [k, j] = (0, o.useState)(null),
+          [w, $] = (0, o.useState)(''),
+          [E, T] = (0, o.useState)('both'),
+          [M, P] = (0, o.useState)(!1),
+          [H, B] = (0, o.useState)(!1),
+          [R, V] = (0, o.useState)(null),
+          U = (0, o.useRef)(null),
+          O = (0, o.useRef)(null)
+        ;((0, o.useEffect)(() => {
+          function e(e) {
+            U.current && !U.current.contains(e.target) && P(!1)
+          }
+          return (
+            document.addEventListener('mousedown', e),
+            () => document.removeEventListener('mousedown', e)
+          )
+        }, []),
+          (0, o.useEffect)(() => {
+            if (0 === t.length) return void c([])
+            ;(async () => {
+              ;(p(!0), j(null))
+              try {
+                let e = t.map(async (e) => {
+                    try {
+                      if (e.bookId) return await i.C$.getSpecificHadith(e.bookId, e.id)
+                      return (
+                        (await i.C$.searchAllBooks('#'.concat(e.id))).results.find(
+                          (t) => t.id === e.id,
+                        ) || null
+                      )
+                    } catch (e) {
+                      return null
+                    }
+                  }),
+                  s = (await Promise.all(e)).filter((e) => null !== e)
+                ;(c(s),
+                  s.length < t.length &&
+                    j(
+                      'Could not load '.concat(
+                        t.length - s.length,
+                        ' bookmark(s). They may no longer exist.',
+                      ),
+                    ))
+              } catch (e) {
+                j('Failed to load bookmarks. Please check your connection and try again.')
+              } finally {
+                p(!1)
+              }
+            })()
+          }, [t]))
+        let D = t.filter((e) => {
+            var t, s, a, o, r, l, n, i, c, u, m, h, x, f, b, g, v, p, k, j, N, y, C, L
+            if (!w.trim()) return !0
+            let S = w.toLowerCase(),
+              A = d.find((t) => t.id === e.id)
+            switch (E) {
+              case 'hadith':
+                if (A)
+                  return (
+                    (null == (s = A.englishText) ? void 0 : s.toLowerCase().includes(S)) ||
+                    (null == (a = A.arabicText) ? void 0 : a.toLowerCase().includes(S)) ||
+                    (null == (o = A.category) ? void 0 : o.toLowerCase().includes(S)) ||
+                    (null == (r = A.chapter) ? void 0 : r.toLowerCase().includes(S)) ||
+                    (null == (l = A.book) ? void 0 : l.toLowerCase().includes(S)) ||
+                    (null == (n = A.author) ? void 0 : n.toLowerCase().includes(S)) ||
+                    (null == (i = A.translator) ? void 0 : i.toLowerCase().includes(S)) ||
+                    (null == (c = A.majlisiGrading) ? void 0 : c.toLowerCase().includes(S)) ||
+                    (null == (u = A.mohseniGrading) ? void 0 : u.toLowerCase().includes(S)) ||
+                    (null == (m = A.behbudiGrading) ? void 0 : m.toLowerCase().includes(S))
+                  )
+                return (
+                  e.preview.toLowerCase().includes(S) ||
+                  (null == (t = e.arabicPreview) ? void 0 : t.toLowerCase().includes(S)) ||
+                  e.category.toLowerCase().includes(S) ||
+                  e.chapter.toLowerCase().includes(S) ||
+                  e.book.toLowerCase().includes(S)
+                )
+              case 'notes':
+                return (null == (h = e.notes) ? void 0 : h.toLowerCase().includes(S)) || !1
+              default: {
+                let t = A
+                    ? (null == (x = A.englishText) ? void 0 : x.toLowerCase().includes(S)) ||
+                      (null == (f = A.arabicText) ? void 0 : f.toLowerCase().includes(S)) ||
+                      (null == (b = A.category) ? void 0 : b.toLowerCase().includes(S)) ||
+                      (null == (g = A.chapter) ? void 0 : g.toLowerCase().includes(S)) ||
+                      (null == (v = A.book) ? void 0 : v.toLowerCase().includes(S)) ||
+                      (null == (p = A.author) ? void 0 : p.toLowerCase().includes(S)) ||
+                      (null == (k = A.translator) ? void 0 : k.toLowerCase().includes(S)) ||
+                      (null == (j = A.majlisiGrading) ? void 0 : j.toLowerCase().includes(S)) ||
+                      (null == (N = A.mohseniGrading) ? void 0 : N.toLowerCase().includes(S)) ||
+                      (null == (y = A.behbudiGrading) ? void 0 : y.toLowerCase().includes(S))
+                    : e.preview.toLowerCase().includes(S) ||
+                      (null == (C = e.arabicPreview) ? void 0 : C.toLowerCase().includes(S)) ||
+                      e.category.toLowerCase().includes(S) ||
+                      e.chapter.toLowerCase().includes(S) ||
+                      e.book.toLowerCase().includes(S),
+                  s = null == (L = e.notes) ? void 0 : L.toLowerCase().includes(S)
+                return t || s
+              }
+            }
+          }),
+          G = d.filter((e) => D.some((t) => t.id === e.id))
+        return g
+          ? (0, a.jsxs)('div', {
+              className: 'mx-auto max-w-5xl px-4 py-8 sm:px-6',
+              children: [
+                (0, a.jsxs)('div', {
+                  className: 'mb-6 flex items-center gap-3',
+                  children: [
+                    (0, a.jsx)(f.A, { className: 'h-5 w-5 text-bookmark' }),
+                    (0, a.jsx)('h1', {
+                      className: 'text-xl font-bold text-foreground',
+                      children: 'Bookmarks',
+                    }),
+                  ],
+                }),
+                (0, a.jsxs)('div', {
+                  className: 'flex items-center justify-center py-12',
+                  children: [
+                    (0, a.jsx)(y.A, { className: 'h-6 w-6 animate-spin text-foreground-muted' }),
+                    (0, a.jsx)('span', {
+                      className: 'ml-3 text-sm text-foreground-muted',
+                      children: 'Loading bookmarks…',
+                    }),
+                  ],
+                }),
+              ],
+            })
+          : (0, a.jsxs)('div', {
+              className: 'mx-auto max-w-5xl px-4 py-8 sm:px-6',
+              children: [
+                (0, a.jsxs)('div', {
+                  className: 'mb-6 flex items-center gap-3',
+                  children: [
+                    (0, a.jsx)(f.A, { className: 'h-5 w-5 text-bookmark' }),
+                    (0, a.jsx)('h1', {
+                      className: 'text-xl font-bold text-foreground',
+                      children: 'Bookmarks',
+                    }),
+                    s > 0 && (0, a.jsx)(m.E, { variant: 'secondary', children: s }),
+                  ],
+                }),
+                (0, a.jsxs)('div', {
+                  className: 'mb-6 flex flex-wrap gap-2',
+                  children: [
+                    s > 0 &&
+                      (0, a.jsxs)(h.$, {
+                        variant: H ? 'default' : 'outline',
+                        size: 'sm',
+                        onClick: () => B(!H),
+                        children: [
+                          (0, a.jsx)(b.A, { className: 'mr-1.5 h-3.5 w-3.5' }),
+                          H ? 'Hide All Notes' : 'Show All Notes',
+                        ],
+                      }),
+                    (0, a.jsxs)(h.$, {
+                      variant: 'outline',
+                      size: 'sm',
+                      onClick: () => {
+                        var e
+                        null == (e = O.current) || e.click()
+                      },
+                      children: [(0, a.jsx)(C, { className: 'mr-1.5 h-3.5 w-3.5' }), 'Import'],
+                    }),
+                    (0, a.jsxs)(h.$, {
+                      variant: 'outline',
+                      size: 'sm',
+                      onClick: () => window.location.reload(),
+                      children: [(0, a.jsx)(L, { className: 'mr-1.5 h-3.5 w-3.5' }), 'Refresh'],
+                    }),
+                    s > 0 &&
+                      (0, a.jsxs)(h.$, {
+                        variant: 'outline',
+                        size: 'sm',
+                        onClick: () => {
+                          try {
+                            let e = t.map((e) => ({
+                                id: e.id,
+                                bookId: e.bookId,
+                                book: e.book,
+                                category: e.category,
+                                chapter: e.chapter,
+                                volume: e.volume,
+                                timestamp: e.timestamp,
+                                notes: e.notes || '',
+                              })),
+                              s = JSON.stringify({ version: '1.0', bookmarks: e }, null, 2),
+                              a = new Blob([s], { type: 'application/json' }),
+                              o = URL.createObjectURL(a),
+                              r = document.createElement('a')
+                            ;((r.href = o),
+                              (r.download = 'saadah-bookmarks-'.concat(
+                                new Date().toISOString().split('T')[0],
+                                '.json',
+                              )),
+                              document.body.appendChild(r),
+                              r.click(),
+                              document.body.removeChild(r),
+                              URL.revokeObjectURL(o))
+                          } catch (e) {
+                            ;(console.error('Failed to export bookmarks:', e),
+                              j('Failed to export bookmarks. Please try again.'))
+                          }
+                        },
+                        children: [(0, a.jsx)(S, { className: 'mr-1.5 h-3.5 w-3.5' }), 'Export'],
+                      }),
+                    (0, a.jsx)('input', {
+                      ref: O,
+                      type: 'file',
+                      accept: '.json',
+                      onChange: (e) => {
+                        var t
+                        let s = null == (t = e.target.files) ? void 0 : t[0]
+                        if (!s) return
+                        let a = new FileReader()
+                        ;((a.onload = (e) => {
+                          try {
+                            var t
+                            let s = null == (t = e.target) ? void 0 : t.result,
+                              a = JSON.parse(s)
+                            if (!a.bookmarks || !Array.isArray(a.bookmarks))
+                              throw Error('Invalid bookmark file format')
+                            let { imported: o, duplicates: l } = r(a.bookmarks),
+                              n = 'Successfully imported '
+                                .concat(o, ' bookmark')
+                                .concat(1 !== o ? 's' : '', '.')
+                            ;(l > 0 &&
+                              (n += ' '
+                                .concat(l, ' duplicate')
+                                .concat(1 !== l ? 's' : '', ' were skipped.')),
+                              V(n),
+                              setTimeout(() => V(null), 5e3))
+                          } catch (e) {
+                            ;(console.error('Failed to import bookmarks:', e),
+                              j(
+                                'Failed to import bookmarks. Please check the file format and try again.',
+                              ))
+                          }
+                        }),
+                          a.readAsText(s),
+                          (e.target.value = ''))
+                      },
+                      className: 'hidden',
+                    }),
+                  ],
+                }),
+                s > 0 &&
+                  (0, a.jsxs)('div', {
+                    className: 'mb-6 flex flex-col gap-3 sm:flex-row',
+                    children: [
+                      (0, a.jsxs)('div', {
+                        className:
+                          'flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5',
+                        children: [
+                          (0, a.jsx)(A.A, { className: 'h-4 w-4 shrink-0 text-foreground-faint' }),
+                          (0, a.jsx)('input', {
+                            type: 'text',
+                            value: w,
+                            onChange: (e) => $(e.target.value),
+                            className:
+                              'w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint',
+                            placeholder: 'Search through your bookmarks…',
+                          }),
+                        ],
+                      }),
+                      (0, a.jsxs)('div', {
+                        className: 'relative min-w-[130px]',
+                        ref: U,
+                        children: [
+                          (0, a.jsxs)('button', {
+                            type: 'button',
+                            onClick: () => P(!M),
+                            className:
+                              'flex w-full items-center justify-between rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 text-sm text-foreground transition-colors hover:bg-surface-2',
+                            children: [
+                              (0, a.jsx)('span', {
+                                children:
+                                  null == (e = F.find((e) => e.value === E)) ? void 0 : e.label,
+                              }),
+                              (0, a.jsx)(z.A, {
+                                className: (0, u.cn)(
+                                  'ml-2 h-3.5 w-3.5 text-foreground-muted transition-transform',
+                                  M && 'rotate-180',
+                                ),
+                              }),
+                            ],
+                          }),
+                          M &&
+                            (0, a.jsx)('div', {
+                              className:
+                                'absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-surface-1 shadow-lg',
+                              children: F.map((e) =>
+                                (0, a.jsxs)(
+                                  'button',
+                                  {
+                                    type: 'button',
+                                    onClick: () => {
+                                      ;(T(e.value), P(!1))
+                                    },
+                                    className: (0, u.cn)(
+                                      'flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors',
+                                      E === e.value
+                                        ? 'bg-accent text-accent-foreground'
+                                        : 'text-foreground hover:bg-surface-2',
+                                    ),
+                                    children: [
+                                      (0, a.jsx)('span', { children: e.label }),
+                                      E === e.value && (0, a.jsx)(I, { className: 'h-3.5 w-3.5' }),
+                                    ],
+                                  },
+                                  e.value,
+                                ),
+                              ),
+                            }),
+                        ],
+                      }),
+                      w.trim() &&
+                        (0, a.jsx)('p', {
+                          className: 'self-center text-xs text-foreground-muted sm:hidden',
+                          children:
+                            D.length === s
+                              ? 'Showing all '.concat(s, ' bookmarks')
+                              : 'Found '.concat(D.length, ' of ').concat(s),
+                        }),
+                    ],
+                  }),
+                w.trim() &&
+                  (0, a.jsx)('p', {
+                    className: 'mb-4 hidden text-xs text-foreground-muted sm:block',
+                    children:
+                      D.length === s
+                        ? 'Showing all '.concat(s, ' bookmarks')
+                        : 'Found '.concat(D.length, ' of ').concat(s, ' bookmarks'),
+                  }),
+                R &&
+                  (0, a.jsx)('div', {
+                    className: 'border-accent/30 bg-accent/10 mb-6 rounded-lg border p-3',
+                    children: (0, a.jsx)('p', {
+                      className: 'text-sm text-foreground',
+                      children: R,
+                    }),
+                  }),
+                k &&
+                  (0, a.jsx)('div', {
+                    className: 'border-destructive/30 bg-destructive/10 mb-6 rounded-lg border p-3',
+                    children: (0, a.jsx)('p', {
+                      className: 'text-sm text-destructive',
+                      children: k,
+                    }),
+                  }),
+                0 === s
+                  ? (0, a.jsxs)('div', {
+                      className: 'py-16 text-center',
+                      children: [
+                        (0, a.jsx)(f.A, {
+                          className: 'mx-auto mb-3 h-12 w-12 text-foreground-faint',
+                        }),
+                        (0, a.jsx)('h2', {
+                          className: 'mb-1 text-lg font-semibold text-foreground',
+                          children: 'No bookmarks yet',
+                        }),
+                        (0, a.jsx)('p', {
+                          className: 'mb-5 text-sm text-foreground-muted',
+                          children: 'Start bookmarking your favorite hadiths to see them here.',
+                        }),
+                        (0, a.jsx)(h.$, {
+                          asChild: !0,
+                          children: (0, a.jsx)(l(), { href: '/', children: 'Browse Hadiths' }),
+                        }),
+                      ],
+                    })
+                  : 0 === D.length && w.trim()
+                    ? (0, a.jsxs)('div', {
+                        className: 'py-16 text-center',
+                        children: [
+                          (0, a.jsx)(A.A, {
+                            className: 'mx-auto mb-3 h-12 w-12 text-foreground-faint',
+                          }),
+                          (0, a.jsx)('h2', {
+                            className: 'mb-1 text-lg font-semibold text-foreground',
+                            children: 'No results found',
+                          }),
+                          (0, a.jsx)('p', {
+                            className: 'mb-4 text-sm text-foreground-muted',
+                            children: 'No bookmarks match your search criteria.',
+                          }),
+                          (0, a.jsx)(h.$, {
+                            variant: 'ghost',
+                            onClick: () => $(''),
+                            children: 'Clear search',
+                          }),
+                        ],
+                      })
+                    : (0, a.jsxs)('div', {
+                        className: 'space-y-6',
+                        children: [
+                          (0, a.jsxs)('div', {
+                            className: 'rounded-lg border border-border bg-surface-1 p-4',
+                            children: [
+                              (0, a.jsxs)('div', {
+                                className: 'flex items-center justify-between text-sm',
+                                children: [
+                                  (0, a.jsx)('span', {
+                                    className: 'text-foreground-muted',
+                                    children: 'Total bookmarks',
+                                  }),
+                                  (0, a.jsx)('span', {
+                                    className: 'font-medium text-foreground',
+                                    children: s,
+                                  }),
+                                ],
+                              }),
+                              w.trim() &&
+                                (0, a.jsxs)(a.Fragment, {
+                                  children: [
+                                    (0, a.jsx)(x.w, { className: 'my-2' }),
+                                    (0, a.jsxs)('div', {
+                                      className: 'flex items-center justify-between text-sm',
+                                      children: [
+                                        (0, a.jsx)('span', {
+                                          className: 'text-foreground-muted',
+                                          children: 'Showing results',
+                                        }),
+                                        (0, a.jsx)('span', {
+                                          className: 'font-medium text-foreground',
+                                          children: D.length,
+                                        }),
+                                      ],
+                                    }),
+                                  ],
+                                }),
+                            ],
+                          }),
+                          0 === G.length &&
+                            D.length > 0 &&
+                            (0, a.jsxs)('div', {
+                              className: 'space-y-4',
+                              children: [
+                                (0, a.jsx)('h2', {
+                                  className: 'text-base font-semibold text-foreground',
+                                  children: 'Bookmark Previews',
+                                }),
+                                (0, a.jsx)('p', {
+                                  className: 'text-xs text-foreground-muted',
+                                  children:
+                                    'Full content could not be loaded. Here are your bookmark previews:',
+                                }),
+                                D.map((e) => (0, a.jsx)(v, { bookmark: e }, e.bookId + ':' + e.id)),
+                              ],
+                            }),
+                          G.length > 0 &&
+                            (0, a.jsxs)('div', {
+                              className: 'space-y-5',
+                              children: [
+                                (0, a.jsx)('h2', {
+                                  className: 'text-base font-semibold text-foreground',
+                                  children: 'Your Bookmarked Hadiths',
+                                }),
+                                G.map((e, t) => {
+                                  let s = D.find((t) => t.id === e.id && t.bookId === e.bookId)
+                                  return s
+                                    ? (0, a.jsxs)(
+                                        'div',
+                                        {
+                                          className: 'relative',
+                                          children: [
+                                            (0, a.jsx)('div', {
+                                              className:
+                                                'absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground',
+                                              children: t + 1,
+                                            }),
+                                            (0, a.jsx)('div', {
+                                              className: 'ml-6',
+                                              children: (0, a.jsx)(N, {
+                                                hadith: e,
+                                                bookmark: s,
+                                                showViewChapter: !1,
+                                                globalNotesVisible: H,
+                                              }),
+                                            }),
+                                          ],
+                                        },
+                                        e.bookId + ':' + e.id,
+                                      )
+                                    : null
+                                }),
+                              ],
+                            }),
+                        ],
+                      }),
+              ],
+            })
+      }
+    },
+    6651: (e, t, s) => {
+      'use strict'
+      s.d(t, { A: () => a })
+      let a = (0, s(5121).A)('search', [
+        ['path', { d: 'm21 21-4.34-4.34', key: '14j7rj' }],
+        ['circle', { cx: '11', cy: '11', r: '8', key: '4ej97u' }],
+      ])
+    },
+    9410: (e, t, s) => {
+      Promise.resolve().then(s.bind(s, 2427))
+    },
+  },
+  (e) => {
+    ;(e.O(0, [307, 346, 619, 952, 579, 962, 441, 255, 358], () => e((e.s = 9410))), (_N_E = e.O()))
+  },
+])

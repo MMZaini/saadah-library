@@ -460,10 +460,7 @@ export interface HighlightSegment {
   highlight: boolean
 }
 
-export function getHighlightSegments(
-  text: string,
-  query: string,
-): HighlightSegment[] {
+export function getHighlightSegments(text: string, query: string): HighlightSegment[] {
   if (!text || !query?.trim()) return [{ text, highlight: false }]
 
   const trimmed = query.trim()
@@ -485,10 +482,7 @@ function highlightEnglishSegments(text: string, query: string): HighlightSegment
   if (words.length === 0) return [{ text, highlight: false }]
 
   // Try full phrase first, then individual words
-  const patterns = [
-    words.join('\\s+'),
-    ...words.filter((w) => w.length >= 2),
-  ]
+  const patterns = [words.join('\\s+'), ...words.filter((w) => w.length >= 2)]
   const regex = new RegExp(`(${patterns.join('|')})`, 'gi')
 
   return splitByRegex(text, regex)

@@ -178,11 +178,7 @@ export async function cacheGet(key: string): Promise<unknown | null> {
 }
 
 /** Store data in the cache (memory + IndexedDB). TTL auto-detected from URL. */
-export async function cacheSet(
-  key: string,
-  data: unknown,
-  ttl?: number,
-): Promise<void> {
+export async function cacheSet(key: string, data: unknown, ttl?: number): Promise<void> {
   const resolvedTtl = ttl ?? getTtlForUrl(key)
   // TTL of 0 means "don't cache" (e.g. random endpoints)
   if (resolvedTtl <= 0) return
@@ -217,9 +213,7 @@ export async function findHadithInCache(
   const volumeKey = `${apiBaseUrl}/${bookId}`
   const volumeData = await cacheGet(volumeKey)
   if (Array.isArray(volumeData)) {
-    const found = volumeData.find(
-      (h: Record<string, unknown>) => h && h.id === hadithId,
-    )
+    const found = volumeData.find((h: Record<string, unknown>) => h && h.id === hadithId)
     if (found) return found
   }
 

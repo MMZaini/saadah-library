@@ -14,7 +14,10 @@ export async function GET(request: NextRequest) {
     }
 
     const bookIds = bookParam
-      ? bookParam.split(',').map((b) => b.trim()).filter(Boolean)
+      ? bookParam
+          .split(',')
+          .map((b) => b.trim())
+          .filter(Boolean)
       : undefined
 
     // Arabic queries always use the local normalized index (diacritic-insensitive)

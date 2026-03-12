@@ -272,7 +272,7 @@ export default function SearchInterface({
 
       {/* ── Error banner ── */}
       {searchError && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3.5 py-2.5">
+        <div className="border-destructive/30 bg-destructive/5 mb-4 flex items-center gap-2 rounded-lg border px-3.5 py-2.5">
           <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
           <p className="text-sm text-destructive">{searchError}</p>
         </div>
@@ -291,7 +291,9 @@ export default function SearchInterface({
             Filters
             {hasActiveFilters() && (
               <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
-                {selectedGradings.filter((g) => g !== 'all').length + (activeMode ? 1 : 0) + selectedBooks.length}
+                {selectedGradings.filter((g) => g !== 'all').length +
+                  (activeMode ? 1 : 0) +
+                  selectedBooks.length}
               </Badge>
             )}
           </Button>

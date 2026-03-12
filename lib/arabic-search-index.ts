@@ -158,7 +158,10 @@ if (typeof window === 'undefined') {
   }
 }
 
-export async function searchArabicLocally(query: string, bookIds?: string[]): Promise<QueryResponse> {
+export async function searchArabicLocally(
+  query: string,
+  bookIds?: string[],
+): Promise<QueryResponse> {
   const q = normalizeArabic(query)
   if (!q) return { results: [], total: 0 }
 
@@ -176,8 +179,10 @@ export async function searchArabicLocally(query: string, bookIds?: string[]): Pr
 
   // Return as Hadith[] (drop the helper fields)
   return {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    results: results.map(({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest),
+     
+    results: results.map(
+      ({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest,
+    ),
     total: results.length,
   }
 }
@@ -191,7 +196,10 @@ export function isArabic(text: string): boolean {
  * Uses smart search (stemming + synonyms) for better recall.
  * Optionally scoped to specific book IDs.
  */
-export async function searchEnglishLocally(query: string, bookIds?: string[]): Promise<QueryResponse> {
+export async function searchEnglishLocally(
+  query: string,
+  bookIds?: string[],
+): Promise<QueryResponse> {
   const q = query.trim().toLowerCase()
   if (!q) return { results: [], total: 0 }
 
@@ -208,8 +216,10 @@ export async function searchEnglishLocally(query: string, bookIds?: string[]): P
   )
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    results: results.map(({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest),
+     
+    results: results.map(
+      ({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest,
+    ),
     total: results.length,
   }
 }

@@ -1,1 +1,533 @@
-"use strict";exports.id=497,exports.ids=[497],exports.modules={46497:(a,b,c)=>{c.r(b),c.d(b,{default:()=>i});var d=c(21124),e=c(38301),f=c(42378);c(94348);var g=c(61365),h=c(15514);function i({className:a}){let b=(0,f.useRouter)(),c=(0,g.c)(),[i,j]=(0,e.useState)(1),[k,l]=(0,e.useState)({}),[m,n]=(0,e.useState)(new Set),[o,p]=(0,e.useState)(!1),[q,r]=(0,e.useState)(null),[s,t]=(0,e.useState)(null),u=(0,e.useRef)(null),v=(0,e.useRef)(null),w=(0,e.useRef)(!1),x=(0,e.useRef)(null),y=(0,e.useRef)(null),z=(0,e.useRef)(!1),[A,B]=(0,e.useState)(null),[,C]=(0,e.useState)(null),D=(0,e.useRef)(null),E=[...Array.from({length:8},(a,b)=>b+1).map(a=>({value:a,label:`Volume ${a}`})),{value:"all",label:"All Volumes"}],F=(a,d)=>{c.saveScrollPosition(window.scrollY);let e="all"===i?1:i;b.push(`/al-kafi/volume/${e}/chapter/${a}/${d}`)},G=()=>{u.current&&(window.clearTimeout(u.current),u.current=null)},H=()=>{v.current&&(window.clearTimeout(v.current),v.current=null),v.current=window.setTimeout(()=>{t(null)},1600)},I=()=>Object.values(k).reduce((a,b)=>a+b.totalHadiths,0);return(0,d.jsxs)("div",{className:(0,h.cn)("space-y-6",a),children:[(0,d.jsxs)("div",{className:"rounded-xl border border-border bg-surface-1 p-6",children:[(0,d.jsxs)("div",{className:"mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center",children:[(0,d.jsxs)("div",{className:"flex items-center gap-4",children:[(0,d.jsx)("div",{className:"flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2",children:(0,d.jsx)("svg",{className:"h-5 w-5 text-foreground-muted",fill:"none",stroke:"currentColor",viewBox:"0 0 24 24",children:(0,d.jsx)("path",{strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:2,d:"M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"})})}),(0,d.jsxs)("div",{children:[(0,d.jsx)("h3",{className:"text-primary mb-1 text-lg font-bold",children:"Al-Kāfi Volume Explorer"}),(0,d.jsx)("p",{className:"text-secondary text-sm",children:"Browse Al-Kāfi volumes individually or view the complete collection structure"})]})]}),(0,d.jsx)("div",{className:"flex items-center gap-4",children:(0,d.jsxs)("div",{className:"relative",children:[(0,d.jsx)("select",{value:i,onChange:a=>{let b=a.target.value;j("all"===b?"all":isNaN(Number(b))?b:Number(b))},disabled:o,className:(0,h.cn)("border-theme bg-card appearance-none border","text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold","hover:shadow-medium shadow-soft transition-all duration-200","focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20","min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50",o&&"cursor-not-allowed opacity-50"),children:E.map(a=>(0,d.jsx)("option",{value:a.value,children:a.label},String(a.value)))}),(0,d.jsx)("div",{className:"pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3",children:(0,d.jsx)("svg",{className:"text-secondary h-5 w-5",fill:"none",stroke:"currentColor",viewBox:"0 0 24 24",children:(0,d.jsx)("path",{strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:2,d:"M19 9l-7 7-7-7"})})})]})})]}),!o&&I()>0&&(0,d.jsxs)("div",{className:"border-theme flex flex-wrap items-center gap-4 border-t pt-4",children:[(0,d.jsxs)("div",{className:"flex items-center gap-2",children:[(0,d.jsx)("div",{className:"h-3 w-3 rounded-full bg-accent"}),(0,d.jsxs)("span",{className:"text-primary text-sm font-semibold",children:[I().toLocaleString()," hadiths"]})]}),(0,d.jsxs)("div",{className:"flex items-center gap-2",children:[(0,d.jsx)("div",{className:"h-3 w-3 rounded-full bg-foreground-faint"}),(0,d.jsxs)("span",{className:"text-primary text-sm font-semibold",children:[Object.keys(k).length," categories"]})]}),(0,d.jsxs)("div",{className:"flex items-center gap-2",children:[(0,d.jsx)("div",{className:"h-3 w-3 rounded-full bg-foreground-faint"}),(0,d.jsx)("span",{className:"text-primary text-sm font-semibold",children:"all"===i?"All Al-Kāfi Volumes":`Al-Kāfi Volume ${i}`})]})]}),(0,d.jsx)("p",{className:"text-secondary mt-4 text-sm",children:"Browse the complete structure of the selected book. Click on categories to expand them and view chapters. Click on any chapter to read all hadiths in that chapter."})]}),o&&(0,d.jsx)("div",{className:"border-theme bg-card shadow-soft rounded-xl border p-12",children:(0,d.jsxs)("div",{className:"flex items-center justify-center",children:[(0,d.jsx)("div",{className:"h-8 w-8 animate-spin rounded-full border-b-2 border-zinc-400"}),(0,d.jsx)("span",{className:"text-secondary ml-3",children:"Loading book structure..."})]})}),q&&(0,d.jsx)("div",{className:"shadow-soft rounded-xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/30 dark:bg-red-900/20",children:(0,d.jsx)("p",{className:"text-red-800 dark:text-red-300",children:q})}),!o&&!q&&Object.keys(k).length>0&&(0,d.jsx)("div",{className:"space-y-6",children:Object.entries(k).map(([a,b])=>(0,d.jsxs)("div",{className:"border-theme hover:shadow-medium bg-card shadow-soft overflow-y-hidden overflow-x-visible rounded-2xl border transition-all duration-200",children:[(0,d.jsxs)("button",{onClick:()=>(a=>{let b=new Set(m);b.has(a)?b.delete(a):b.add(a),n(b)})(a),className:"hover:bg-card-hover group flex w-full items-center justify-between px-6 py-5 transition-all duration-200",children:[(0,d.jsxs)("div",{className:"flex items-center gap-4",children:[(0,d.jsx)("div",{className:`transition-transform duration-200 ${m.has(a)?"rotate-90":"rotate-0"}`,children:(0,d.jsx)("div",{className:"flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 transition-all duration-200 group-hover:bg-zinc-700",children:(0,d.jsx)("svg",{className:"h-4 w-4 text-zinc-400",fill:"none",stroke:"currentColor",viewBox:"0 0 24 24",children:(0,d.jsx)("path",{strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:2,d:"M9 5l7 7-7 7"})})})}),(0,d.jsx)("h3",{className:"text-primary text-left text-lg font-bold transition-colors group-hover:text-foreground",children:b.category})]}),(0,d.jsxs)("div",{className:"flex items-center gap-4",children:[(0,d.jsxs)("div",{className:"text-right",children:[(0,d.jsxs)("div",{className:"text-primary text-sm font-semibold",children:[b.totalHadiths," hadiths"]}),(0,d.jsxs)("div",{className:"text-secondary text-xs",children:[Object.keys(b.chapters).length," chapters"]})]}),(0,d.jsx)("div",{className:"h-12 w-1 rounded-full bg-zinc-700"})]})]}),m.has(a)&&(0,d.jsx)("div",{className:"border-theme from-card/50 to-card/30 border-t bg-gradient-to-r p-4 duration-300 animate-in slide-in-from-top-2 sm:p-6",children:(0,d.jsx)("div",{className:"grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4",children:Object.entries(b.chapters).map(([a,c])=>{let e,f,g,i=(e=b.categoryId,f=c.chapterInCategoryId,`${e}-${f}`),j=s===i;return(0,d.jsxs)("button",{onClick:a=>{if(w.current){a.preventDefault(),a.stopPropagation(),w.current=!1;return}F(b.categoryId,c.chapterInCategoryId)},...(g=()=>F(b.categoryId,c.chapterInCategoryId),{onTouchStart:a=>{let b=a.touches&&a.touches[0];b&&(x.current={x:b.clientX,y:b.clientY}),y.current=Date.now(),z.current=!1,G(),u.current=window.setTimeout(()=>{z.current=!0,t(i),H()},250)},onTouchMove:a=>{let b=x.current,c=a.touches&&a.touches[0];if(!b||!c)return;let d=Math.abs(c.clientX-b.x),e=Math.abs(c.clientY-b.y);(d>20||e>20)&&(w.current=!0)},onTouchEnd:a=>{let b=y.current||Date.now(),c=Date.now()-b;if(G(),x.current=null,y.current=null,!z.current&&c<250){a.preventDefault(),a.stopPropagation(),w.current=!0,g();return}s===i&&H()},onTouchCancel:()=>{G(),x.current=null,y.current=null,s===i&&H()}}),"aria-expanded":j,onMouseEnter:()=>{C(null),B(i)},onMouseLeave:()=>{B(null),C(i),D.current&&window.clearTimeout(D.current),D.current=window.setTimeout(()=>{C(null)},900)},onMouseMove:a=>{let b=a.currentTarget,c=b.getBoundingClientRect(),d=a.clientX-c.left,e=a.clientY-c.top;b.style.setProperty("--mx",`${d}px`),b.style.setProperty("--my",`${e}px`)},className:(0,h.cn)("border-theme bg-card group relative rounded-xl border text-left","p-4 transition-all duration-500 ease-out sm:p-5","touch-manipulation select-none","shadow-soft hover:shadow-md","hover:border-zinc-600 md:hover:ring-1 md:hover:ring-zinc-700/30","md:hover:translate-y-[-2px]",j&&"z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30"),style:{transform:j?"translateY(-2px)":void 0},children:[(0,d.jsxs)("div",{className:"pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-xl",children:[(0,d.jsx)("div",{className:(0,h.cn)("absolute inset-0 bg-zinc-900/40","transition-opacity duration-500 ease-in-out",A===i&&"opacity-100",A!==i&&"opacity-0",j&&"opacity-100")}),(0,d.jsx)("div",{className:(0,h.cn)("absolute inset-0 opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-40",j&&"md:opacity-40"),style:{background:"radial-gradient(180px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.035), rgba(0,0,0,0) 60%)"}})]}),(0,d.jsx)("div",{className:"absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs font-bold text-zinc-200",children:c.chapterInCategoryId}),(0,d.jsxs)("div",{className:(0,h.cn)("overflow-hidden pr-4","relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100","max-h-24","md:group-hover:max-h-[500px]"),style:{willChange:"max-height",maxHeight:j?"500px":void 0},children:[(0,d.jsx)("h4",{className:(0,h.cn)("text-primary mb-3 font-semibold leading-snug transition-colors","group-hover:text-foreground",j&&"text-foreground","line-clamp-2","md:group-hover:line-clamp-none",j&&"line-clamp-none"),children:c.chapter}),(0,d.jsxs)("div",{className:"flex items-center justify-between",children:[(0,d.jsxs)("div",{className:"flex items-center gap-2",children:[(0,d.jsx)("div",{className:"h-2 w-2 rounded-full bg-accent"}),(0,d.jsxs)("span",{className:"text-secondary text-sm font-medium",children:[c.hadithCount," ",1===c.hadithCount?"hadith":"hadiths"]})]}),(0,d.jsx)("div",{className:"text-secondary flex items-center gap-1 transition-colors group-hover:text-foreground-muted",children:(0,d.jsx)("svg",{className:"h-4 w-4",fill:"none",stroke:"currentColor",viewBox:"0 0 24 24",children:(0,d.jsx)("path",{strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:2,d:"M9 5l7 7-7 7"})})})]})]})]},a)})})})]},a))}),!o&&!q&&0===Object.keys(k).length&&(0,d.jsxs)("div",{className:"border-theme from-card to-card/50 shadow-soft rounded-2xl border bg-gradient-to-br p-12 text-center",children:[(0,d.jsx)("div",{className:"mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800",children:(0,d.jsx)("svg",{className:"h-8 w-8 text-zinc-500",fill:"none",stroke:"currentColor",viewBox:"0 0 24 24",children:(0,d.jsx)("path",{strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:1.5,d:"M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"})})}),(0,d.jsx)("h3",{className:"text-primary mb-2 text-lg font-semibold",children:"No chapters found"}),(0,d.jsx)("p",{className:"text-secondary",children:"The selected book appears to be empty or still loading."})]})]})}}};
+'use strict'
+;((exports.id = 497),
+  (exports.ids = [497]),
+  (exports.modules = {
+    46497: (a, b, c) => {
+      ;(c.r(b), c.d(b, { default: () => i }))
+      var d = c(21124),
+        e = c(38301),
+        f = c(42378)
+      c(94348)
+      var g = c(61365),
+        h = c(15514)
+      function i({ className: a }) {
+        let b = (0, f.useRouter)(),
+          c = (0, g.c)(),
+          [i, j] = (0, e.useState)(1),
+          [k, l] = (0, e.useState)({}),
+          [m, n] = (0, e.useState)(new Set()),
+          [o, p] = (0, e.useState)(!1),
+          [q, r] = (0, e.useState)(null),
+          [s, t] = (0, e.useState)(null),
+          u = (0, e.useRef)(null),
+          v = (0, e.useRef)(null),
+          w = (0, e.useRef)(!1),
+          x = (0, e.useRef)(null),
+          y = (0, e.useRef)(null),
+          z = (0, e.useRef)(!1),
+          [A, B] = (0, e.useState)(null),
+          [, C] = (0, e.useState)(null),
+          D = (0, e.useRef)(null),
+          E = [
+            ...Array.from({ length: 8 }, (a, b) => b + 1).map((a) => ({
+              value: a,
+              label: `Volume ${a}`,
+            })),
+            { value: 'all', label: 'All Volumes' },
+          ],
+          F = (a, d) => {
+            c.saveScrollPosition(window.scrollY)
+            let e = 'all' === i ? 1 : i
+            b.push(`/al-kafi/volume/${e}/chapter/${a}/${d}`)
+          },
+          G = () => {
+            u.current && (window.clearTimeout(u.current), (u.current = null))
+          },
+          H = () => {
+            ;(v.current && (window.clearTimeout(v.current), (v.current = null)),
+              (v.current = window.setTimeout(() => {
+                t(null)
+              }, 1600)))
+          },
+          I = () => Object.values(k).reduce((a, b) => a + b.totalHadiths, 0)
+        return (0, d.jsxs)('div', {
+          className: (0, h.cn)('space-y-6', a),
+          children: [
+            (0, d.jsxs)('div', {
+              className: 'rounded-xl border border-border bg-surface-1 p-6',
+              children: [
+                (0, d.jsxs)('div', {
+                  className: 'mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center',
+                  children: [
+                    (0, d.jsxs)('div', {
+                      className: 'flex items-center gap-4',
+                      children: [
+                        (0, d.jsx)('div', {
+                          className:
+                            'flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2',
+                          children: (0, d.jsx)('svg', {
+                            className: 'h-5 w-5 text-foreground-muted',
+                            fill: 'none',
+                            stroke: 'currentColor',
+                            viewBox: '0 0 24 24',
+                            children: (0, d.jsx)('path', {
+                              strokeLinecap: 'round',
+                              strokeLinejoin: 'round',
+                              strokeWidth: 2,
+                              d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                            }),
+                          }),
+                        }),
+                        (0, d.jsxs)('div', {
+                          children: [
+                            (0, d.jsx)('h3', {
+                              className: 'text-primary mb-1 text-lg font-bold',
+                              children: 'Al-Kāfi Volume Explorer',
+                            }),
+                            (0, d.jsx)('p', {
+                              className: 'text-secondary text-sm',
+                              children:
+                                'Browse Al-Kāfi volumes individually or view the complete collection structure',
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                    (0, d.jsx)('div', {
+                      className: 'flex items-center gap-4',
+                      children: (0, d.jsxs)('div', {
+                        className: 'relative',
+                        children: [
+                          (0, d.jsx)('select', {
+                            value: i,
+                            onChange: (a) => {
+                              let b = a.target.value
+                              j('all' === b ? 'all' : isNaN(Number(b)) ? b : Number(b))
+                            },
+                            disabled: o,
+                            className: (0, h.cn)(
+                              'border-theme bg-card appearance-none border',
+                              'text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold',
+                              'hover:shadow-medium shadow-soft transition-all duration-200',
+                              'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                              'min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50',
+                              o && 'cursor-not-allowed opacity-50',
+                            ),
+                            children: E.map((a) =>
+                              (0, d.jsx)(
+                                'option',
+                                { value: a.value, children: a.label },
+                                String(a.value),
+                              ),
+                            ),
+                          }),
+                          (0, d.jsx)('div', {
+                            className:
+                              'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3',
+                            children: (0, d.jsx)('svg', {
+                              className: 'text-secondary h-5 w-5',
+                              fill: 'none',
+                              stroke: 'currentColor',
+                              viewBox: '0 0 24 24',
+                              children: (0, d.jsx)('path', {
+                                strokeLinecap: 'round',
+                                strokeLinejoin: 'round',
+                                strokeWidth: 2,
+                                d: 'M19 9l-7 7-7-7',
+                              }),
+                            }),
+                          }),
+                        ],
+                      }),
+                    }),
+                  ],
+                }),
+                !o &&
+                  I() > 0 &&
+                  (0, d.jsxs)('div', {
+                    className: 'border-theme flex flex-wrap items-center gap-4 border-t pt-4',
+                    children: [
+                      (0, d.jsxs)('div', {
+                        className: 'flex items-center gap-2',
+                        children: [
+                          (0, d.jsx)('div', { className: 'h-3 w-3 rounded-full bg-accent' }),
+                          (0, d.jsxs)('span', {
+                            className: 'text-primary text-sm font-semibold',
+                            children: [I().toLocaleString(), ' hadiths'],
+                          }),
+                        ],
+                      }),
+                      (0, d.jsxs)('div', {
+                        className: 'flex items-center gap-2',
+                        children: [
+                          (0, d.jsx)('div', {
+                            className: 'h-3 w-3 rounded-full bg-foreground-faint',
+                          }),
+                          (0, d.jsxs)('span', {
+                            className: 'text-primary text-sm font-semibold',
+                            children: [Object.keys(k).length, ' categories'],
+                          }),
+                        ],
+                      }),
+                      (0, d.jsxs)('div', {
+                        className: 'flex items-center gap-2',
+                        children: [
+                          (0, d.jsx)('div', {
+                            className: 'h-3 w-3 rounded-full bg-foreground-faint',
+                          }),
+                          (0, d.jsx)('span', {
+                            className: 'text-primary text-sm font-semibold',
+                            children: 'all' === i ? 'All Al-Kāfi Volumes' : `Al-Kāfi Volume ${i}`,
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                (0, d.jsx)('p', {
+                  className: 'text-secondary mt-4 text-sm',
+                  children:
+                    'Browse the complete structure of the selected book. Click on categories to expand them and view chapters. Click on any chapter to read all hadiths in that chapter.',
+                }),
+              ],
+            }),
+            o &&
+              (0, d.jsx)('div', {
+                className: 'border-theme bg-card shadow-soft rounded-xl border p-12',
+                children: (0, d.jsxs)('div', {
+                  className: 'flex items-center justify-center',
+                  children: [
+                    (0, d.jsx)('div', {
+                      className: 'h-8 w-8 animate-spin rounded-full border-b-2 border-zinc-400',
+                    }),
+                    (0, d.jsx)('span', {
+                      className: 'text-secondary ml-3',
+                      children: 'Loading book structure...',
+                    }),
+                  ],
+                }),
+              }),
+            q &&
+              (0, d.jsx)('div', {
+                className:
+                  'shadow-soft rounded-xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/30 dark:bg-red-900/20',
+                children: (0, d.jsx)('p', {
+                  className: 'text-red-800 dark:text-red-300',
+                  children: q,
+                }),
+              }),
+            !o &&
+              !q &&
+              Object.keys(k).length > 0 &&
+              (0, d.jsx)('div', {
+                className: 'space-y-6',
+                children: Object.entries(k).map(([a, b]) =>
+                  (0, d.jsxs)(
+                    'div',
+                    {
+                      className:
+                        'border-theme hover:shadow-medium bg-card shadow-soft overflow-y-hidden overflow-x-visible rounded-2xl border transition-all duration-200',
+                      children: [
+                        (0, d.jsxs)('button', {
+                          onClick: () =>
+                            ((a) => {
+                              let b = new Set(m)
+                              ;(b.has(a) ? b.delete(a) : b.add(a), n(b))
+                            })(a),
+                          className:
+                            'hover:bg-card-hover group flex w-full items-center justify-between px-6 py-5 transition-all duration-200',
+                          children: [
+                            (0, d.jsxs)('div', {
+                              className: 'flex items-center gap-4',
+                              children: [
+                                (0, d.jsx)('div', {
+                                  className: `transition-transform duration-200 ${m.has(a) ? 'rotate-90' : 'rotate-0'}`,
+                                  children: (0, d.jsx)('div', {
+                                    className:
+                                      'flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 transition-all duration-200 group-hover:bg-zinc-700',
+                                    children: (0, d.jsx)('svg', {
+                                      className: 'h-4 w-4 text-zinc-400',
+                                      fill: 'none',
+                                      stroke: 'currentColor',
+                                      viewBox: '0 0 24 24',
+                                      children: (0, d.jsx)('path', {
+                                        strokeLinecap: 'round',
+                                        strokeLinejoin: 'round',
+                                        strokeWidth: 2,
+                                        d: 'M9 5l7 7-7 7',
+                                      }),
+                                    }),
+                                  }),
+                                }),
+                                (0, d.jsx)('h3', {
+                                  className:
+                                    'text-primary text-left text-lg font-bold transition-colors group-hover:text-foreground',
+                                  children: b.category,
+                                }),
+                              ],
+                            }),
+                            (0, d.jsxs)('div', {
+                              className: 'flex items-center gap-4',
+                              children: [
+                                (0, d.jsxs)('div', {
+                                  className: 'text-right',
+                                  children: [
+                                    (0, d.jsxs)('div', {
+                                      className: 'text-primary text-sm font-semibold',
+                                      children: [b.totalHadiths, ' hadiths'],
+                                    }),
+                                    (0, d.jsxs)('div', {
+                                      className: 'text-secondary text-xs',
+                                      children: [Object.keys(b.chapters).length, ' chapters'],
+                                    }),
+                                  ],
+                                }),
+                                (0, d.jsx)('div', {
+                                  className: 'h-12 w-1 rounded-full bg-zinc-700',
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                        m.has(a) &&
+                          (0, d.jsx)('div', {
+                            className:
+                              'border-theme from-card/50 to-card/30 border-t bg-gradient-to-r p-4 duration-300 animate-in slide-in-from-top-2 sm:p-6',
+                            children: (0, d.jsx)('div', {
+                              className:
+                                'grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
+                              children: Object.entries(b.chapters).map(([a, c]) => {
+                                let e,
+                                  f,
+                                  g,
+                                  i =
+                                    ((e = b.categoryId), (f = c.chapterInCategoryId), `${e}-${f}`),
+                                  j = s === i
+                                return (0, d.jsxs)(
+                                  'button',
+                                  {
+                                    onClick: (a) => {
+                                      if (w.current) {
+                                        ;(a.preventDefault(), a.stopPropagation(), (w.current = !1))
+                                        return
+                                      }
+                                      F(b.categoryId, c.chapterInCategoryId)
+                                    },
+                                    ...((g = () => F(b.categoryId, c.chapterInCategoryId)),
+                                    {
+                                      onTouchStart: (a) => {
+                                        let b = a.touches && a.touches[0]
+                                        ;(b && (x.current = { x: b.clientX, y: b.clientY }),
+                                          (y.current = Date.now()),
+                                          (z.current = !1),
+                                          G(),
+                                          (u.current = window.setTimeout(() => {
+                                            ;((z.current = !0), t(i), H())
+                                          }, 250)))
+                                      },
+                                      onTouchMove: (a) => {
+                                        let b = x.current,
+                                          c = a.touches && a.touches[0]
+                                        if (!b || !c) return
+                                        let d = Math.abs(c.clientX - b.x),
+                                          e = Math.abs(c.clientY - b.y)
+                                        ;(d > 20 || e > 20) && (w.current = !0)
+                                      },
+                                      onTouchEnd: (a) => {
+                                        let b = y.current || Date.now(),
+                                          c = Date.now() - b
+                                        if (
+                                          (G(),
+                                          (x.current = null),
+                                          (y.current = null),
+                                          !z.current && c < 250)
+                                        ) {
+                                          ;(a.preventDefault(),
+                                            a.stopPropagation(),
+                                            (w.current = !0),
+                                            g())
+                                          return
+                                        }
+                                        s === i && H()
+                                      },
+                                      onTouchCancel: () => {
+                                        ;(G(),
+                                          (x.current = null),
+                                          (y.current = null),
+                                          s === i && H())
+                                      },
+                                    }),
+                                    'aria-expanded': j,
+                                    onMouseEnter: () => {
+                                      ;(C(null), B(i))
+                                    },
+                                    onMouseLeave: () => {
+                                      ;(B(null),
+                                        C(i),
+                                        D.current && window.clearTimeout(D.current),
+                                        (D.current = window.setTimeout(() => {
+                                          C(null)
+                                        }, 900)))
+                                    },
+                                    onMouseMove: (a) => {
+                                      let b = a.currentTarget,
+                                        c = b.getBoundingClientRect(),
+                                        d = a.clientX - c.left,
+                                        e = a.clientY - c.top
+                                      ;(b.style.setProperty('--mx', `${d}px`),
+                                        b.style.setProperty('--my', `${e}px`))
+                                    },
+                                    className: (0, h.cn)(
+                                      'border-theme bg-card group relative rounded-xl border text-left',
+                                      'p-4 transition-all duration-500 ease-out sm:p-5',
+                                      'touch-manipulation select-none',
+                                      'shadow-soft hover:shadow-md',
+                                      'hover:border-zinc-600 md:hover:ring-1 md:hover:ring-zinc-700/30',
+                                      'md:hover:translate-y-[-2px]',
+                                      j &&
+                                        'z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30',
+                                    ),
+                                    style: { transform: j ? 'translateY(-2px)' : void 0 },
+                                    children: [
+                                      (0, d.jsxs)('div', {
+                                        className:
+                                          'pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-xl',
+                                        children: [
+                                          (0, d.jsx)('div', {
+                                            className: (0, h.cn)(
+                                              'absolute inset-0 bg-zinc-900/40',
+                                              'transition-opacity duration-500 ease-in-out',
+                                              A === i && 'opacity-100',
+                                              A !== i && 'opacity-0',
+                                              j && 'opacity-100',
+                                            ),
+                                          }),
+                                          (0, d.jsx)('div', {
+                                            className: (0, h.cn)(
+                                              'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-40',
+                                              j && 'md:opacity-40',
+                                            ),
+                                            style: {
+                                              background:
+                                                'radial-gradient(180px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.035), rgba(0,0,0,0) 60%)',
+                                            },
+                                          }),
+                                        ],
+                                      }),
+                                      (0, d.jsx)('div', {
+                                        className:
+                                          'absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs font-bold text-zinc-200',
+                                        children: c.chapterInCategoryId,
+                                      }),
+                                      (0, d.jsxs)('div', {
+                                        className: (0, h.cn)(
+                                          'overflow-hidden pr-4',
+                                          'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
+                                          'max-h-24',
+                                          'md:group-hover:max-h-[500px]',
+                                        ),
+                                        style: {
+                                          willChange: 'max-height',
+                                          maxHeight: j ? '500px' : void 0,
+                                        },
+                                        children: [
+                                          (0, d.jsx)('h4', {
+                                            className: (0, h.cn)(
+                                              'text-primary mb-3 font-semibold leading-snug transition-colors',
+                                              'group-hover:text-foreground',
+                                              j && 'text-foreground',
+                                              'line-clamp-2',
+                                              'md:group-hover:line-clamp-none',
+                                              j && 'line-clamp-none',
+                                            ),
+                                            children: c.chapter,
+                                          }),
+                                          (0, d.jsxs)('div', {
+                                            className: 'flex items-center justify-between',
+                                            children: [
+                                              (0, d.jsxs)('div', {
+                                                className: 'flex items-center gap-2',
+                                                children: [
+                                                  (0, d.jsx)('div', {
+                                                    className: 'h-2 w-2 rounded-full bg-accent',
+                                                  }),
+                                                  (0, d.jsxs)('span', {
+                                                    className: 'text-secondary text-sm font-medium',
+                                                    children: [
+                                                      c.hadithCount,
+                                                      ' ',
+                                                      1 === c.hadithCount ? 'hadith' : 'hadiths',
+                                                    ],
+                                                  }),
+                                                ],
+                                              }),
+                                              (0, d.jsx)('div', {
+                                                className:
+                                                  'text-secondary flex items-center gap-1 transition-colors group-hover:text-foreground-muted',
+                                                children: (0, d.jsx)('svg', {
+                                                  className: 'h-4 w-4',
+                                                  fill: 'none',
+                                                  stroke: 'currentColor',
+                                                  viewBox: '0 0 24 24',
+                                                  children: (0, d.jsx)('path', {
+                                                    strokeLinecap: 'round',
+                                                    strokeLinejoin: 'round',
+                                                    strokeWidth: 2,
+                                                    d: 'M9 5l7 7-7 7',
+                                                  }),
+                                                }),
+                                              }),
+                                            ],
+                                          }),
+                                        ],
+                                      }),
+                                    ],
+                                  },
+                                  a,
+                                )
+                              }),
+                            }),
+                          }),
+                      ],
+                    },
+                    a,
+                  ),
+                ),
+              }),
+            !o &&
+              !q &&
+              0 === Object.keys(k).length &&
+              (0, d.jsxs)('div', {
+                className:
+                  'border-theme from-card to-card/50 shadow-soft rounded-2xl border bg-gradient-to-br p-12 text-center',
+                children: [
+                  (0, d.jsx)('div', {
+                    className:
+                      'mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800',
+                    children: (0, d.jsx)('svg', {
+                      className: 'h-8 w-8 text-zinc-500',
+                      fill: 'none',
+                      stroke: 'currentColor',
+                      viewBox: '0 0 24 24',
+                      children: (0, d.jsx)('path', {
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        strokeWidth: 1.5,
+                        d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+                      }),
+                    }),
+                  }),
+                  (0, d.jsx)('h3', {
+                    className: 'text-primary mb-2 text-lg font-semibold',
+                    children: 'No chapters found',
+                  }),
+                  (0, d.jsx)('p', {
+                    className: 'text-secondary',
+                    children: 'The selected book appears to be empty or still loading.',
+                  }),
+                ],
+              }),
+          ],
+        })
+      }
+    },
+  }))

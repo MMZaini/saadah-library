@@ -2,10 +2,7 @@
   "version": 3,
   "middleware": {
     "/": {
-      "files": [
-        "server/edge-runtime-webpack.js",
-        "server/middleware.js"
-      ],
+      "files": ["server/edge-runtime-webpack.js", "server/middleware.js"],
       "name": "middleware",
       "page": "/",
       "matchers": [
@@ -26,7 +23,5 @@
     }
   },
   "functions": {},
-  "sortedMiddleware": [
-    "/"
-  ]
+  "sortedMiddleware": ["/"]
 }
