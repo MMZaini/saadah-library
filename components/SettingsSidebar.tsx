@@ -6,7 +6,14 @@ import clsx from 'clsx'
 import { useEffect, useRef } from 'react'
 
 export default function SettingsSidebar() {
-  const { settings, updateSettings, isSettingsOpen, toggleSettings, resetArabicFontSize, resetEnglishFontSize } = useSettings()
+  const {
+    settings,
+    updateSettings,
+    isSettingsOpen,
+    toggleSettings,
+    resetArabicFontSize,
+    resetEnglishFontSize,
+  } = useSettings()
   const sidebarRef = useRef<HTMLDivElement>(null)
   const scrollYRef = useRef(0)
 
@@ -58,10 +65,10 @@ export default function SettingsSidebar() {
       if (!isDragging) {
         currentX = e.touches[0].clientX
         currentY = e.touches[0].clientY
-        
+
         const deltaX = currentX - startX
         const deltaY = Math.abs(currentY - startY)
-        
+
         // Start dragging if horizontal movement is greater than vertical
         if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
           isDragging = true
@@ -72,7 +79,7 @@ export default function SettingsSidebar() {
         e.preventDefault()
         currentX = e.touches[0].clientX
         const deltaX = currentX - startX
-        
+
         // Only allow swiping to the right (positive deltaX)
         if (deltaX > 0) {
           const sidebar = sidebarRef.current
@@ -87,17 +94,17 @@ export default function SettingsSidebar() {
       if (isDragging) {
         const deltaX = currentX - startX
         const sidebar = sidebarRef.current
-        
+
         if (sidebar) {
           sidebar.style.transform = ''
-          
+
           // Close if swiped more than 100px to the right
           if (deltaX > 100) {
             toggleSettings()
           }
         }
       }
-      
+
       isDragging = false
     }
 
@@ -115,13 +122,11 @@ export default function SettingsSidebar() {
     }
   }, [isSettingsOpen, toggleSettings])
 
-
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 ease-in-out
-          ${isSettingsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      <div
+        className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${isSettingsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={toggleSettings}
         aria-hidden="true"
       />
@@ -129,68 +134,64 @@ export default function SettingsSidebar() {
       {/* Sidebar */}
       <div
         ref={sidebarRef}
-        className={`fixed right-0 top-0 h-full w-full sm:w-80 max-w-sm bg-card border-l border-theme shadow-2xl z-[60] p-0 flex flex-col
-          transition-transform duration-300 ease-out will-change-transform
-          ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`border-theme fixed right-0 top-0 z-[60] flex h-full w-full max-w-sm flex-col border-l bg-card p-0 shadow-2xl transition-transform duration-300 ease-out will-change-transform sm:w-80 ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Swipe handle (mobile only) */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-16 bg-theme/20 rounded-r-full sm:hidden" />
+        <div className="bg-theme/20 absolute left-0 top-1/2 h-16 w-1 -translate-y-1/2 rounded-r-full sm:hidden" />
 
         <div
-          className={`transition-opacity duration-300 delay-100 ease-out flex-1 flex flex-col p-4 sm:p-6 overflow-hidden
-            ${isSettingsOpen ? 'opacity-100' : 'opacity-0'}`}
+          className={`flex flex-1 flex-col overflow-hidden p-4 transition-opacity delay-100 duration-300 ease-out sm:p-6 ${isSettingsOpen ? 'opacity-100' : 'opacity-0'}`}
         >
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <h2 className="text-lg font-semibold text-primary">Settings</h2>
+          <div className="mb-6 flex items-center justify-between sm:mb-8">
+            <h2 className="text-primary text-lg font-semibold">Settings</h2>
             <button
               onClick={toggleSettings}
-              className="p-2 rounded-lg transition-colors hover:bg-card-hover active:bg-card-hover active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="hover:bg-card-hover active:bg-card-hover flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-colors active:scale-95"
             >
-              <IconX className="w-5 h-5 text-primary" />
+              <IconX className="text-primary h-5 w-5" />
             </button>
           </div>
 
           <div
-            className={`space-y-4 sm:space-y-6 transition-all duration-300 delay-150 ease-out flex-1 min-h-0 overflow-y-auto
-              ${isSettingsOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+            className={`min-h-0 flex-1 space-y-4 overflow-y-auto transition-all delay-150 duration-300 ease-out sm:space-y-6 ${isSettingsOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
           >
             {/* Theme Selection */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-secondary">Theme</label>
+              <label className="text-secondary block text-sm font-medium">Theme</label>
               <div className="flex justify-center">
                 <button
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg border bg-zinc-900 text-white border-zinc-700 shadow-sm font-medium cursor-default text-sm sm:text-base"
+                  className="cursor-default rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm sm:px-6 sm:py-3 sm:text-base"
                   disabled
                 >
                   Dark Mode
                 </button>
               </div>
-              <p className="text-xs text-muted text-center mt-2">
+              <p className="mt-2 text-center text-xs text-muted">
                 Dark mode provides the optimal reading experience
               </p>
             </div>
 
             {/* Hadith Display Options */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-secondary">Hadith Display</label>
-              <div className="flex items-center justify-between p-3 rounded-lg border border-theme/50 bg-card-hover/30">
-                <div className="min-w-0 flex-1 mr-3">
-                  <p className="text-sm font-medium text-primary">Always Show Full Text</p>
-                  <p className="text-xs text-muted mt-1">Expand all hadith text by default</p>
+              <label className="text-secondary block text-sm font-medium">Hadith Display</label>
+              <div className="border-theme/50 bg-card-hover/30 flex items-center justify-between rounded-lg border p-3">
+                <div className="mr-3 min-w-0 flex-1">
+                  <p className="text-primary text-sm font-medium">Always Show Full Text</p>
+                  <p className="mt-1 text-xs text-muted">Expand all hadith text by default</p>
                 </div>
                 <button
-                  onClick={() => updateSettings({ alwaysShowFullHadith: !settings.alwaysShowFullHadith })}
+                  onClick={() =>
+                    updateSettings({ alwaysShowFullHadith: !settings.alwaysShowFullHadith })
+                  }
                   className={clsx(
-                    "relative inline-flex w-16 h-8 items-center rounded-full px-1 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 active:scale-95 flex-shrink-0 min-h-[44px] min-w-[64px]",
-                    settings.alwaysShowFullHadith
-                      ? "bg-accent-primary"
-                      : "bg-input"
+                    'focus:ring-accent-primary relative inline-flex h-8 min-h-[44px] w-16 min-w-[64px] flex-shrink-0 items-center rounded-full px-1 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95',
+                    settings.alwaysShowFullHadith ? 'bg-accent-primary' : 'bg-input',
                   )}
                 >
                   <span
                     className={clsx(
-                      "inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm",
-                      settings.alwaysShowFullHadith ? "translate-x-8" : "translate-x-0"
+                      'inline-block h-6 w-6 transform rounded-full bg-white shadow-sm transition-transform',
+                      settings.alwaysShowFullHadith ? 'translate-x-8' : 'translate-x-0',
                     )}
                   />
                 </button>
@@ -200,17 +201,17 @@ export default function SettingsSidebar() {
             {/* Font Size Controls */}
             <div className="space-y-4">
               <div className="mb-2">
-                <h3 className="text-sm font-semibold text-primary">Hadith Text Size</h3>
+                <h3 className="text-primary text-sm font-semibold">Hadith Text Size</h3>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-secondary">
+                  <label className="text-secondary block text-sm font-medium">
                     Arabic Font Size
                   </label>
                   <button
                     onClick={resetArabicFontSize}
-                    className="px-3 py-2 text-xs bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary rounded-lg transition-colors min-h-[36px]"
+                    className="bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary min-h-[36px] rounded-lg px-3 py-2 text-xs transition-colors"
                   >
                     Reset
                   </button>
@@ -223,9 +224,9 @@ export default function SettingsSidebar() {
                     step="5"
                     value={settings.arabicFontSize}
                     onChange={(e) => updateSettings({ arabicFontSize: Number(e.target.value) })}
-                    className="flex-1 h-3 rounded-full bg-input appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-primary hover:[&::-webkit-slider-thumb]:bg-accent-secondary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-colors [&::-webkit-slider-thumb]:shadow-sm"
+                    className="bg-input [&::-webkit-slider-thumb]:bg-accent-primary hover:[&::-webkit-slider-thumb]:bg-accent-secondary h-3 flex-1 appearance-none rounded-full [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-colors"
                   />
-                  <span className="text-sm tabular-nums text-secondary min-w-[50px] text-right">
+                  <span className="text-secondary min-w-[50px] text-right text-sm tabular-nums">
                     {settings.arabicFontSize}%
                   </span>
                 </div>
@@ -233,12 +234,12 @@ export default function SettingsSidebar() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-secondary">
+                  <label className="text-secondary block text-sm font-medium">
                     English Font Size
                   </label>
                   <button
                     onClick={resetEnglishFontSize}
-                    className="px-3 py-2 text-xs bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary rounded-lg transition-colors min-h-[36px]"
+                    className="bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary min-h-[36px] rounded-lg px-3 py-2 text-xs transition-colors"
                   >
                     Reset
                   </button>
@@ -251,9 +252,9 @@ export default function SettingsSidebar() {
                     step="5"
                     value={settings.englishFontSize}
                     onChange={(e) => updateSettings({ englishFontSize: Number(e.target.value) })}
-                    className="flex-1 h-3 rounded-full bg-input appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-primary hover:[&::-webkit-slider-thumb]:bg-accent-secondary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-colors [&::-webkit-slider-thumb]:shadow-sm"
+                    className="bg-input [&::-webkit-slider-thumb]:bg-accent-primary hover:[&::-webkit-slider-thumb]:bg-accent-secondary h-3 flex-1 appearance-none rounded-full [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-colors"
                   />
-                  <span className="text-sm tabular-nums text-secondary min-w-[50px] text-right">
+                  <span className="text-secondary min-w-[50px] text-right text-sm tabular-nums">
                     {settings.englishFontSize}%
                   </span>
                 </div>
@@ -262,9 +263,10 @@ export default function SettingsSidebar() {
           </div>
         </div>
         {/* Sidebar Footer */}
-        <footer className="w-full border-t border-gray-200 dark:border-gray-700 py-4 flex justify-center items-center bg-white/70 dark:bg-black/30">
-          <p className="text-xs text-gray-700 dark:text-gray-300 text-center">
-            Found a bug or have a feature request? Contact <span className="font-semibold">@deleteooom</span> on Discord.
+        <footer className="flex w-full items-center justify-center border-t border-gray-200 bg-white/70 py-4 dark:border-gray-700 dark:bg-black/30">
+          <p className="text-center text-xs text-gray-700 dark:text-gray-300">
+            Found a bug or have a feature request? Contact{' '}
+            <span className="font-semibold">@deleteooom</span> on Discord.
           </p>
         </footer>
       </div>

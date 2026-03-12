@@ -32,19 +32,19 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const [navigationState, setNavigationState] = useState<NavigationState>({
     scrollPosition: 0,
     lastPath: '/',
-    searchState: null
+    searchState: null,
   })
 
   const saveScrollPosition = (position: number) => {
-    setNavigationState(prev => ({ ...prev, scrollPosition: position }))
+    setNavigationState((prev) => ({ ...prev, scrollPosition: position }))
   }
 
   const saveSearchState = (searchState: NavigationState['searchState']) => {
-    setNavigationState(prev => ({ ...prev, searchState }))
+    setNavigationState((prev) => ({ ...prev, searchState }))
   }
 
   const savePath = (path: string) => {
-    setNavigationState(prev => ({ ...prev, lastPath: path }))
+    setNavigationState((prev) => ({ ...prev, lastPath: path }))
   }
 
   const restoreScrollPosition = () => {
@@ -59,20 +59,22 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     setNavigationState({
       scrollPosition: 0,
       lastPath: '/',
-      searchState: null
+      searchState: null,
     })
   }
 
   return (
-    <NavigationContext.Provider value={{
-      navigationState,
-      saveScrollPosition,
-      saveSearchState,
-      savePath,
-      restoreScrollPosition,
-      getSearchState,
-      clearNavigationState
-    }}>
+    <NavigationContext.Provider
+      value={{
+        navigationState,
+        saveScrollPosition,
+        saveSearchState,
+        savePath,
+        restoreScrollPosition,
+        getSearchState,
+        clearNavigationState,
+      }}
+    >
       {children}
     </NavigationContext.Provider>
   )

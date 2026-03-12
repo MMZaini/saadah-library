@@ -13,7 +13,7 @@
     /* Improved touch targets on mobile */
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
   }
-  
+
   html {
     /* Prevent horizontal scrolling on mobile */
     overflow-x: hidden;
@@ -21,25 +21,28 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
-  
+
   body {
     /* Better scrolling on iOS */
     -webkit-overflow-scrolling: touch;
     /* Prevent bounce scrolling */
     overscroll-behavior-y: none;
   }
-  
+
   /* Better button touch targets */
-  button, [role="button"] {
+  button,
+  [role='button'] {
     min-height: 44px; /* iOS recommended touch target */
     min-width: 44px;
   }
-  
+
   /* Better input touch targets */
-  input[type="text"], input[type="search"], textarea {
+  input[type='text'],
+  input[type='search'],
+  textarea {
     min-height: 44px;
   }
-  
+
   /* Improve select dropdown on mobile */
   select {
     min-height: 44px;
@@ -48,37 +51,35 @@
   }
 }
 
-
-
 @layer utilities {
   .bg-color {
     background-color: var(--bg-color);
   }
-  
+
   .text-primary {
     color: var(--text-primary);
   }
-  
+
   .text-secondary {
     color: var(--text-secondary);
   }
-  
+
   .text-muted {
     color: var(--text-muted);
   }
-  
+
   .bg-card {
     background-color: var(--card-bg);
   }
-  
+
   .hover\:bg-card-hover:hover {
     background-color: var(--card-hover);
   }
-  
+
   .border-theme {
     border-color: var(--border-color);
   }
-  
+
   .bg-input {
     background-color: var(--input-bg);
   }
@@ -106,7 +107,7 @@
   .hover\:bg-hover-color:hover {
     background-color: var(--hover-color);
   }
-  
+
   .font-arabic {
     font-family: 'Amiri', 'Noto Sans Arabic', serif;
   }
@@ -144,7 +145,7 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
   }
-  
+
   .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
@@ -152,7 +153,7 @@
     -webkit-line-clamp: 3;
     line-clamp: 3;
   }
-  
+
   .line-clamp-6 {
     overflow: hidden;
     display: -webkit-box;
@@ -173,45 +174,46 @@
 
   /* Modern shadow system for both themes */
   .shadow-soft {
-    box-shadow: 
+    box-shadow:
       0 1px 3px 0 var(--shadow-color),
       0 1px 2px -1px var(--shadow-color);
   }
-  
+
   .shadow-medium {
-    box-shadow: 
+    box-shadow:
       0 4px 6px -1px var(--shadow-color),
       0 2px 4px -2px var(--shadow-color);
   }
 
   /* Light theme specific enhancements */
-  [data-theme="light"] .shadow-soft {
-    box-shadow: 
+  [data-theme='light'] .shadow-soft {
+    box-shadow:
       0 1px 3px 0 rgba(0, 0, 0, 0.1),
       0 1px 2px -1px rgba(0, 0, 0, 0.1);
   }
-  
-  [data-theme="light"] .shadow-medium {
-    box-shadow: 
+
+  [data-theme='light'] .shadow-medium {
+    box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
       0 2px 4px -2px rgba(0, 0, 0, 0.1);
   }
 
   /* Improved card styling for light mode */
-  [data-theme="light"] .bg-card {
+  [data-theme='light'] .bg-card {
     background-color: #ffffff;
     border: 1px solid rgba(26, 26, 26, 0.08);
   }
 
-  [data-theme="light"] .hover\:bg-card-hover:hover {
+  [data-theme='light'] .hover\:bg-card-hover:hover {
     background-color: #fafafa;
     border-color: rgba(26, 26, 26, 0.12);
   }
 }
 
 @layer base {
-    /* Dark theme */
-  :root, [data-theme="dark"] {
+  /* Dark theme */
+  :root,
+  [data-theme='dark'] {
     --bg-gradient: radial-gradient(1200px 600px at 50% -10%, var(--gradient-color), transparent);
     --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
@@ -232,7 +234,7 @@
   }
 
   /* Light theme */
-  [data-theme="light"] {
+  [data-theme='light'] {
     --bg-gradient: radial-gradient(1200px 600px at 50% -10%, var(--gradient-color), transparent);
     --text-primary: #1a1a1a;
     --text-secondary: rgba(26, 26, 26, 0.8);
@@ -278,11 +280,11 @@
 }
 .gold-swipe .base {
   color: #e5e7eb;
-  transition: opacity .25s ease;
+  transition: opacity 0.25s ease;
   font-weight: 600;
 }
-:root[data-theme="dark"] .gold-swipe .base {
-  color: #27272a;  /* zinc-800 */
+:root[data-theme='dark'] .gold-swipe .base {
+  color: #27272a; /* zinc-800 */
 }
 
 .gold-swipe .gold {
@@ -291,7 +293,8 @@
   top: 0;
   right: 0;
   bottom: -0.1em;
-  background: linear-gradient(90deg, 
+  background: linear-gradient(
+    90deg,
     #15803d 0%,
     #22c55e 15%,
     #16a34a 30%,
@@ -312,14 +315,14 @@
 
 /* Hover animation - slide in from left */
 .gold-swipe:hover .gold {
-  animation: 
-    slideIn 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards,
+  animation:
+    slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards,
     shine 3s linear infinite;
 }
 
 /* Exit animation - slide out to right */
 .gold-swipe:not(:hover) .gold {
-  animation: slideOut 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation: slideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Responsive utility classes */
@@ -331,26 +334,26 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
   }
-  
+
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
-  
+
   .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
-  
+
   /* Touch-friendly active states */
   .active\:scale-95:active {
     transform: scale(0.95);
   }
-  
+
   /* Better mobile spacing */
   .touch-target {
     min-height: 44px;
@@ -361,7 +364,8 @@
   .library-title-gradient {
     position: relative;
     color: var(--text-primary);
-    background: linear-gradient(90deg, 
+    background: linear-gradient(
+      90deg,
       #065f46 0%,
       #047857 10%,
       #059669 20%,
@@ -408,13 +412,13 @@
     .transition-colors {
       transition: none !important;
     }
-    
+
     .animate-spin,
     .animate-pulse {
       animation: none !important;
     }
   }
-  
+
   /* Better button spacing on mobile */
   .space-y-3 > :not([hidden]) ~ :not([hidden]) {
     margin-top: 0.75rem;
@@ -428,18 +432,30 @@
 }
 
 @keyframes slideIn {
-  from { background-position: 100% 0; }
-  to   { background-position: 0% 0; }
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
 }
 
 @keyframes slideOut {
-  0% { clip-path: inset(0 0 0 0); }      /* Start fully visible */
-  100% { clip-path: inset(0 0 0 100%); } /* Slide out to right */
+  0% {
+    clip-path: inset(0 0 0 0);
+  } /* Start fully visible */
+  100% {
+    clip-path: inset(0 0 0 100%);
+  } /* Slide out to right */
 }
 
 @keyframes slideOutLeft {
-  from { background-position: 0% 0; }
-  to   { background-position: -100% 0; }
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 
 @keyframes fadeInUp {
@@ -472,7 +488,10 @@
 
 /* Card outline on hover (soft gold glow) */
 .card-outline {
-  transition: box-shadow .35s cubic-bezier(.22,.8,.25,1), transform .35s cubic-bezier(.22,.8,.25,1), border-color .35s;
+  transition:
+    box-shadow 0.35s cubic-bezier(0.22, 0.8, 0.25, 1),
+    transform 0.35s cubic-bezier(0.22, 0.8, 0.25, 1),
+    border-color 0.35s;
 }
 
 /* Fake caret blink in search input */
@@ -485,4 +504,8 @@
   margin-left: 2px;
   animation: blink 1s step-end infinite;
 }
-@keyframes blink { 50% { opacity: 0; } }
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

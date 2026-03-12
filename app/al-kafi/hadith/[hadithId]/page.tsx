@@ -13,9 +13,9 @@ export default function HadithPage() {
   const params = useParams()
   const { settings } = useSettings()
   const { setChapterInfo } = useChapter()
-  
+
   const hadithId = parseInt(params.hadithId as string)
-  
+
   const [hadith, setHadith] = useState<Hadith | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,14 +29,14 @@ export default function HadithPage() {
       try {
         // Get all hadiths from all Al-Kafi volumes and find the one with matching ID
         let foundHadith: Hadith | null = null
-        
+
         // Try volumes 1-8 (Al-Kafi typically has 8 volumes)
         for (let volumeId = 1; volumeId <= 8; volumeId++) {
           try {
             console.log(`Searching volume ${volumeId} for hadith ${hadithId}`)
             const volumeHadiths = await alKafiApi.getVolumeHadiths(volumeId)
             console.log(`Volume ${volumeId} has ${volumeHadiths.length} hadiths`)
-            foundHadith = volumeHadiths.find(h => h.id === hadithId) || null
+            foundHadith = volumeHadiths.find((h) => h.id === hadithId) || null
             if (foundHadith) {
               console.log(`Found hadith ${hadithId} in volume ${volumeId}`)
               break
@@ -56,7 +56,7 @@ export default function HadithPage() {
 
         console.log('Setting hadith:', foundHadith)
         setHadith(foundHadith)
-        
+
         // Set chapter context for TopBar navigation
         setChapterInfo({
           volumeId: foundHadith.volume,
@@ -64,9 +64,8 @@ export default function HadithPage() {
           chapter: foundHadith.chapter || 'Unknown Chapter',
           hadithCount: 1,
           categoryId: foundHadith.categoryId,
-          chapterInCategoryId: foundHadith.chapterInCategoryId
+          chapterInCategoryId: foundHadith.chapterInCategoryId,
         })
-        
       } catch (err) {
         setError('Failed to load hadith')
       } finally {
@@ -90,9 +89,16 @@ export default function HadithPage() {
   }, [hadithId])
 
   const handleBackClick = () => {
-    if (hadith?.volume && hadith?.categoryId && (hadith?.chapterInCategoryId !== null && hadith?.chapterInCategoryId !== undefined)) {
+    if (
+      hadith?.volume &&
+      hadith?.categoryId &&
+      hadith?.chapterInCategoryId !== null &&
+      hadith?.chapterInCategoryId !== undefined
+    ) {
       // Navigate back to the chapter this hadith belongs to
-      router.push(`/al-kafi/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+      router.push(
+        `/al-kafi/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+      )
     } else {
       // Fallback to Al-Kafi main page
       router.push('/al-kafi')
@@ -102,9 +108,9 @@ export default function HadithPage() {
   if (loading) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex min-h-[50vh] items-center justify-center">
+            <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
           </div>
         </div>
       </main>
@@ -114,26 +120,24 @@ export default function HadithPage() {
   if (error || !hadith) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <button
             onClick={handleBackClick}
-            className="mb-6 flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
+            className="text-primary/70 hover:text-primary mb-6 flex items-center gap-2 transition-colors"
           >
             <IconArrowLeft className="h-4 w-4" />
             Back to Al-Kāfi
           </button>
-          
-          <div className="flex items-center justify-center min-h-[50vh]">
+
+          <div className="flex min-h-[50vh] items-center justify-center">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-primary mb-4">
+              <h1 className="text-primary mb-4 text-2xl font-bold">
                 {error || 'Hadith Not Found'}
               </h1>
-              <p className="text-secondary mb-6">
-                The requested hadith could not be found.
-              </p>
+              <p className="text-secondary mb-6">The requested hadith could not be found.</p>
               <button
                 onClick={handleBackClick}
-                className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-colors"
+                className="bg-accent-primary hover:bg-accent-secondary rounded-lg px-6 py-3 text-white transition-colors"
               >
                 Return to Al-Kāfi
               </button>
@@ -146,20 +150,18 @@ export default function HadithPage() {
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <button
           onClick={handleBackClick}
-          className="mb-6 flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
+          className="text-primary/70 hover:text-primary mb-6 flex items-center gap-2 transition-colors"
         >
           <IconArrowLeft className="h-4 w-4" />
           Back to Chapter
         </button>
-        
+
         <div className="space-y-6">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-primary mb-2">
-              Al-Kāfi Hadith #{hadith.id}
-            </h1>
+          <div className="mb-8 text-center">
+            <h1 className="text-primary mb-2 text-2xl font-bold">Al-Kāfi Hadith #{hadith.id}</h1>
             <p className="text-secondary">
               Volume {hadith.volume} • {hadith.category} • {hadith.chapter}
             </p>
@@ -167,15 +169,11 @@ export default function HadithPage() {
 
           {/* Match chapter card layout with index bubble */}
           <div className="relative">
-            <div className="absolute -left-4 top-6 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-medium">
+            <div className="bg-accent-primary shadow-medium absolute -left-4 top-6 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
               1
             </div>
             <div className="ml-8">
-              <HadithCard 
-                hadith={hadith}
-                className="mb-6"
-                showViewChapter={false}
-              />
+              <HadithCard hadith={hadith} className="mb-6" showViewChapter={false} />
             </div>
           </div>
         </div>

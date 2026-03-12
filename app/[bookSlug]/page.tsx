@@ -36,7 +36,7 @@ export default function BookPage() {
     bookInfo: null,
     hadiths: [],
     loading: true,
-    error: null
+    error: null,
   })
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -48,38 +48,39 @@ export default function BookPage() {
 
   // Create debounced search function
   const debouncedSearch = useMemo(
-    () => debounce(async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([])
-        return
-      }
+    () =>
+      debounce(async (query: string) => {
+        if (!query.trim()) {
+          setSearchResults([])
+          return
+        }
 
-      setIsSearching(true)
+        setIsSearching(true)
 
-      try {
-        const response = await thaqalaynApi.searchBook(bookId, query)
-        setSearchResults(response.results)
-        
-  // Optional: persist search state if navigation-context implemented
-      } catch (error) {
-        // Search failed
-        setSearchResults([])
-      } finally {
-        setIsSearching(false)
-      }
-  }, 300),
-  [bookId]
+        try {
+          const response = await thaqalaynApi.searchBook(bookId, query)
+          setSearchResults(response.results)
+
+          // Optional: persist search state if navigation-context implemented
+        } catch (error) {
+          // Search failed
+          setSearchResults([])
+        } finally {
+          setIsSearching(false)
+        }
+      }, 300),
+    [bookId],
   )
 
   // Handle search input change
   const handleSearchInput = (value: string) => {
     setSearchQuery(value)
-    
+
     if (!value.trim()) {
       setSearchResults([])
       return
     }
-    
+
     debouncedSearch(value)
   }
 
@@ -94,11 +95,11 @@ export default function BookPage() {
     const loadBookData = async () => {
       if (!bookId) return
 
-      setState(prev => ({ ...prev, loading: true, error: null }))
+      setState((prev) => ({ ...prev, loading: true, error: null }))
 
       try {
         const allBooks = await thaqalaynApi.getAllBooks()
-        let bookInfo = allBooks.find(book => book.bookId === bookId)
+        let bookInfo = allBooks.find((book) => book.bookId === bookId)
 
         // If API didn't return the book, fallback to local config (some books are multi-volume
         // with Thaqalayn book IDs and may not appear in the API's allbooks payload)
@@ -115,7 +116,7 @@ export default function BookPage() {
                 .replace(/[^a-z0-9]+/g, '')
 
             const target = simpleNorm(config.englishName || config.bookId)
-            const localMatch = books.find(b => {
+            const localMatch = books.find((b) => {
               const bNorm = simpleNorm(b.title)
               return bNorm && (bNorm.includes(target) || target.includes(bNorm))
             })
@@ -130,27 +131,27 @@ export default function BookPage() {
               bookCover: localMatch?.image || '',
               englishName: config.englishName,
               translator: '',
-              volume: config.volumeCount ?? (config.volumes?.length ?? 1)
+              volume: config.volumeCount ?? config.volumes?.length ?? 1,
             } as BookInfo
           }
         }
 
         if (!bookInfo) {
-          setState(prev => ({ ...prev, error: 'Book not found', loading: false }))
+          setState((prev) => ({ ...prev, error: 'Book not found', loading: false }))
           return
         }
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           bookInfo,
-          loading: false
+          loading: false,
         }))
       } catch (error) {
         // Failed to load book data
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           error: 'Failed to load book data',
-          loading: false
+          loading: false,
         }))
       }
     }
@@ -161,9 +162,9 @@ export default function BookPage() {
   if (state.loading) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="border-primary mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2"></div>
             <p className="text-muted">Loading book...</p>
           </div>
         </div>
@@ -174,12 +175,12 @@ export default function BookPage() {
   if (state.error || !state.bookInfo) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <p className="text-red-500 mb-4">{state.error || 'Book not found'}</p>
+            <p className="mb-4 text-red-500">{state.error || 'Book not found'}</p>
             <button
               onClick={() => router.push('/')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-theme rounded-lg hover:bg-hover-color text-primary transition-all active:scale-95"
+              className="border-theme hover:bg-hover-color text-primary inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 transition-all active:scale-95"
             >
               Go back to library
             </button>
@@ -222,82 +223,89 @@ export default function BookPage() {
     return null
   }
 
-  const displayTitle = findTitleFromBooksList(bookId) || getBookConfig(bookId)?.englishName || bookInfo?.englishName || bookInfo?.BookName || bookId
+  const displayTitle =
+    findTitleFromBooksList(bookId) ||
+    getBookConfig(bookId)?.englishName ||
+    bookInfo?.englishName ||
+    bookInfo?.BookName ||
+    bookId
 
   const coverSrc = bookInfo?.bookCover || findImageFromBooksList(bookId)
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
       {/* Top bar */}
-      <header 
+      <header
         style={{ background: 'var(--topbar-bg)' }}
-        className="sticky top-0 z-40 backdrop-blur-md border-b border-theme">
-  <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-4">
+        className="border-theme sticky top-0 z-40 border-b backdrop-blur-md"
+      >
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
           {/* Back button removed: search bar only */}
 
           {/* Search */}
-          <div className="relative flex-1 max-w-[720px] mx-auto">
-            <div className="flex items-center gap-3 rounded-xl border border-theme bg-input px-4 py-2.5 shadow-soft">
-              <IconSearch className="h-5 w-5 text-secondary" />
+          <div className="relative mx-auto max-w-[720px] flex-1">
+            <div className="border-theme bg-input flex items-center gap-3 rounded-xl border px-4 py-2.5 shadow-soft">
+              <IconSearch className="text-secondary h-5 w-5" />
               <input
                 placeholder={`Search across all ${displayTitle} volumes...`}
                 value={searchQuery}
                 onChange={(e) => handleSearchInput(e.target.value)}
-                className="w-full bg-transparent outline-none text-primary placeholder:text-muted text-[15px] focus:outline-none focus:ring-0 focus:border-transparent"
+                className="text-primary w-full bg-transparent text-[15px] outline-none placeholder:text-muted focus:border-transparent focus:outline-none focus:ring-0"
               />
               {isSearching && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <div className="border-primary h-4 w-4 animate-spin rounded-full border-b-2"></div>
               )}
             </div>
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-3 ml-auto">
-            <button 
+          <div className="ml-auto flex items-center gap-3">
+            <button
               onClick={toggleSettings}
-              className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus-visible:outline-2 focus-visible:outline-amber-500/50 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-colors hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-amber-500/50 dark:hover:bg-white/10"
               title="Settings"
             >
-              <IconMenu className="h-5 w-5 sm:h-6 sm:w-6 text-primary/80 hover:text-primary" />
+              <IconMenu className="text-primary/80 hover:text-primary h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
         </div>
       </header>
 
       {/* Book header (Uyun-style hero for visual parity) */}
-  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200/60 dark:border-emerald-800/30 rounded-2xl p-8 shadow-soft backdrop-blur-sm">
+      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/80 p-8 shadow-soft backdrop-blur-sm dark:border-emerald-800/30 dark:from-emerald-900/20 dark:to-teal-900/20">
           <div className="flex items-start gap-6">
             {coverSrc ? (
               <img
                 src={coverSrc}
                 alt={bookInfo?.englishName || displayTitle}
-                className="hidden md:block w-48 object-cover rounded-lg shadow-medium shrink-0 select-none"
+                className="shadow-medium hidden w-48 shrink-0 select-none rounded-lg object-cover md:block"
               />
             ) : null}
 
             <div className="min-w-0 flex-1">
-              <h1 className="text-4xl font-bold text-emerald-900 dark:text-emerald-100 mb-3">
+              <h1 className="mb-3 text-4xl font-bold text-emerald-900 dark:text-emerald-100">
                 {displayTitle}
               </h1>
 
-              <p className="text-xl text-emerald-800 dark:text-emerald-200 mb-4">
+              <p className="mb-4 text-xl text-emerald-800 dark:text-emerald-200">
                 {bookInfo?.englishName || bookConfig?.englishName || ''}
               </p>
 
-              <p className="text-emerald-700 dark:text-emerald-300 mb-4 font-medium">
+              <p className="mb-4 font-medium text-emerald-700 dark:text-emerald-300">
                 {bookInfo?.author}
               </p>
 
-              <p className="text-sm text-emerald-700/90 dark:text-emerald-300/90 leading-relaxed mb-6">
+              <p className="mb-6 text-sm leading-relaxed text-emerald-700/90 dark:text-emerald-300/90">
                 {bookInfo?.bookDescription}
               </p>
 
               <div className="flex flex-wrap gap-3 text-sm">
-                <span className="bg-emerald-200/80 dark:bg-emerald-800/80 text-emerald-900 dark:text-emerald-100 px-3 py-1.5 rounded-full font-medium shadow-soft">
-                  {bookConfig?.volumeCount ?? (bookConfig?.volumes?.length || 1)} {bookConfig?.volumeCount && bookConfig.volumeCount > 1 ? 'Volumes' : 'Volume'}
+                <span className="rounded-full bg-emerald-200/80 px-3 py-1.5 font-medium text-emerald-900 shadow-soft dark:bg-emerald-800/80 dark:text-emerald-100">
+                  {bookConfig?.volumeCount ?? (bookConfig?.volumes?.length || 1)}{' '}
+                  {bookConfig?.volumeCount && bookConfig.volumeCount > 1 ? 'Volumes' : 'Volume'}
                 </span>
-                <span className="bg-emerald-200/80 dark:bg-emerald-800/80 text-emerald-900 dark:text-emerald-100 px-3 py-1.5 rounded-full font-medium shadow-soft">
+                <span className="rounded-full bg-emerald-200/80 px-3 py-1.5 font-medium text-emerald-900 shadow-soft dark:bg-emerald-800/80 dark:text-emerald-100">
                   {displayTitle}
                 </span>
               </div>
@@ -307,7 +315,7 @@ export default function BookPage() {
       </section>
 
       {/* Results */}
-  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-16">
+      <section className="mx-auto mt-8 max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         {searchQuery ? (
           <SearchInterface
             searchResults={searchResults}
@@ -320,20 +328,24 @@ export default function BookPage() {
         ) : (
           <>
             {/* View Mode Toggle (match Uyun layout exactly) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div className="hidden sm:block">
-                <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2">Explore {displayTitle}</h2>
-                <p className="text-sm text-muted hidden sm:block">Choose how you want to explore the collection</p>
+                <h2 className="text-primary mb-2 text-xl font-bold sm:text-2xl">
+                  Explore {displayTitle}
+                </h2>
+                <p className="hidden text-sm text-muted sm:block">
+                  Choose how you want to explore the collection
+                </p>
               </div>
 
-              <div className="bg-card border border-theme rounded-lg p-1 shadow-soft mx-auto sm:mx-0">
+              <div className="border-theme mx-auto rounded-lg border bg-card p-1 shadow-soft sm:mx-0">
                 <button
                   onClick={() => setViewMode('structure')}
                   className={clsx(
-                    'px-4 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-all active:scale-95',
+                    'rounded px-4 py-2 text-xs font-medium transition-all active:scale-95 sm:px-4 sm:text-sm',
                     viewMode === 'structure'
                       ? 'bg-accent-primary text-white shadow-soft'
-                      : 'text-secondary hover:text-primary hover:bg-hover-color'
+                      : 'text-secondary hover:text-primary hover:bg-hover-color',
                   )}
                 >
                   <span className="sm:hidden">Explorer</span>
@@ -342,10 +354,10 @@ export default function BookPage() {
                 <button
                   onClick={() => setViewMode('chapters')}
                   className={clsx(
-                    'px-5 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-all active:scale-95',
+                    'rounded px-5 py-2 text-xs font-medium transition-all active:scale-95 sm:px-4 sm:text-sm',
                     viewMode === 'chapters'
                       ? 'bg-accent-primary text-white shadow-soft'
-                      : 'text-secondary hover:text-primary hover:bg-hover-color'
+                      : 'text-secondary hover:text-primary hover:bg-hover-color',
                   )}
                 >
                   <span className="sm:hidden">Tree</span>
@@ -354,10 +366,10 @@ export default function BookPage() {
                 <button
                   onClick={() => setViewMode('explorer')}
                   className={clsx(
-                    'px-4 sm:px-3 py-2 rounded text-xs font-medium transition-all active:scale-95',
+                    'rounded px-4 py-2 text-xs font-medium transition-all active:scale-95 sm:px-3',
                     viewMode === 'explorer'
                       ? 'bg-accent-primary text-white shadow-soft'
-                      : 'text-secondary hover:text-primary hover:bg-hover-color'
+                      : 'text-secondary hover:text-primary hover:bg-hover-color',
                   )}
                 >
                   Random
@@ -365,11 +377,13 @@ export default function BookPage() {
               </div>
             </div>
 
-            <Suspense fallback={
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-12">
+                  <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
+                </div>
+              }
+            >
               {viewMode === 'structure' ? (
                 <GenericVolumeStructure
                   bookId={bookInfo.bookId}
@@ -380,7 +394,16 @@ export default function BookPage() {
               ) : viewMode === 'chapters' ? (
                 <GenericBookBrowser bookId={bookId} bookConfig={bookConfig} />
               ) : (
-                <GenericVolumeExplorer bookConfig={bookConfig || { bookId: bookInfo.bookId, englishName: bookInfo.englishName, volumes: [bookInfo.bookId], hasMultipleVolumes: false }} />
+                <GenericVolumeExplorer
+                  bookConfig={
+                    bookConfig || {
+                      bookId: bookInfo.bookId,
+                      englishName: bookInfo.englishName,
+                      volumes: [bookInfo.bookId],
+                      hasMultipleVolumes: false,
+                    }
+                  }
+                />
               )}
             </Suspense>
           </>

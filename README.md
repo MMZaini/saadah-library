@@ -11,7 +11,7 @@ Saadah Library ("The Library of Happiness") is a free, non-profit online platfor
 
 ## What the app provides
 
-- A browsable collection of key works including Al-Kāfi. 
+- A browsable collection of key works including Al-Kāfi.
 - Side-by-side translations and original-language text where available.
 - Bookmarks and personal saved items for study and review.
 - Hadith sharing and grading classifications with verifiable source references.

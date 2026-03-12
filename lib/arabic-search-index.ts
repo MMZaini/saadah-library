@@ -26,7 +26,7 @@ const REFRESH_INTERVAL_MS: number = (() => {
 
 let refreshTimer: NodeJS.Timeout | null = null
 
-const shouldRebuild = () => !indexed || (Date.now() - lastBuilt) > INDEX_TTL_MS
+const shouldRebuild = () => !indexed || Date.now() - lastBuilt > INDEX_TTL_MS
 
 async function fetchAllBooks(): Promise<BookInfo[]> {
   try {
@@ -47,7 +47,11 @@ async function fetchHadithsForBook(bookId: string): Promise<Hadith[]> {
 }
 
 // Limit concurrent fetches to avoid hammering the API
-async function withConcurrency<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>): Promise<R[]> {
+async function withConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, i: number) => Promise<R>,
+): Promise<R[]> {
   const results: R[] = []
   let i = 0
 
@@ -75,11 +79,15 @@ async function buildIndex(): Promise<void> {
       return
     }
 
-    const bookIds = books.map(b => b.bookId).filter(Boolean)
-    const allHadithsArrays = await withConcurrency(bookIds, 3, async (bookId) => await fetchHadithsForBook(bookId))
+    const bookIds = books.map((b) => b.bookId).filter(Boolean)
+    const allHadithsArrays = await withConcurrency(
+      bookIds,
+      3,
+      async (bookId) => await fetchHadithsForBook(bookId),
+    )
     const allHadiths = allHadithsArrays.flat().filter(Boolean)
 
-    indexed = allHadiths.map(h => {
+    indexed = allHadiths.map((h) => {
       const arabic = h.arabicText || h.thaqalaynMatn || ''
       const normalizedArabicText = normalizeArabic(arabic)
       return { ...h, normalizedArabicText }
@@ -152,10 +160,13 @@ export async function searchArabicLocally(query: string): Promise<QueryResponse>
   const list = indexed || []
 
   // Simple includes matching on normalized Arabic text
-  const results = list.filter(h => h.normalizedArabicText.includes(q))
+  const results = list.filter((h) => h.normalizedArabicText.includes(q))
 
   // Return as Hadith[] (drop the helper field)
-  return { results: results.map(({ normalizedArabicText, ...rest }) => rest), total: results.length }
+  return {
+    results: results.map(({ normalizedArabicText, ...rest }) => rest),
+    total: results.length,
+  }
 }
 
 export function isArabic(text: string): boolean {

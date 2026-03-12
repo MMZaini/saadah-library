@@ -9,5 +9,5 @@ function NoSSR({ children }: { children: ReactNode }) {
 }
 
 export default dynamic(() => Promise.resolve(NoSSR), {
-  ssr: false
+  ssr: false,
 })

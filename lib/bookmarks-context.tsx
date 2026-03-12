@@ -37,7 +37,7 @@ type BookmarksContextType = {
   addBookmark: (hadith: Hadith) => void
   removeBookmark: (bookId: string, hadithId: number) => void
   updateBookmarkNotes: (bookId: string, hadithId: number, notes: string) => void
-  importBookmarks: (bookmarks: BookmarkData[]) => { imported: number, duplicates: number }
+  importBookmarks: (bookmarks: BookmarkData[]) => { imported: number; duplicates: number }
   isBookmarked: (bookId: string, hadithId: number) => boolean
   bookmarkCount: number
   isHydrated: boolean
@@ -56,7 +56,7 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
   // Load bookmarks from localStorage on mount
   useEffect(() => {
     setIsHydrated(true)
-    
+
     if (!isLocalStorageAvailable()) {
       return
     }
@@ -67,14 +67,15 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(saved) as BookmarkData[]
         // Validate the data structure and sort by timestamp (newest first)
         const validBookmarks = parsed
-          .filter(bookmark => 
-            typeof bookmark.id === 'number' &&
-            typeof bookmark.bookId === 'string' &&
-            typeof bookmark.book === 'string' &&
-            typeof bookmark.timestamp === 'number'
+          .filter(
+            (bookmark) =>
+              typeof bookmark.id === 'number' &&
+              typeof bookmark.bookId === 'string' &&
+              typeof bookmark.book === 'string' &&
+              typeof bookmark.timestamp === 'number',
           )
           .sort((a, b) => b.timestamp - a.timestamp)
-        
+
         setBookmarks(validBookmarks)
       }
     } catch (error) {
@@ -96,7 +97,7 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks))
     } catch (error) {
       console.error('Failed to save bookmarks to localStorage:', error)
-      
+
       // Try to handle quota exceeded error
       if (error instanceof Error && error.message.includes('QuotaExceededError')) {
         try {
@@ -112,16 +113,16 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
   }, [bookmarks, isHydrated])
 
   const addBookmark = useCallback((hadith: Hadith) => {
-    setBookmarks(prev => {
+    setBookmarks((prev) => {
       // Check if already bookmarked (by bookId and id)
-      if (prev.some(bookmark => bookmark.id === hadith.id && bookmark.bookId === hadith.bookId)) {
+      if (prev.some((bookmark) => bookmark.id === hadith.id && bookmark.bookId === hadith.bookId)) {
         return prev
       }
 
       // Create bookmark data with preview text
       const englishText = hadith.englishText || hadith.thaqalaynMatn || ''
       const arabicText = hadith.arabicText || ''
-      
+
       const newBookmark: BookmarkData = {
         id: hadith.id,
         bookId: hadith.bookId,
@@ -130,8 +131,13 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
         chapter: hadith.chapter,
         volume: hadith.volume,
         timestamp: Date.now(),
-        preview: englishText.slice(0, MAX_PREVIEW_LENGTH) + (englishText.length > MAX_PREVIEW_LENGTH ? '...' : ''),
-        arabicPreview: arabicText ? (arabicText.slice(0, MAX_PREVIEW_LENGTH) + (arabicText.length > MAX_PREVIEW_LENGTH ? '...' : '')) : undefined
+        preview:
+          englishText.slice(0, MAX_PREVIEW_LENGTH) +
+          (englishText.length > MAX_PREVIEW_LENGTH ? '...' : ''),
+        arabicPreview: arabicText
+          ? arabicText.slice(0, MAX_PREVIEW_LENGTH) +
+            (arabicText.length > MAX_PREVIEW_LENGTH ? '...' : '')
+          : undefined,
       }
 
       // Add to beginning of array (newest first)
@@ -147,22 +153,26 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const removeBookmark = useCallback((bookId: string, hadithId: number) => {
-    setBookmarks(prev => prev.filter(bookmark => !(bookmark.id === hadithId && bookmark.bookId === bookId)))
+    setBookmarks((prev) =>
+      prev.filter((bookmark) => !(bookmark.id === hadithId && bookmark.bookId === bookId)),
+    )
   }, [])
 
   const updateBookmarkNotes = useCallback((bookId: string, hadithId: number, notes: string) => {
-    setBookmarks(prev => prev.map(bookmark => 
-      bookmark.id === hadithId && bookmark.bookId === bookId
-        ? { ...bookmark, notes: notes.trim() || undefined }
-        : bookmark
-    ))
+    setBookmarks((prev) =>
+      prev.map((bookmark) =>
+        bookmark.id === hadithId && bookmark.bookId === bookId
+          ? { ...bookmark, notes: notes.trim() || undefined }
+          : bookmark,
+      ),
+    )
   }, [])
 
   const importBookmarks = useCallback((importedBookmarks: BookmarkData[]) => {
     let imported = 0
     let duplicates = 0
-    setBookmarks(prev => {
-      const existingKeys = new Set(prev.map(bookmark => `${bookmark.bookId}::${bookmark.id}`))
+    setBookmarks((prev) => {
+      const existingKeys = new Set(prev.map((bookmark) => `${bookmark.bookId}::${bookmark.id}`))
       const newBookmarks = []
       for (const bookmark of importedBookmarks) {
         const key = `${bookmark.bookId}::${bookmark.id}`
@@ -183,7 +193,7 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
               timestamp: bookmark.timestamp || Date.now(),
               preview: bookmark.preview || `${bookmark.book} - ${bookmark.chapter}`,
               arabicPreview: bookmark.arabicPreview || undefined,
-              notes: bookmark.notes || undefined
+              notes: bookmark.notes || undefined,
             })
             imported++
             existingKeys.add(key)
@@ -196,26 +206,36 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
     return { imported, duplicates }
   }, [])
 
-  const isBookmarked = useCallback((bookId: string, hadithId: number) => {
-    return bookmarks.some(bookmark => bookmark.id === hadithId && bookmark.bookId === bookId)
-  }, [bookmarks])
-
-  const contextValue = useMemo(() => ({
-    bookmarks,
-    addBookmark,
-    removeBookmark,
-    updateBookmarkNotes,
-    importBookmarks,
-    isBookmarked,
-    bookmarkCount: bookmarks.length,
-    isHydrated
-  }), [bookmarks, addBookmark, removeBookmark, updateBookmarkNotes, importBookmarks, isBookmarked, isHydrated])
-
-  return (
-    <BookmarksContext.Provider value={contextValue}>
-      {children}
-    </BookmarksContext.Provider>
+  const isBookmarked = useCallback(
+    (bookId: string, hadithId: number) => {
+      return bookmarks.some((bookmark) => bookmark.id === hadithId && bookmark.bookId === bookId)
+    },
+    [bookmarks],
   )
+
+  const contextValue = useMemo(
+    () => ({
+      bookmarks,
+      addBookmark,
+      removeBookmark,
+      updateBookmarkNotes,
+      importBookmarks,
+      isBookmarked,
+      bookmarkCount: bookmarks.length,
+      isHydrated,
+    }),
+    [
+      bookmarks,
+      addBookmark,
+      removeBookmark,
+      updateBookmarkNotes,
+      importBookmarks,
+      isBookmarked,
+      isHydrated,
+    ],
+  )
+
+  return <BookmarksContext.Provider value={contextValue}>{children}</BookmarksContext.Provider>
 }
 
 export function useBookmarks() {

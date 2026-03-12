@@ -10,11 +10,8 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
   preload: true,
-  fallback: ['system-ui', 'arial']
+  fallback: ['system-ui', 'arial'],
 })
-
-
-
 
 export const metadata = {
   title: 'مكتبة السعادة',
@@ -27,7 +24,7 @@ export const metadata = {
   // Preload critical resources
   other: {
     'X-UA-Compatible': 'IE=edge',
-  }
+  },
 }
 
 // Next 14+ requires viewport to be exported separately using the `viewport` export
@@ -49,7 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body suppressHydrationWarning>
         {/* Clean up VS Code injected classes immediately */}
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function(){
             try {
               function cleanVSCodeClasses() {
@@ -69,14 +68,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               setTimeout(cleanVSCodeClasses, 100);
             } catch(e) {}
           })();
-        ` }} />
+        `,
+          }}
+        />
         <ClientProviders>
-          <div className="antialiased duration-200 min-h-screen flex flex-col bg-color">
+          <div className="bg-color flex min-h-screen flex-col antialiased duration-200">
             <SettingsSidebar />
             <TopBar />
-            <main className="flex-1">
-              {children}
-            </main>
+            <main className="flex-1">{children}</main>
           </div>
         </ClientProviders>
       </body>

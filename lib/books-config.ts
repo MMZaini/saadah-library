@@ -18,7 +18,7 @@ export const MULTI_VOLUME_BOOKS: Record<string, BookConfig> = {
     englishName: 'Al-Kāfi',
     hasMultipleVolumes: true,
     volumes: alKafiApi.getAlKafiVolumes(),
-    volumeCount: 8
+    volumeCount: 8,
   },
 
   'Uyun-akhbar-al-Rida': {
@@ -27,9 +27,8 @@ export const MULTI_VOLUME_BOOKS: Record<string, BookConfig> = {
     englishName: 'ʿUyūn akhbār al-Riḍā',
     hasMultipleVolumes: true,
     volumes: uyunApi.getUyunVolumes(),
-    volumeCount: 2
-  }
-  ,
+    volumeCount: 2,
+  },
   'Man-La-Yahduruh-al-Faqih': {
     bookId: 'Man-La-Yahduruh-al-Faqih',
     baseName: 'Man-La-Yahduruh-al-Faqih-Saduq',
@@ -40,10 +39,10 @@ export const MULTI_VOLUME_BOOKS: Record<string, BookConfig> = {
       'Man-La-Yahduruh-al-Faqih-Volume-2-Saduq',
       'Man-La-Yahduruh-al-Faqih-Volume-3-Saduq',
       'Man-La-Yahduruh-al-Faqih-Volume-4-Saduq',
-      'Man-La-Yahduruh-al-Faqih-Volume-5-Saduq'
+      'Man-La-Yahduruh-al-Faqih-Volume-5-Saduq',
     ],
-    volumeCount: 5
-  }
+    volumeCount: 5,
+  },
 }
 
 // Single-volume books (common API book IDs)
@@ -62,7 +61,7 @@ export const SINGLE_VOLUME_BOOKS: string[] = [
   'Kamil-al-Ziyarat-Qummi',
   'Kitab-al-Duafa-Ghadairi',
   'Maani-al-Akhbar-Saduq',
-  'Mujam-al-Ahadith-al-Mutabara-Muhsini'
+  'Mujam-al-Ahadith-al-Mutabara-Muhsini',
 ]
 
 // URL slug to full book ID mapping for cleaner URLs
@@ -88,12 +87,12 @@ export const URL_TO_BOOK_ID_MAP: Record<string, string> = {
   'Kamil-al-Ziyarat': 'Kamil-al-Ziyarat-Qummi',
   'Kitab-al-Duafa': 'Kitab-al-Duafa-Ghadairi',
   'Maani-al-Akhbar': 'Maani-al-Akhbar-Saduq',
-  'Mujam-al-Ahadith-al-Mutabara': 'Mujam-al-Ahadith-al-Mutabara-Muhsini'
+  'Mujam-al-Ahadith-al-Mutabara': 'Mujam-al-Ahadith-al-Mutabara-Muhsini',
 }
 
 // Reverse mapping for generating URLs from book IDs
 export const BOOK_ID_TO_URL_MAP: Record<string, string> = Object.fromEntries(
-  Object.entries(URL_TO_BOOK_ID_MAP).map(([url, bookId]) => [bookId, url])
+  Object.entries(URL_TO_BOOK_ID_MAP).map(([url, bookId]) => [bookId, url]),
 )
 
 // Helper function to get clean URL from book ID
@@ -113,14 +112,14 @@ export const getBookIdFromUrlSlug = (urlSlug: string): string => {
   const lowerKey = urlSlug.toLowerCase()
   // Build a lowercase-keyed lookup for efficient case-insensitive mapping
   const lowercaseMap: Record<string, string> = Object.fromEntries(
-    Object.entries(URL_TO_BOOK_ID_MAP).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries(URL_TO_BOOK_ID_MAP).map(([k, v]) => [k.toLowerCase(), v]),
   )
 
   return lowercaseMap[lowerKey] || urlSlug
 }
 
 export const isMultiVolumeBook = (bookId: string): boolean => {
-  return Object.keys(MULTI_VOLUME_BOOKS).some(key => bookId.startsWith(key))
+  return Object.keys(MULTI_VOLUME_BOOKS).some((key) => bookId.startsWith(key))
 }
 
 export const getBookConfig = (bookId: string): BookConfig | null => {
@@ -139,7 +138,7 @@ export const getBookConfig = (bookId: string): BookConfig | null => {
       englishName: bookId,
       hasMultipleVolumes: false,
       volumes: [bookId],
-      volumeCount: 1
+      volumeCount: 1,
     }
   }
 

@@ -29,7 +29,7 @@ export default function BookmarksPage() {
   const filterOptions = [
     { value: 'both', label: 'Both', icon: '🔍' },
     { value: 'hadith', label: 'Hadith', icon: '📜' },
-    { value: 'notes', label: 'Notes', icon: '📝' }
+    { value: 'notes', label: 'Notes', icon: '📝' },
   ]
 
   // Close dropdown when clicking outside
@@ -50,7 +50,7 @@ export default function BookmarksPage() {
   const handleExportBookmarks = () => {
     try {
       // Export only fields required for import
-      const exportBookmarks = bookmarks.map(bookmark => ({
+      const exportBookmarks = bookmarks.map((bookmark) => ({
         id: bookmark.id,
         bookId: bookmark.bookId,
         book: bookmark.book,
@@ -58,12 +58,12 @@ export default function BookmarksPage() {
         chapter: bookmark.chapter,
         volume: bookmark.volume,
         timestamp: bookmark.timestamp,
-        notes: bookmark.notes || ''
+        notes: bookmark.notes || '',
       }))
 
       const exportData = {
         version: '1.0',
-        bookmarks: exportBookmarks
+        bookmarks: exportBookmarks,
       }
 
       const dataStr = JSON.stringify(exportData, null, 2)
@@ -98,30 +98,29 @@ export default function BookmarksPage() {
       try {
         const result = e.target?.result as string
         const data = JSON.parse(result)
-        
+
         // Validate file structure
         if (!data.bookmarks || !Array.isArray(data.bookmarks)) {
           throw new Error('Invalid bookmark file format')
         }
-        
+
         const { imported, duplicates } = importBookmarks(data.bookmarks)
-        
+
         let message = `Successfully imported ${imported} bookmark${imported !== 1 ? 's' : ''}.`
         if (duplicates > 0) {
           message += ` ${duplicates} duplicate${duplicates !== 1 ? 's' : ''} were skipped.`
         }
-        
+
         setImportMessage(message)
-        
+
         // Clear the message after 5 seconds
         setTimeout(() => setImportMessage(null), 5000)
-        
       } catch (err) {
         console.error('Failed to import bookmarks:', err)
         setError('Failed to import bookmarks. Please check the file format and try again.')
       }
     }
-    
+
     reader.readAsText(file)
     // Clear the input so the same file can be selected again
     event.target.value = ''
@@ -137,7 +136,7 @@ export default function BookmarksPage() {
     const fetchHadiths = async () => {
       setLoading(true)
       setError(null)
-      
+
       try {
         const hadithPromises = bookmarks.map(async (bookmark) => {
           try {
@@ -148,7 +147,7 @@ export default function BookmarksPage() {
             } else {
               // Fallback: search for the hadith by ID across all books
               const searchResult = await thaqalaynApi.searchAllBooks(`#${bookmark.id}`)
-              const foundHadith = searchResult.results.find(h => h.id === bookmark.id)
+              const foundHadith = searchResult.results.find((h) => h.id === bookmark.id)
               return foundHadith || null
             }
           } catch (err) {
@@ -160,9 +159,11 @@ export default function BookmarksPage() {
         const results = await Promise.all(hadithPromises)
         const validHadiths = results.filter((h: Hadith | null): h is Hadith => h !== null)
         setFullHadiths(validHadiths)
-        
+
         if (validHadiths.length < bookmarks.length) {
-          setError(`Could not load ${bookmarks.length - validHadiths.length} bookmark(s). They may no longer exist.`)
+          setError(
+            `Could not load ${bookmarks.length - validHadiths.length} bookmark(s). They may no longer exist.`,
+          )
         }
       } catch (err) {
         console.error('Failed to fetch bookmarked hadiths:', err)
@@ -176,14 +177,14 @@ export default function BookmarksPage() {
   }, [bookmarks])
 
   // Filter bookmarks based on search query and filter type
-  const filteredBookmarks = bookmarks.filter(bookmark => {
+  const filteredBookmarks = bookmarks.filter((bookmark) => {
     if (!searchQuery.trim()) return true
-    
+
     const query = searchQuery.toLowerCase()
-    
+
     // Get full hadith data if available
-    const fullHadith = fullHadiths.find(h => h.id === bookmark.id)
-    
+    const fullHadith = fullHadiths.find((h) => h.id === bookmark.id)
+
     switch (searchFilter) {
       case 'hadith':
         // Search in full hadith content if available, otherwise use preview
@@ -214,54 +215,52 @@ export default function BookmarksPage() {
       case 'both':
       default:
         // Search in both full hadith content and notes
-        const hadithMatch = fullHadith ? (
-          fullHadith.englishText?.toLowerCase().includes(query) ||
-          fullHadith.arabicText?.toLowerCase().includes(query) ||
-          fullHadith.category?.toLowerCase().includes(query) ||
-          fullHadith.chapter?.toLowerCase().includes(query) ||
-          fullHadith.book?.toLowerCase().includes(query) ||
-          fullHadith.author?.toLowerCase().includes(query) ||
-          fullHadith.translator?.toLowerCase().includes(query) ||
-          fullHadith.majlisiGrading?.toLowerCase().includes(query) ||
-          fullHadith.mohseniGrading?.toLowerCase().includes(query) ||
-          fullHadith.behbudiGrading?.toLowerCase().includes(query)
-        ) : (
-          bookmark.preview.toLowerCase().includes(query) ||
-          bookmark.arabicPreview?.toLowerCase().includes(query) ||
-          bookmark.category.toLowerCase().includes(query) ||
-          bookmark.chapter.toLowerCase().includes(query) ||
-          bookmark.book.toLowerCase().includes(query)
-        )
-        
+        const hadithMatch = fullHadith
+          ? fullHadith.englishText?.toLowerCase().includes(query) ||
+            fullHadith.arabicText?.toLowerCase().includes(query) ||
+            fullHadith.category?.toLowerCase().includes(query) ||
+            fullHadith.chapter?.toLowerCase().includes(query) ||
+            fullHadith.book?.toLowerCase().includes(query) ||
+            fullHadith.author?.toLowerCase().includes(query) ||
+            fullHadith.translator?.toLowerCase().includes(query) ||
+            fullHadith.majlisiGrading?.toLowerCase().includes(query) ||
+            fullHadith.mohseniGrading?.toLowerCase().includes(query) ||
+            fullHadith.behbudiGrading?.toLowerCase().includes(query)
+          : bookmark.preview.toLowerCase().includes(query) ||
+            bookmark.arabicPreview?.toLowerCase().includes(query) ||
+            bookmark.category.toLowerCase().includes(query) ||
+            bookmark.chapter.toLowerCase().includes(query) ||
+            bookmark.book.toLowerCase().includes(query)
+
         const notesMatch = bookmark.notes?.toLowerCase().includes(query)
-        
+
         return hadithMatch || notesMatch
     }
   })
 
   // Filter full hadiths to match filtered bookmarks
-  const filteredFullHadiths = fullHadiths.filter(hadith => 
-    filteredBookmarks.some(bookmark => bookmark.id === hadith.id)
+  const filteredFullHadiths = fullHadiths.filter((hadith) =>
+    filteredBookmarks.some((bookmark) => bookmark.id === hadith.id),
   )
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Link 
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-center gap-4">
+          <Link
             href="/"
-            className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+            className="rounded-lg p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
           >
-            <IconArrowLeft className="h-5 w-5 text-primary/80 hover:text-primary" />
+            <IconArrowLeft className="text-primary/80 hover:text-primary h-5 w-5" />
           </Link>
           <div className="flex items-center gap-3">
             <IconBookmark className="h-6 w-6 text-yellow-600 dark:text-yellow-500" />
-            <h1 className="text-2xl font-bold text-primary">Bookmarks</h1>
+            <h1 className="text-primary text-2xl font-bold">Bookmarks</h1>
           </div>
         </div>
-        
+
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+          <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
           <span className="ml-3 text-muted">Loading bookmarks...</span>
         </div>
       </div>
@@ -269,20 +268,20 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link 
+      <div className="mb-8 flex items-center gap-4">
+        <Link
           href="/"
-          className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          className="rounded-lg p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
         >
-          <IconArrowLeft className="h-5 w-5 text-primary/80 hover:text-primary" />
+          <IconArrowLeft className="text-primary/80 hover:text-primary h-5 w-5" />
         </Link>
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex flex-1 items-center gap-3">
           <IconBookmark className="h-6 w-6 text-yellow-600 dark:text-yellow-500" />
-          <h1 className="text-2xl font-bold text-primary">Bookmarks</h1>
+          <h1 className="text-primary text-2xl font-bold">Bookmarks</h1>
           {bookmarkCount > 0 && (
-            <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-1 rounded-full text-sm font-medium">
+            <span className="rounded-full bg-yellow-100 px-2 py-1 text-sm font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
               {bookmarkCount}
             </span>
           )}
@@ -290,32 +289,42 @@ export default function BookmarksPage() {
       </div>
 
       {/* Global Notes Toggle and Import/Refresh/Import Buttons */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-3">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
         {/* Global Notes Toggle (only if bookmarks exist) */}
         {bookmarkCount > 0 && (
           <button
             onClick={() => setGlobalNotesVisible(!globalNotesVisible)}
             className={clsx(
-              "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200",
+              'flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all duration-200',
               globalNotesVisible
-                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+                ? 'border border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                : 'border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700',
             )}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
             <span>{globalNotesVisible ? 'Hide All Notes' : 'Show All Notes'}</span>
-            <svg 
+            <svg
               className={clsx(
-                "w-4 h-4 transition-transform duration-200",
-                globalNotesVisible ? "rotate-180" : ""
-              )} 
-              fill="none" 
-              stroke="currentColor" 
+                'h-4 w-4 transition-transform duration-200',
+                globalNotesVisible ? 'rotate-180' : '',
+              )}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
         )}
@@ -324,21 +333,31 @@ export default function BookmarksPage() {
         <div className="flex gap-2">
           <button
             onClick={handleImportBookmarks}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 rounded-lg font-medium hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-all duration-200"
+            className="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-100 px-4 py-2 font-medium text-purple-700 transition-all duration-200 hover:bg-purple-200 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-800/50"
             title="Import bookmarks from file"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+              />
             </svg>
             Import
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200"
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 font-medium text-gray-800 transition-all duration-200 hover:bg-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
             title="Refresh bookmarks"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582M20 20v-5h-.581M5.635 19.364A9 9 0 104.582 9.582" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582M20 20v-5h-.581M5.635 19.364A9 9 0 104.582 9.582"
+              />
             </svg>
             Refresh
           </button>
@@ -346,11 +365,16 @@ export default function BookmarksPage() {
           {bookmarkCount > 0 && (
             <button
               onClick={handleExportBookmarks}
-              className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700 rounded-lg font-medium hover:bg-green-200 dark:hover:bg-green-800/50 transition-all duration-200"
+              className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-100 px-4 py-2 font-medium text-green-700 transition-all duration-200 hover:bg-green-200 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-800/50"
               title="Export bookmarks to file"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                />
               </svg>
               Export
             </button>
@@ -371,50 +395,65 @@ export default function BookmarksPage() {
       {bookmarkCount > 0 && (
         <div className="mb-6 space-y-4">
           {/* Search Input and Filter - Side by Side Layout */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             {/* Search Input */}
             <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg
+                  className="h-5 w-5 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
               </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl leading-5 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 leading-5 text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-blue-400"
                 placeholder="Search through your bookmarks..."
               />
             </div>
-            
+
             {/* Search Filter Dropdown - Custom Component */}
             <div className="relative min-w-[140px]" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-medium rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-700/50 dark:focus:border-blue-400"
               >
                 <span className="flex items-center gap-2">
-                  <span>{filterOptions.find(opt => opt.value === searchFilter)?.icon}</span>
-                  <span>{filterOptions.find(opt => opt.value === searchFilter)?.label}</span>
+                  <span>{filterOptions.find((opt) => opt.value === searchFilter)?.icon}</span>
+                  <span>{filterOptions.find((opt) => opt.value === searchFilter)?.label}</span>
                 </span>
-                <svg 
+                <svg
                   className={clsx(
-                    "h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200",
-                    isDropdownOpen ? "rotate-180" : ""
-                  )} 
-                  fill="none" 
-                  stroke="currentColor" 
+                    'h-4 w-4 text-gray-500 transition-transform duration-200 dark:text-gray-400',
+                    isDropdownOpen ? 'rotate-180' : '',
+                  )}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
               {/* Custom Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                   {filterOptions.map((option) => (
                     <button
                       key={option.value}
@@ -424,17 +463,27 @@ export default function BookmarksPage() {
                         setIsDropdownOpen(false)
                       }}
                       className={clsx(
-                        "w-full text-left px-4 py-3 flex items-center gap-3 transition-colors duration-150",
+                        'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150',
                         searchFilter === option.value
-                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300"
+                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                          : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50',
                       )}
                     >
                       <span className="text-lg">{option.icon}</span>
                       <div className="flex-1 font-medium">{option.label}</div>
                       {searchFilter === option.value && (
-                        <svg className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <svg
+                          className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       )}
                     </button>
@@ -443,15 +492,13 @@ export default function BookmarksPage() {
               )}
             </div>
           </div>
-          
+
           {/* Search Results Info */}
           {searchQuery.trim() && (
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {filteredBookmarks.length === bookmarkCount ? (
-                `Showing all ${bookmarkCount} bookmarks`
-              ) : (
-                `Found ${filteredBookmarks.length} of ${bookmarkCount} bookmarks`
-              )}
+              {filteredBookmarks.length === bookmarkCount
+                ? `Showing all ${bookmarkCount} bookmarks`
+                : `Found ${filteredBookmarks.length} of ${bookmarkCount} bookmarks`}
             </div>
           )}
         </div>
@@ -459,42 +506,50 @@ export default function BookmarksPage() {
 
       {/* Import Success Message */}
       {importMessage && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-          <p className="text-green-800 dark:text-green-300 text-sm font-medium">{importMessage}</p>
+        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+          <p className="text-sm font-medium text-green-800 dark:text-green-300">{importMessage}</p>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
         </div>
       )}
 
       {/* Content */}
       {bookmarkCount === 0 ? (
-        <div className="text-center py-12">
-          <IconBookmark className="h-16 w-16 text-muted mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-primary mb-2">No bookmarks yet</h2>
-          <p className="text-muted mb-6">
+        <div className="py-12 text-center">
+          <IconBookmark className="mx-auto mb-4 h-16 w-16 text-muted" />
+          <h2 className="text-primary mb-2 text-xl font-semibold">No bookmarks yet</h2>
+          <p className="mb-6 text-muted">
             Start bookmarking your favorite hadiths to see them here.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center px-4 py-2 bg-accent-primary text-white font-medium rounded-lg hover:bg-accent-secondary transition-colors"
+            className="bg-accent-primary hover:bg-accent-secondary inline-flex items-center rounded-lg px-4 py-2 font-medium text-white transition-colors"
           >
             Browse Hadiths
           </Link>
         </div>
       ) : filteredBookmarks.length === 0 && searchQuery.trim() ? (
-        <div className="text-center py-12">
-          <svg className="h-16 w-16 text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <div className="py-12 text-center">
+          <svg
+            className="mx-auto mb-4 h-16 w-16 text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
-          <h2 className="text-xl font-semibold text-primary mb-2">No results found</h2>
-          <p className="text-muted mb-4">
-            No bookmarks match your search criteria.
-          </p>
+          <h2 className="text-primary mb-2 text-xl font-semibold">No results found</h2>
+          <p className="mb-4 text-muted">No bookmarks match your search criteria.</p>
           <button
             onClick={() => setSearchQuery('')}
             className="text-accent-primary hover:underline"
@@ -505,15 +560,15 @@ export default function BookmarksPage() {
       ) : (
         <div className="space-y-6">
           {/* Stats */}
-          <div className="bg-card border border-theme rounded-xl p-4">
+          <div className="border-theme rounded-xl border bg-card p-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted">Total bookmarks:</span>
-              <span className="font-medium text-primary">{bookmarkCount}</span>
+              <span className="text-primary font-medium">{bookmarkCount}</span>
             </div>
             {searchQuery.trim() && (
-              <div className="flex items-center justify-between text-sm mt-2">
+              <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-muted">Showing results:</span>
-                <span className="font-medium text-primary">{filteredBookmarks.length}</span>
+                <span className="text-primary font-medium">{filteredBookmarks.length}</span>
               </div>
             )}
           </div>
@@ -521,16 +576,13 @@ export default function BookmarksPage() {
           {/* Bookmark Preview Cards (if hadiths failed to load) */}
           {filteredFullHadiths.length === 0 && filteredBookmarks.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-primary">Bookmark Previews</h2>
-              <p className="text-sm text-muted mb-4">
+              <h2 className="text-primary text-lg font-semibold">Bookmark Previews</h2>
+              <p className="mb-4 text-sm text-muted">
                 Full content could not be loaded. Here are your bookmark previews:
               </p>
-              
+
               {filteredBookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.bookId + ':' + bookmark.id}
-                  bookmark={bookmark}
-                />
+                <BookmarkCard key={bookmark.bookId + ':' + bookmark.id} bookmark={bookmark} />
               ))}
             </div>
           )}
@@ -538,12 +590,14 @@ export default function BookmarksPage() {
           {/* Full Hadith Cards */}
           {filteredFullHadiths.length > 0 && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-primary">Your Bookmarked Hadiths</h2>
+              <h2 className="text-primary text-lg font-semibold">Your Bookmarked Hadiths</h2>
               {filteredFullHadiths.map((hadith, idx) => {
-                const bookmark = filteredBookmarks.find(b => b.id === hadith.id && b.bookId === hadith.bookId)
+                const bookmark = filteredBookmarks.find(
+                  (b) => b.id === hadith.id && b.bookId === hadith.bookId,
+                )
                 return bookmark ? (
                   <div key={hadith.bookId + ':' + hadith.id} className="relative">
-                    <div className="absolute -left-4 top-6 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-medium">
+                    <div className="bg-accent-primary shadow-medium absolute -left-4 top-6 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
                       {idx + 1}
                     </div>
                     <div className="ml-8">

@@ -13,9 +13,9 @@ export default function HadithPage() {
   const params = useParams()
   const { settings } = useSettings()
   const { setChapterInfo } = useChapter()
-  
+
   const hadithId = parseInt(params.hadithId as string)
-  
+
   const [hadith, setHadith] = useState<Hadith | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,20 +29,20 @@ export default function HadithPage() {
       try {
         // Get all hadiths from all ʿUyūn volumes and find the one with matching ID
         let foundHadith: Hadith | null = null
-        
+
         // ʿUyūn akhbār al-Riḍā has 2 volumes
         const uyunVolumes = [
           'Uyun-akhbar-al-Rida-Volume-1-Saduq',
-          'Uyun-akhbar-al-Rida-Volume-2-Saduq'
+          'Uyun-akhbar-al-Rida-Volume-2-Saduq',
         ]
-        
+
         // Search through each volume
         for (const volumeBookId of uyunVolumes) {
           try {
             console.log(`Searching ${volumeBookId} for hadith ${hadithId}`)
             const volumeHadiths = await thaqalaynApi.getBookHadiths(volumeBookId)
             console.log(`${volumeBookId} has ${volumeHadiths.length} hadiths`)
-            foundHadith = volumeHadiths.find(h => h.id === hadithId) || null
+            foundHadith = volumeHadiths.find((h) => h.id === hadithId) || null
             if (foundHadith) {
               console.log(`Found hadith ${hadithId} in ${volumeBookId}`)
               break
@@ -62,7 +62,7 @@ export default function HadithPage() {
 
         console.log('Setting ʿUyūn hadith:', foundHadith)
         setHadith(foundHadith)
-        
+
         // Set chapter context for TopBar navigation
         setChapterInfo({
           volumeId: foundHadith.volume,
@@ -70,9 +70,8 @@ export default function HadithPage() {
           chapter: foundHadith.chapter || 'Unknown Chapter',
           hadithCount: 1,
           categoryId: foundHadith.categoryId,
-          chapterInCategoryId: foundHadith.chapterInCategoryId
+          chapterInCategoryId: foundHadith.chapterInCategoryId,
         })
-        
       } catch (err) {
         setError('Failed to load hadith')
       } finally {
@@ -96,9 +95,16 @@ export default function HadithPage() {
   }, [hadithId])
 
   const handleBackClick = () => {
-    if (hadith?.volume && hadith?.categoryId && (hadith?.chapterInCategoryId !== null && hadith?.chapterInCategoryId !== undefined)) {
+    if (
+      hadith?.volume &&
+      hadith?.categoryId &&
+      hadith?.chapterInCategoryId !== null &&
+      hadith?.chapterInCategoryId !== undefined
+    ) {
       // Navigate back to the chapter this hadith belongs to
-      router.push(`/Uyun-akhbar-al-Rida/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+      router.push(
+        `/Uyun-akhbar-al-Rida/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+      )
     } else {
       // Fallback to ʿUyūn main page
       router.push('/Uyun-akhbar-al-Rida')
@@ -108,9 +114,9 @@ export default function HadithPage() {
   if (loading) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex min-h-[50vh] items-center justify-center">
+            <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
           </div>
         </div>
       </main>
@@ -120,26 +126,24 @@ export default function HadithPage() {
   if (error || !hadith) {
     return (
       <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <button
             onClick={handleBackClick}
-            className="mb-6 flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
+            className="text-primary/70 hover:text-primary mb-6 flex items-center gap-2 transition-colors"
           >
             <IconArrowLeft className="h-4 w-4" />
             Back to ʿUyūn akhbār al-Riḍā
           </button>
-          
-          <div className="flex items-center justify-center min-h-[50vh]">
+
+          <div className="flex min-h-[50vh] items-center justify-center">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-primary mb-4">
+              <h1 className="text-primary mb-4 text-2xl font-bold">
                 {error || 'Hadith Not Found'}
               </h1>
-              <p className="text-secondary mb-6">
-                The requested hadith could not be found.
-              </p>
+              <p className="text-secondary mb-6">The requested hadith could not be found.</p>
               <button
                 onClick={handleBackClick}
-                className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-colors"
+                className="bg-accent-primary hover:bg-accent-secondary rounded-lg px-6 py-3 text-white transition-colors"
               >
                 Return to ʿUyūn akhbār al-Riḍā
               </button>
@@ -152,18 +156,18 @@ export default function HadithPage() {
 
   return (
     <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <button
           onClick={handleBackClick}
-          className="mb-6 flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
+          className="text-primary/70 hover:text-primary mb-6 flex items-center gap-2 transition-colors"
         >
           <IconArrowLeft className="h-4 w-4" />
           Back to Chapter
         </button>
-        
+
         <div className="space-y-6">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-primary mb-2">
+          <div className="mb-8 text-center">
+            <h1 className="text-primary mb-2 text-2xl font-bold">
               ʿUyūn akhbār al-Riḍā Hadith #{hadith.id}
             </h1>
             <p className="text-secondary">
@@ -173,15 +177,11 @@ export default function HadithPage() {
 
           {/* Match chapter card layout with index bubble */}
           <div className="relative">
-            <div className="absolute -left-4 top-6 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-medium">
+            <div className="bg-accent-primary shadow-medium absolute -left-4 top-6 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
               1
             </div>
             <div className="ml-8">
-              <HadithCard 
-                hadith={hadith}
-                className="mb-6"
-                showViewChapter={false}
-              />
+              <HadithCard hadith={hadith} className="mb-6" showViewChapter={false} />
             </div>
           </div>
         </div>

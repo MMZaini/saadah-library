@@ -22,7 +22,12 @@ interface HadithCardProps {
 }
 
 // Tooltip component using React Portal
-const Tooltip = ({ children, content, isVisible, triggerRef }: {
+const Tooltip = ({
+  children,
+  content,
+  isVisible,
+  triggerRef,
+}: {
   children: React.ReactNode
   content: React.ReactNode
   isVisible: boolean
@@ -33,10 +38,10 @@ const Tooltip = ({ children, content, isVisible, triggerRef }: {
   useEffect(() => {
     if (isVisible && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
-      
+
       setPosition({
         top: rect.top - 8, // Position just above the trigger element
-        left: rect.left + rect.width / 2
+        left: rect.left + rect.width / 2,
       })
     }
   }, [isVisible, triggerRef])
@@ -44,52 +49,62 @@ const Tooltip = ({ children, content, isVisible, triggerRef }: {
   return (
     <>
       {children}
-      {typeof document !== 'undefined' && isVisible && createPortal(
-        <div
-          className="fixed px-3 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs rounded-lg shadow-lg pointer-events-none min-w-max max-w-xs transform -translate-x-1/2 -translate-y-full z-[999999]"
-          style={{ top: position.top, left: position.left }}
-        >
-          {content}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-100"></div>
-        </div>,
-        document.body
-      )}
+      {typeof document !== 'undefined' &&
+        isVisible &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-[999999] min-w-max max-w-xs -translate-x-1/2 -translate-y-full transform rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg dark:bg-slate-100 dark:text-slate-900"
+            style={{ top: position.top, left: position.left }}
+          >
+            {content}
+            <div className="absolute left-1/2 top-full -translate-x-1/2 transform border-4 border-transparent border-t-slate-900 dark:border-t-slate-100"></div>
+          </div>,
+          document.body,
+        )}
     </>
   )
 }
 
-const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggle = false, notesVisible = false, onToggleNotes, showArabicByDefault = false }: HadithCardProps) => {
+const HadithCard = ({
+  hadith,
+  className,
+  showViewChapter = false,
+  showNotesToggle = false,
+  notesVisible = false,
+  onToggleNotes,
+  showArabicByDefault = false,
+}: HadithCardProps) => {
   const { settings } = useSettings()
   const router = useRouter()
   const navigation = useNavigation()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
-  
+
   const [showArabic, setShowArabic] = useState(showArabicByDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
   const arabicRef = useRef<HTMLDivElement | null>(null)
   const [arabicOverflow, setArabicOverflow] = useState(false)
-  
+
   // Check if this hadith is bookmarked
   const bookmarked = isBookmarked(hadith.bookId, hadith.id)
-  
+
   // Update expanded state when settings change
   useEffect(() => {
     setExpanded(settings.alwaysShowFullHadith)
   }, [settings.alwaysShowFullHadith])
-  
+
   // Update showArabic state when showArabicByDefault prop changes
   useEffect(() => {
     setShowArabic(showArabicByDefault)
   }, [showArabicByDefault])
-  
+
   // Tooltip states
   const [tooltipStates, setTooltipStates] = useState({
     majlisi: false,
     mohseni: false,
-    behbudi: false
+    behbudi: false,
   })
-  
+
   // Refs for tooltip positioning
   const majlisiRef = useRef<HTMLSpanElement>(null)
   const mohseniRef = useRef<HTMLSpanElement>(null)
@@ -101,7 +116,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
 
     const cleanMatn = matn.trim()
     const cleanChain = chain.trim()
-    
+
     // Case 1: Exact match at the beginning
     if (cleanMatn.startsWith(cleanChain)) {
       let result = cleanMatn.slice(cleanChain.length).trim()
@@ -109,26 +124,28 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
       result = result.replace(/^[:\s;"']+/, '').trim()
       return result
     }
-    
+
     // Case 2: Chain might have slight variations (punctuation, spacing)
     // Normalize both texts for comparison
-    const normalizeText = (text: string) => 
-      text.replace(/[^\w\s]/g, ' ')  // Replace punctuation with spaces
-          .replace(/\s+/g, ' ')      // Normalize whitespace
-          .toLowerCase()
-          .trim()
-    
+    const normalizeText = (text: string) =>
+      text
+        .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .toLowerCase()
+        .trim()
+
     const normalizedMatn = normalizeText(cleanMatn)
     const normalizedChain = normalizeText(cleanChain)
-    
+
     if (normalizedMatn.startsWith(normalizedChain)) {
       // Find where the chain ends in the original text
       const words = cleanChain.split(/\s+/)
       let endIndex = 0
       let wordCount = 0
-      
+
       for (let i = 0; i < cleanMatn.length && wordCount < words.length; i++) {
-        if (/\w/.test(cleanMatn[i])) { // If it's a word character
+        if (/\w/.test(cleanMatn[i])) {
+          // If it's a word character
           // Find the end of this word
           let wordEnd = i
           while (wordEnd < cleanMatn.length && /\w/.test(cleanMatn[wordEnd])) {
@@ -139,7 +156,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
           i = wordEnd - 1 // Skip to end of word
         }
       }
-      
+
       if (wordCount === words.length) {
         let result = cleanMatn.slice(endIndex).trim()
         // Remove leading punctuation that might separate chain from actual hadith
@@ -147,7 +164,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
         return result
       }
     }
-    
+
     return cleanMatn
   }, [])
 
@@ -156,21 +173,27 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
     const rawEnglish = hadith.englishText || hadith.thaqalaynMatn
     const arabic = hadith.arabicText
     const chain = hadith.thaqalaynSanad
-    
+
     // Remove duplicate chain from the beginning of the matn if both exist
     let processedEnglish = rawEnglish
     if (chain && rawEnglish) {
       processedEnglish = removeChainFromMatn(rawEnglish, chain)
     }
-    
+
     return {
       englishText: processedEnglish,
       arabicText: arabic,
       // Use the same cutoff as the slice(0, 750) used for truncation
       isLongText: (processedEnglish?.length || 0) > 750,
-      isArabicLongText: (arabic?.length || 0) > 750
+      isArabicLongText: (arabic?.length || 0) > 750,
     }
-  }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad, removeChainFromMatn])
+  }, [
+    hadith.englishText,
+    hadith.thaqalaynMatn,
+    hadith.arabicText,
+    hadith.thaqalaynSanad,
+    removeChainFromMatn,
+  ])
 
   // Measure Arabic overflow to show Read more/less only when necessary
   useEffect(() => {
@@ -214,100 +237,111 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
   }, [arabicRef, arabicText, settings.arabicFontSize, arabicExpanded])
 
   // Memoize grading data
-  const gradingData = useMemo(() => ({
-    majlisi: hadith.gradingsFull?.find(g => g.author.name_en.toLowerCase().includes('majlisi')),
-    mohseni: hadith.gradingsFull?.find(g => g.author.name_en.toLowerCase().includes('mohseni')),
-    behbudi: hadith.gradingsFull?.find(g => g.author.name_en.toLowerCase().includes('behbudi'))
-  }), [hadith.gradingsFull])
+  const gradingData = useMemo(
+    () => ({
+      majlisi: hadith.gradingsFull?.find((g) => g.author.name_en.toLowerCase().includes('majlisi')),
+      mohseni: hadith.gradingsFull?.find((g) => g.author.name_en.toLowerCase().includes('mohseni')),
+      behbudi: hadith.gradingsFull?.find((g) => g.author.name_en.toLowerCase().includes('behbudi')),
+    }),
+    [hadith.gradingsFull],
+  )
 
   // Memoize tooltip handlers
   const handleTooltipEnter = useCallback((type: 'majlisi' | 'mohseni' | 'behbudi') => {
-    setTooltipStates(prev => ({ ...prev, [type]: true }))
+    setTooltipStates((prev) => ({ ...prev, [type]: true }))
   }, [])
 
   const handleTooltipLeave = useCallback((type: 'majlisi' | 'mohseni' | 'behbudi') => {
-    setTooltipStates(prev => ({ ...prev, [type]: false }))
+    setTooltipStates((prev) => ({ ...prev, [type]: false }))
   }, [])
 
   // Returns the chapter URL for the hadith (for use in both navigation and anchor href)
   const getChapterUrl = useCallback(() => {
-    let basePath = '/al-kafi';
-    let isAlKafi = true;
+    let basePath = '/al-kafi'
+    let isAlKafi = true
     try {
-      const bookId = hadith.bookId || '';
-      const cfg = getBookConfig(bookId);
+      const bookId = hadith.bookId || ''
+      const cfg = getBookConfig(bookId)
       if (cfg) {
         if (cfg.bookId === 'Al-Kafi') {
-          basePath = '/al-kafi';
-          isAlKafi = true;
+          basePath = '/al-kafi'
+          isAlKafi = true
         } else {
-          basePath = `/${getBookUrlSlug(cfg.bookId)}`;
-          isAlKafi = false;
+          basePath = `/${getBookUrlSlug(cfg.bookId)}`
+          isAlKafi = false
         }
-      } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
-        basePath = '/Uyun-akhbar-al-Rida';
-        isAlKafi = false;
+      } else if (
+        bookId.includes('Uyun') ||
+        (hadith.book && hadith.book.toLowerCase().includes('uyun'))
+      ) {
+        basePath = '/Uyun-akhbar-al-Rida'
+        isAlKafi = false
       } else if (bookId) {
-        basePath = `/${getBookUrlSlug(bookId)}`;
-        isAlKafi = false;
+        basePath = `/${getBookUrlSlug(bookId)}`
+        isAlKafi = false
       }
     } catch (e) {
-      if ((hadith.book && hadith.book.includes('Uyun')) || (hadith.bookId && hadith.bookId.includes('Uyun'))) {
-        basePath = '/Uyun-akhbar-al-Rida';
-        isAlKafi = false;
+      if (
+        (hadith.book && hadith.book.includes('Uyun')) ||
+        (hadith.bookId && hadith.bookId.includes('Uyun'))
+      ) {
+        basePath = '/Uyun-akhbar-al-Rida'
+        isAlKafi = false
       } else if (hadith.bookId) {
-        basePath = `/${getBookUrlSlug(hadith.bookId)}`;
-        isAlKafi = false;
+        basePath = `/${getBookUrlSlug(hadith.bookId)}`
+        isAlKafi = false
       }
     }
     if (isAlKafi) {
-      return `${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`;
+      return `${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
     } else {
-      return `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`;
+      return `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
     }
-  }, [hadith.volume, hadith.categoryId, hadith.chapterInCategoryId, hadith.book, hadith.bookId]);
+  }, [hadith.volume, hadith.categoryId, hadith.chapterInCategoryId, hadith.book, hadith.bookId])
 
   // For backward compatibility, keep the handler (if needed elsewhere)
   const handleNavigateToChapter = useCallback(async () => {
-    navigation.saveScrollPosition(window.scrollY);
-    router.push(getChapterUrl());
-  }, [navigation, router, getChapterUrl]);
+    navigation.saveScrollPosition(window.scrollY)
+    router.push(getChapterUrl())
+  }, [navigation, router, getChapterUrl])
 
   const handleCopyLink = useCallback(async () => {
     try {
       const bookId = hadith.bookId || ''
       let hadithUrl = ''
-      
+
       console.log('Copy link - hadith:', { id: hadith.id, bookId, book: hadith.book })
-      
+
       // Determine the correct path based on the book/collection
       const cfg = getBookConfig(bookId)
       console.log('Book config:', cfg)
-      
+
       if (cfg) {
         if (cfg.bookId === 'Al-Kafi') {
           hadithUrl = `/al-kafi/hadith/${hadith.id}`
         } else {
           hadithUrl = `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
         }
-      } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
+      } else if (
+        bookId.includes('Uyun') ||
+        (hadith.book && hadith.book.toLowerCase().includes('uyun'))
+      ) {
         hadithUrl = `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
       } else if (bookId) {
         hadithUrl = `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
       } else {
         hadithUrl = `/al-kafi/hadith/${hadith.id}` // fallback
       }
-      
+
       console.log('Generated hadith URL:', hadithUrl)
-      
+
       const fullUrl = `${window.location.origin}${hadithUrl}`
       console.log('Full URL to copy:', fullUrl)
-      
+
       await navigator.clipboard.writeText(fullUrl)
-      
+
       // Could add a toast notification here if you have a toast system
       // For now, we'll just provide visual feedback through the title change
-      
     } catch (err) {
       console.error('Failed to copy link:', err)
     }
@@ -317,30 +351,29 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
     try {
       // Format the source information
       let sourceText = ''
-      
+
       // Book name
       const bookName = hadith.book || 'Unknown Book'
-      
+
       // Chapter information
       const chapterInfo = hadith.chapter || 'Unknown Chapter'
-      
+
       // Volume information (if available)
       const volumeInfo = hadith.volume ? `Volume ${hadith.volume}` : ''
-      
+
       // Hadith number
       const hadithNumber = `Hadith ${hadith.id}`
-      
+
       // Combine all parts
       if (volumeInfo) {
         sourceText = `${bookName}, ${volumeInfo}, ${chapterInfo}, ${hadithNumber}`
       } else {
         sourceText = `${bookName}, ${chapterInfo}, ${hadithNumber}`
       }
-      
+
       await navigator.clipboard.writeText(sourceText)
-      
+
       console.log('Copied source:', sourceText)
-      
     } catch (err) {
       console.error('Failed to copy source:', err)
     }
@@ -351,106 +384,112 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
       // Get the link URL
       const bookId = hadith.bookId || ''
       let hadithUrl = ''
-      
+
       // Determine the correct path based on the book/collection
       const cfg = getBookConfig(bookId)
-      
+
       if (cfg) {
         if (cfg.bookId === 'Al-Kafi') {
           hadithUrl = `/al-kafi/hadith/${hadith.id}`
         } else {
           hadithUrl = `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
         }
-      } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
+      } else if (
+        bookId.includes('Uyun') ||
+        (hadith.book && hadith.book.toLowerCase().includes('uyun'))
+      ) {
         hadithUrl = `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
       } else if (bookId) {
         hadithUrl = `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
       } else {
         hadithUrl = `/al-kafi/hadith/${hadith.id}` // fallback
       }
-      
+
       const fullUrl = `${window.location.origin}${hadithUrl}`
-      
+
       // Format the source information
       const bookName = hadith.book || 'Unknown Book'
       const chapterInfo = hadith.chapter || 'Unknown Chapter'
       const volumeInfo = hadith.volume ? `Volume ${hadith.volume}` : ''
       const hadithNumber = `Hadith ${hadith.id}`
-      
+
       let sourceText = ''
       if (volumeInfo) {
         sourceText = `${bookName}, ${volumeInfo}, ${chapterInfo}, ${hadithNumber}`
       } else {
         sourceText = `${bookName}, ${chapterInfo}, ${hadithNumber}`
       }
-      
+
       // Combine link and source
       const combinedText = `${sourceText}\n${fullUrl}`
-      
+
       await navigator.clipboard.writeText(combinedText)
-      
+
       console.log('Copied link and source:', combinedText)
-      
     } catch (err) {
       console.error('Failed to copy link and source:', err)
     }
   }, [hadith.id, hadith.bookId, hadith.book, hadith.chapter, hadith.volume])
 
   return (
-    <div className={clsx(
-      'bg-card border border-theme rounded-xl p-4 sm:p-6 shadow-soft',
-      'hover:border-accent-primary/20 hover:bg-card-hover hover:shadow-medium',
-      'transition-all duration-300',
-      className
-    )}>
+    <div
+      className={clsx(
+        'border-theme rounded-xl border bg-card p-4 shadow-soft sm:p-6',
+        'hover:border-accent-primary/20 hover:bg-card-hover hover:shadow-medium',
+        'transition-all duration-300',
+        className,
+      )}
+    >
       {/* Header */}
-        <div className="flex items-start justify-between mb-3 sm:mb-4">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-              <span className="text-xs sm:text-sm font-medium text-white bg-accent-primary px-2 py-1 rounded shadow-soft w-fit">
-                <span className="sm:hidden">{hadith.book} Vol.{hadith.volume}</span>
-                <span className="hidden sm:inline">{hadith.book} - Volume {hadith.volume}</span>
+      <div className="mb-3 flex items-start justify-between sm:mb-4">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="bg-accent-primary w-fit rounded px-2 py-1 text-xs font-medium text-white shadow-soft sm:text-sm">
+              <span className="sm:hidden">
+                {hadith.book} Vol.{hadith.volume}
               </span>
-              <span className="text-xs text-muted">#{hadith.id}</span>
-            </div>          <h3 className="text-sm font-medium text-secondary leading-tight mb-1 line-clamp-2">
+              <span className="hidden sm:inline">
+                {hadith.book} - Volume {hadith.volume}
+              </span>
+            </span>
+            <span className="text-xs text-muted">#{hadith.id}</span>
+          </div>{' '}
+          <h3 className="text-secondary mb-1 line-clamp-2 text-sm font-medium leading-tight">
             {hadith.category}
           </h3>
-          
-          <p className="text-xs text-muted line-clamp-2">
-            {hadith.chapter}
-          </p>
+          <p className="line-clamp-2 text-xs text-muted">{hadith.chapter}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 ml-3 sm:ml-4">
+        <div className="ml-3 flex flex-wrap items-center gap-2 sm:ml-4">
           {/* Bookmark Button */}
           <button
-            onClick={e => {
-              e.preventDefault();
-              bookmarked ? removeBookmark(hadith.bookId, hadith.id) : addBookmark(hadith);
+            onClick={(e) => {
+              e.preventDefault()
+              bookmarked ? removeBookmark(hadith.bookId, hadith.id) : addBookmark(hadith)
             }}
             className={clsx(
-              'px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-all shadow-soft min-w-[28px] sm:min-w-[32px] flex items-center justify-center',
-              bookmarked 
-                ? 'bg-yellow-500 text-white shadow-medium hover:bg-yellow-600' 
-                : 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 active:scale-95 dark:text-yellow-500'
+              'flex min-w-[28px] items-center justify-center rounded-lg px-2 py-1 text-xs font-medium shadow-soft transition-all sm:min-w-[32px] sm:px-3',
+              bookmarked
+                ? 'shadow-medium bg-yellow-500 text-white hover:bg-yellow-600'
+                : 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 active:scale-95 dark:text-yellow-500',
             )}
             title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
           >
             {bookmarked ? (
-              <IconBookmarkFilled className="w-3 h-3 sm:w-4 sm:h-4" />
+              <IconBookmarkFilled className="h-3 w-3 sm:h-4 sm:w-4" />
             ) : (
-              <IconBookmark className="w-3 h-3 sm:w-4 sm:h-4" />
+              <IconBookmark className="h-3 w-3 sm:h-4 sm:w-4" />
             )}
           </button>
-          
+
           {arabicText && (
             <button
               onClick={() => setShowArabic(!showArabic)}
               className={clsx(
-                'px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-all shadow-soft min-w-[28px] sm:min-w-[32px]',
-                showArabic 
-                  ? 'bg-accent-primary text-white shadow-medium' 
-                  : 'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95'
+                'min-w-[28px] rounded-lg px-2 py-1 text-xs font-medium shadow-soft transition-all sm:min-w-[32px] sm:px-3',
+                showArabic
+                  ? 'bg-accent-primary shadow-medium text-white'
+                  : 'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95',
               )}
               aria-label={showArabic ? 'Hide Arabic' : 'Show Arabic'}
               title={showArabic ? 'Hide Arabic' : 'Show Arabic'}
@@ -473,7 +512,10 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   } else {
                     hadithUrl = `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
                   }
-                } else if (bookId.includes('Uyun') || (hadith.book && hadith.book.toLowerCase().includes('uyun'))) {
+                } else if (
+                  bookId.includes('Uyun') ||
+                  (hadith.book && hadith.book.toLowerCase().includes('uyun'))
+                ) {
                   hadithUrl = `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
                 } else if (bookId) {
                   hadithUrl = `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
@@ -488,16 +530,21 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
               }
             }}
             className={clsx(
-              'px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-all shadow-soft min-w-[28px] sm:min-w-[32px] flex items-center justify-center gap-1',
-              'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95'
+              'flex min-w-[28px] items-center justify-center gap-1 rounded-lg px-2 py-1 text-xs font-medium shadow-soft transition-all sm:min-w-[32px] sm:px-3',
+              'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95',
             )}
             aria-label="Open hadith in a new tab"
             title="Open hadith in a new tab"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7v7m0-7L10 14" />
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14 3h7v7m0-7L10 14"
+              />
             </svg>
-            <span className="hidden xs:inline sm:inline">Open</span>
+            <span className="xs:inline hidden sm:inline">Open</span>
           </button>
         </div>
       </div>
@@ -505,10 +552,10 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
       {/* Content */}
       <div className="space-y-3 sm:space-y-4">
         {showArabic && arabicText ? (
-          <div className="bg-amber-50/80 dark:bg-amber-900/20 hadith-block rounded-lg border border-amber-200/60 dark:border-amber-800/30 shadow-soft backdrop-blur-sm">
+          <div className="hadith-block rounded-lg border border-amber-200/60 bg-amber-50/80 shadow-soft backdrop-blur-sm dark:border-amber-800/30 dark:bg-amber-900/20">
             <div
               ref={arabicRef}
-              className="text-right text-base sm:text-lg leading-relaxed font-arabic text-amber-900 dark:text-amber-100 hadith-arabic-text"
+              className="hadith-arabic-text text-right font-arabic text-base leading-relaxed text-amber-900 dark:text-amber-100 sm:text-lg"
               dir="rtl"
             >
               {arabicOverflow && !arabicExpanded ? (
@@ -524,7 +571,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                 {arabicExpanded ? (
                   <button
                     onClick={() => setArabicExpanded(false)}
-                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                    className="px-2 py-1 font-medium text-amber-600 transition-colors hover:text-amber-700 hover:underline active:scale-95 dark:text-amber-400 dark:hover:text-amber-300"
                     aria-label="Show less Arabic"
                   >
                     اعرض أقل
@@ -532,7 +579,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                 ) : (
                   <button
                     onClick={() => setArabicExpanded(true)}
-                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                    className="px-2 py-1 font-medium text-amber-600 transition-colors hover:text-amber-700 hover:underline active:scale-95 dark:text-amber-400 dark:hover:text-amber-300"
                     aria-label="Read more Arabic"
                   >
                     اقرأ المزيد
@@ -543,21 +590,28 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
           </div>
         ) : (
           <div className="text-primary leading-relaxed">
-              {hadith.thaqalaynSanad && (
+            {hadith.thaqalaynSanad && (
               <p
-                className="text-sm mb-3 hadith-english-text line-clamp-3 sm:line-clamp-none text-[#3e3e42] font-mono"
-                style={{ fontSize: `${settings.englishFontSize}%`, fontFamily: '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace' }}
+                className="hadith-english-text mb-3 line-clamp-3 font-mono text-sm text-[#3e3e42] sm:line-clamp-none"
+                style={{
+                  fontSize: `${settings.englishFontSize}%`,
+                  fontFamily:
+                    '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace',
+                }}
               >
                 {hadith.thaqalaynSanad.trim()}
               </p>
             )}
-            
-            <div className="text-sm sm:text-base hadith-english-text font-mono" style={{ fontSize: `${settings.englishFontSize}%`, fontFamily: '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace' }}>
-              {isLongText && !expanded ? (
-                <>{englishText.slice(0, 750)}...</>
-              ) : (
-                <>{englishText}</>
-              )}
+
+            <div
+              className="hadith-english-text font-mono text-sm sm:text-base"
+              style={{
+                fontSize: `${settings.englishFontSize}%`,
+                fontFamily:
+                  '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace',
+              }}
+            >
+              {isLongText && !expanded ? <>{englishText.slice(0, 750)}...</> : <>{englishText}</>}
 
               {/* Read control row for English */}
               {isLongText && (
@@ -565,7 +619,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   {expanded ? (
                     <button
                       onClick={() => setExpanded(false)}
-                      className="text-accent-primary hover:text-accent-secondary hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                      className="text-accent-primary hover:text-accent-secondary px-2 py-1 font-medium transition-colors hover:underline active:scale-95"
                       aria-label="Show less English"
                     >
                       Show less
@@ -573,7 +627,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   ) : (
                     <button
                       onClick={() => setExpanded(true)}
-                      className="text-accent-primary hover:text-accent-secondary hover:underline px-2 py-1 font-medium transition-colors active:scale-95"
+                      className="text-accent-primary hover:text-accent-secondary px-2 py-1 font-medium transition-colors hover:underline active:scale-95"
                       aria-label="Read more English"
                     >
                       Read more
@@ -587,17 +641,25 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
       </div>
 
       {/* Footer */}
-      <div className="mt-6 pt-4 border-t border-theme">
+      <div className="border-theme mt-6 border-t pt-4">
         {/* Grading Information */}
-        {(hadith.majlisiGrading || hadith.mohseniGrading || hadith.behbudiGrading || (hadith.gradingsFull && hadith.gradingsFull.length > 0)) && (
+        {(hadith.majlisiGrading ||
+          hadith.mohseniGrading ||
+          hadith.behbudiGrading ||
+          (hadith.gradingsFull && hadith.gradingsFull.length > 0)) && (
           <div className="mb-4">
-            <h4 className="text-xs font-semibold text-primary mb-3 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <h4 className="text-primary mb-3 flex items-center gap-2 text-xs font-semibold">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               Hadith Gradings
             </h4>
-            
+
             <div className="flex flex-wrap items-center gap-2">
               {/* Short Gradings with Detailed Tooltips */}
               {hadith.majlisiGrading && (
@@ -607,10 +669,13 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   content={(() => {
                     return gradingData.majlisi ? (
                       <>
-                        <div className="text-center mb-1 font-semibold">
+                        <div className="mb-1 text-center font-semibold">
                           {gradingData.majlisi.author.name_en}
                           {gradingData.majlisi.author.death_date && (
-                            <span className="font-normal"> (d. {gradingData.majlisi.author.death_date})</span>
+                            <span className="font-normal">
+                              {' '}
+                              (d. {gradingData.majlisi.author.death_date})
+                            </span>
                           )}
                         </div>
                         {gradingData.majlisi.grade_en && gradingData.majlisi.grade_ar && (
@@ -620,19 +685,19 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                           </div>
                         )}
                         {gradingData.majlisi.reference_en && (
-                          <div className="text-xs opacity-90 border-t border-slate-600 dark:border-slate-400 pt-2 mt-2">
+                          <div className="mt-2 border-t border-slate-600 pt-2 text-xs opacity-90 dark:border-slate-400">
                             <strong>Reference:</strong> {gradingData.majlisi.reference_en}
                           </div>
                         )}
                       </>
                     ) : (
-                      "Traditional Majlisi classification"
+                      'Traditional Majlisi classification'
                     )
                   })()}
                 >
-                  <span 
+                  <span
                     ref={majlisiRef}
-                    className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-md text-xs font-medium cursor-help"
+                    className="cursor-help rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                     title="Majlisi Grading"
                     onMouseEnter={() => handleTooltipEnter('majlisi')}
                     onMouseLeave={() => handleTooltipLeave('majlisi')}
@@ -641,7 +706,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   </span>
                 </Tooltip>
               )}
-              
+
               {hadith.mohseniGrading && (
                 <Tooltip
                   isVisible={tooltipStates.mohseni}
@@ -649,10 +714,13 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   content={(() => {
                     return gradingData.mohseni ? (
                       <>
-                        <div className="text-center mb-1 font-semibold">
+                        <div className="mb-1 text-center font-semibold">
                           {gradingData.mohseni.author.name_en}
                           {gradingData.mohseni.author.death_date && (
-                            <span className="font-normal"> (d. {gradingData.mohseni.author.death_date})</span>
+                            <span className="font-normal">
+                              {' '}
+                              (d. {gradingData.mohseni.author.death_date})
+                            </span>
                           )}
                         </div>
                         {gradingData.mohseni.grade_en && gradingData.mohseni.grade_ar && (
@@ -662,19 +730,19 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                           </div>
                         )}
                         {gradingData.mohseni.reference_en && (
-                          <div className="text-xs opacity-90 border-t border-slate-600 dark:border-slate-400 pt-2 mt-2">
+                          <div className="mt-2 border-t border-slate-600 pt-2 text-xs opacity-90 dark:border-slate-400">
                             <strong>Reference:</strong> {gradingData.mohseni.reference_en}
                           </div>
                         )}
                       </>
                     ) : (
-                      "Mohseni scholar classification"
+                      'Mohseni scholar classification'
                     )
                   })()}
                 >
-                  <span 
+                  <span
                     ref={mohseniRef}
-                    className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-md text-xs font-medium cursor-help"
+                    className="cursor-help rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
                     title="Mohseni Grading"
                     onMouseEnter={() => handleTooltipEnter('mohseni')}
                     onMouseLeave={() => handleTooltipLeave('mohseni')}
@@ -683,7 +751,7 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   </span>
                 </Tooltip>
               )}
-              
+
               {hadith.behbudiGrading && (
                 <Tooltip
                   isVisible={tooltipStates.behbudi}
@@ -691,10 +759,13 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                   content={(() => {
                     return gradingData.behbudi ? (
                       <>
-                        <div className="text-center mb-1 font-semibold">
+                        <div className="mb-1 text-center font-semibold">
                           {gradingData.behbudi.author.name_en}
                           {gradingData.behbudi.author.death_date && (
-                            <span className="font-normal"> (d. {gradingData.behbudi.author.death_date})</span>
+                            <span className="font-normal">
+                              {' '}
+                              (d. {gradingData.behbudi.author.death_date})
+                            </span>
                           )}
                         </div>
                         {gradingData.behbudi.grade_en && gradingData.behbudi.grade_ar && (
@@ -704,19 +775,19 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
                           </div>
                         )}
                         {gradingData.behbudi.reference_en && (
-                          <div className="text-xs opacity-90 border-t border-slate-600 dark:border-slate-400 pt-2 mt-2">
+                          <div className="mt-2 border-t border-slate-600 pt-2 text-xs opacity-90 dark:border-slate-400">
                             <strong>Reference:</strong> {gradingData.behbudi.reference_en}
                           </div>
                         )}
                       </>
                     ) : (
-                      "Behbudi scholar classification"
+                      'Behbudi scholar classification'
                     )
                   })()}
                 >
-                  <span 
+                  <span
                     ref={behbudiRef}
-                    className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-2 py-1 rounded-md text-xs font-medium cursor-help"
+                    className="cursor-help rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
                     title="Behbudi Grading"
                     onMouseEnter={() => handleTooltipEnter('behbudi')}
                     onMouseLeave={() => handleTooltipLeave('behbudi')}
@@ -731,39 +802,54 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
 
         {/* Source Link and Actions */}
         <div className="flex items-center justify-between text-xs text-muted">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3">
             {/* Copy Link Button */}
             <button
               onClick={handleCopyLink}
-              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
+              className="text-primary/70 hover:text-primary flex min-h-[36px] w-full min-w-[44px] items-center justify-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:underline sm:w-auto sm:text-xs"
               title="Copy link to this hadith"
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
               </svg>
               Copy Link
             </button>
-            
+
             {/* Copy Source Button */}
             <button
               onClick={handleCopySource}
-              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
+              className="text-primary/70 hover:text-primary flex min-h-[36px] w-full min-w-[44px] items-center justify-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:underline sm:w-auto sm:text-xs"
               title="Copy source citation (book, chapter, hadith number)"
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               Copy Source
             </button>
-            
+
             {/* Copy Link & Source Button */}
             <button
               onClick={handleCopyLinkAndSource}
-              className="text-primary/70 hover:text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
+              className="text-primary/70 hover:text-primary flex min-h-[36px] w-full min-w-[44px] items-center justify-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:underline sm:w-auto sm:text-xs"
               title="Copy both source citation and link"
             >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
               </svg>
               Copy Both
             </button>
@@ -773,44 +859,63 @@ const HadithCard = ({ hadith, className, showViewChapter = false, showNotesToggl
               <button
                 onClick={onToggleNotes}
                 className={clsx(
-                  "flex items-center gap-1 transition-colors font-medium rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center",
-                  notesVisible 
-                    ? "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                    : "text-primary/70 hover:text-primary hover:underline"
+                  'flex min-h-[36px] w-full min-w-[44px] items-center justify-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors sm:w-auto sm:text-xs',
+                  notesVisible
+                    ? 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300'
+                    : 'text-primary/70 hover:text-primary hover:underline',
                 )}
-                title={notesVisible ? "Hide notes" : "Show notes"}
+                title={notesVisible ? 'Hide notes' : 'Show notes'}
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
                 </svg>
                 Notes
-                <svg 
+                <svg
                   className={clsx(
-                    "w-3 h-3 transition-transform duration-200",
-                    notesVisible ? "rotate-180" : ""
-                  )} 
-                  fill="none" 
-                  stroke="currentColor" 
+                    'h-3 w-3 transition-transform duration-200',
+                    notesVisible ? 'rotate-180' : '',
+                  )}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
             )}
           </div>
-          
+
           {/* View Chapter Button */}
-          {showViewChapter && hadith.volume && hadith.categoryId && (hadith.chapterInCategoryId !== null && hadith.chapterInCategoryId !== undefined) ? (
+          {showViewChapter &&
+          hadith.volume &&
+          hadith.categoryId &&
+          hadith.chapterInCategoryId !== null &&
+          hadith.chapterInCategoryId !== undefined ? (
             <a
               href={getChapterUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline flex items-center gap-1 transition-colors rounded px-2 py-1 min-w-[44px] min-h-[36px] text-xs sm:text-xs w-full sm:w-auto justify-center"
+              className="text-primary flex min-h-[36px] w-full min-w-[44px] items-center justify-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:underline sm:w-auto sm:text-xs"
               tabIndex={0}
             >
               View Chapter
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </a>
           ) : showViewChapter ? (

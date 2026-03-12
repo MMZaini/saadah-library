@@ -21,6 +21,6 @@ export function makeVolumeOptions(volumes: any[] | undefined): VolumeOption[] {
 
 export function getVolumeLabelForValue(volumes: any[] | undefined, value: any): string {
   const options = makeVolumeOptions(volumes)
-  const found = options.find(o => String(o.value) === String(value))
+  const found = options.find((o) => String(o.value) === String(value))
   return found ? found.label : options[0]?.label || 'Volume 1'
 }

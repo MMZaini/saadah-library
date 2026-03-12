@@ -37,7 +37,7 @@ const defaultSettings: Settings = {
   theme: 'dark',
   arabicFontSize: 135,
   englishFontSize: 100,
-  alwaysShowFullHadith: false // false = collapsed by default (current behavior)
+  alwaysShowFullHadith: false, // false = collapsed by default (current behavior)
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null)
@@ -50,25 +50,25 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Mark as hydrated and load settings from localStorage
     setIsHydrated(true)
-    
+
     // Check if localStorage is available
     if (!isLocalStorageAvailable()) {
       setSettings(defaultSettings)
       return
     }
-    
+
     try {
       const savedSettings = localStorage.getItem('siteSettings')
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
-        
+
         // Merge with defaults to handle new settings that might not be in saved data
         const mergedSettings = {
           ...defaultSettings,
           ...parsed,
-          theme: 'dark' // Always force dark mode
+          theme: 'dark', // Always force dark mode
         }
-        
+
         setSettings(mergedSettings)
       } else {
         setSettings(defaultSettings)
@@ -83,7 +83,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (isHydrated) {
       const root = document.documentElement
       root.setAttribute('data-theme', settings.theme)
-      
+
       // Set font size CSS custom properties
       root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize}%`)
       root.style.setProperty('--hadith-english-font-size', `${settings.englishFontSize}%`)
@@ -93,60 +93,68 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         document.documentElement.setAttribute('data-theme', 'dark')
       }
     }
-  }, [settings.theme, settings.arabicFontSize, settings.englishFontSize, settings.alwaysShowFullHadith, isHydrated])
+  }, [
+    settings.theme,
+    settings.arabicFontSize,
+    settings.englishFontSize,
+    settings.alwaysShowFullHadith,
+    isHydrated,
+  ])
 
-  const updateSettings = useCallback((newSettings: Partial<Settings>) => {
-    // If called before hydration, allow the state update to proceed so UI sliders are responsive.
-    // Persistence to localStorage will only be attempted when hydrated to avoid DOM/storage races.
+  const updateSettings = useCallback(
+    (newSettings: Partial<Settings>) => {
+      // If called before hydration, allow the state update to proceed so UI sliders are responsive.
+      // Persistence to localStorage will only be attempted when hydrated to avoid DOM/storage races.
 
-    setSettings(prev => {
-      const updated = { ...prev, ...newSettings }
+      setSettings((prev) => {
+        const updated = { ...prev, ...newSettings }
 
-      // Immediately reflect font size changes on the root so CSS-variable-driven
-      // styles respond to the slider without waiting for the hydration effect.
-      // This is safe because it's a client-side mutation triggered by user input.
-      try {
-        if (typeof document !== 'undefined') {
-          const root = document.documentElement
-          if (updated.arabicFontSize !== undefined) {
-            root.style.setProperty('--hadith-arabic-font-size', `${updated.arabicFontSize}%`)
-          }
-          if (updated.englishFontSize !== undefined) {
-            root.style.setProperty('--hadith-english-font-size', `${updated.englishFontSize}%`)
-          }
-        }
-      } catch (e) {
-        // Fail silently — not critical
-      }
-
-      // Persist only when hydrated and localStorage is available
-      if (isHydrated && isLocalStorageAvailable()) {
+        // Immediately reflect font size changes on the root so CSS-variable-driven
+        // styles respond to the slider without waiting for the hydration effect.
+        // This is safe because it's a client-side mutation triggered by user input.
         try {
-          localStorage.setItem('siteSettings', JSON.stringify(updated))
-        } catch (error) {
+          if (typeof document !== 'undefined') {
+            const root = document.documentElement
+            if (updated.arabicFontSize !== undefined) {
+              root.style.setProperty('--hadith-arabic-font-size', `${updated.arabicFontSize}%`)
+            }
+            if (updated.englishFontSize !== undefined) {
+              root.style.setProperty('--hadith-english-font-size', `${updated.englishFontSize}%`)
+            }
+          }
+        } catch (e) {
+          // Fail silently — not critical
+        }
 
-          // Try to clear localStorage if it's full
-          if (error instanceof Error && error.message.includes('QuotaExceededError')) {
-            try {
-              localStorage.clear()
-              localStorage.setItem('siteSettings', JSON.stringify(updated))
-            } catch (clearError) {
-              // Silent fail
+        // Persist only when hydrated and localStorage is available
+        if (isHydrated && isLocalStorageAvailable()) {
+          try {
+            localStorage.setItem('siteSettings', JSON.stringify(updated))
+          } catch (error) {
+            // Try to clear localStorage if it's full
+            if (error instanceof Error && error.message.includes('QuotaExceededError')) {
+              try {
+                localStorage.clear()
+                localStorage.setItem('siteSettings', JSON.stringify(updated))
+              } catch (clearError) {
+                // Silent fail
+              }
             }
           }
         }
-      }
 
-      return updated
-    })
-  }, [isHydrated])
+        return updated
+      })
+    },
+    [isHydrated],
+  )
 
-  const toggleSettings = useCallback(() => setIsSettingsOpen(prev => !prev), [])
+  const toggleSettings = useCallback(() => setIsSettingsOpen((prev) => !prev), [])
 
   const resetFontSizes = useCallback(() => {
-    updateSettings({ 
-      arabicFontSize: 100, 
-      englishFontSize: 100 
+    updateSettings({
+      arabicFontSize: 100,
+      englishFontSize: 100,
     })
   }, [updateSettings])
 
@@ -158,22 +166,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateSettings({ englishFontSize: 100 })
   }, [updateSettings])
 
-  const contextValue = useMemo(() => ({
-    settings,
-    updateSettings,
-    isSettingsOpen,
-    toggleSettings,
-    resetFontSizes,
-    resetArabicFontSize,
-    resetEnglishFontSize,
-    isHydrated // Expose hydration state
-  }), [settings, updateSettings, isSettingsOpen, toggleSettings, resetFontSizes, resetArabicFontSize, resetEnglishFontSize, isHydrated])
-
-  return (
-    <SettingsContext.Provider value={contextValue}>
-      {children}
-    </SettingsContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      settings,
+      updateSettings,
+      isSettingsOpen,
+      toggleSettings,
+      resetFontSizes,
+      resetArabicFontSize,
+      resetEnglishFontSize,
+      isHydrated, // Expose hydration state
+    }),
+    [
+      settings,
+      updateSettings,
+      isSettingsOpen,
+      toggleSettings,
+      resetFontSizes,
+      resetArabicFontSize,
+      resetEnglishFontSize,
+      isHydrated,
+    ],
   )
+
+  return <SettingsContext.Provider value={contextValue}>{children}</SettingsContext.Provider>
 }
 
 export function useSettings() {

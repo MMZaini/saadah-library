@@ -13,12 +13,12 @@ interface BookmarkedHadithCardProps {
   globalNotesVisible?: boolean
 }
 
-export default function BookmarkedHadithCard({ 
-  hadith, 
-  bookmark, 
-  showViewChapter = true, 
+export default function BookmarkedHadithCard({
+  hadith,
+  bookmark,
+  showViewChapter = true,
   className,
-  globalNotesVisible = false
+  globalNotesVisible = false,
 }: BookmarkedHadithCardProps) {
   const { updateBookmarkNotes } = useBookmarks()
   const [isEditingNotes, setIsEditingNotes] = useState(false)
@@ -76,14 +76,19 @@ export default function BookmarkedHadithCard({
         notesVisible={notesVisible}
         onToggleNotes={() => setShowNotes(!showNotes)}
       />
-      
+
       {/* Notes Section - Only shown when toggled */}
       {notesVisible && (
-        <div className="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-200/30 dark:border-blue-800/20">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        <div className="rounded-lg border border-blue-200/30 bg-blue-50/50 p-4 dark:border-blue-800/20 dark:bg-blue-900/10">
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-primary flex items-center gap-2 text-sm font-semibold">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
               Personal Notes
             </h4>
@@ -92,14 +97,14 @@ export default function BookmarkedHadithCard({
                 <>
                   <button
                     onClick={handleCopyNotes}
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:underline transition-colors"
+                    className="text-sm text-gray-600 transition-colors hover:text-gray-700 hover:underline dark:text-gray-400 dark:hover:text-gray-300"
                     title="Copy notes to clipboard"
                   >
                     Copy
                   </button>
                   <button
                     onClick={handleClearNotes}
-                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline transition-colors"
+                    className="text-sm text-red-600 transition-colors hover:text-red-700 hover:underline dark:text-red-400 dark:hover:text-red-300"
                     title="Clear all notes"
                   >
                     Clear
@@ -109,20 +114,20 @@ export default function BookmarkedHadithCard({
               {!isEditingNotes && (
                 <button
                   onClick={() => setIsEditingNotes(true)}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
+                  className="text-sm text-blue-600 transition-colors hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   {bookmark.notes ? 'Edit' : 'Add Note'}
                 </button>
               )}
             </div>
           </div>
-          
+
           {isEditingNotes ? (
             <form onSubmit={handleSaveNotes} className="space-y-3">
               <textarea
                 value={notesValue}
                 onChange={(e) => setNotesValue(e.target.value)}
-                className="w-full p-3 text-sm border border-blue-200 dark:border-blue-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                className="w-full resize-none rounded-md border border-blue-200 bg-white p-3 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
                 rows={4}
                 placeholder="Add your personal notes about this hadith..."
                 autoFocus
@@ -130,14 +135,14 @@ export default function BookmarkedHadithCard({
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 >
                   Save
                 </button>
                 <button
                   type="button"
                   onClick={handleCancelNotes}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                  className="rounded-md bg-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
                 >
                   Cancel
                 </button>
@@ -146,26 +151,28 @@ export default function BookmarkedHadithCard({
           ) : (
             <div className="text-sm text-gray-700 dark:text-gray-300">
               {bookmark.notes ? (
-                <div className="whitespace-pre-wrap leading-relaxed bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
+                <div className="whitespace-pre-wrap rounded border border-gray-200 bg-white p-3 leading-relaxed dark:border-gray-700 dark:bg-gray-800">
                   {bookmark.notes}
                 </div>
               ) : (
-                <div className="text-gray-500 dark:text-gray-400 italic py-2">
-                  No notes added yet. Click "Add Note" to start writing your thoughts about this hadith.
+                <div className="py-2 italic text-gray-500 dark:text-gray-400">
+                  No notes added yet. Click "Add Note" to start writing your thoughts about this
+                  hadith.
                 </div>
               )}
             </div>
           )}
-          
+
           {/* Bookmark timestamp */}
-          <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+          <div className="mt-3 border-t border-blue-200 pt-3 dark:border-blue-700">
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              Bookmarked: {new Date(bookmark.timestamp).toLocaleDateString('en-US', {
+              Bookmarked:{' '}
+              {new Date(bookmark.timestamp).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
               })}
             </div>
           </div>

@@ -45,24 +45,23 @@ export default function BookCard({ book }: { book: Book }) {
   // The "Featured" badge is still shown when book.highlighted is true.
   const [hovered, setHovered] = useState<boolean>(false)
   const bookId = book.bookId || bookIdMap[book.id]
-  
+
   // Special routing for Al-Kafi; route others to clean URL slugs
-  const href = book.id === 1 ? '/al-kafi' : 
-               bookId ? `/${getBookUrlSlug(bookId)}` : '#'
+  const href = book.id === 1 ? '/al-kafi' : bookId ? `/${getBookUrlSlug(bookId)}` : '#'
 
   const cardContent = (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={clsx(
-        'rounded-2xl bg-card border border-theme shadow-soft',
-        'flex items-center gap-4 sm:gap-6 p-4 sm:p-6 transition-all duration-300',
-        'hover:border-zinc-500/20 hover:bg-card-hover dark:hover:border-zinc-500/30',
+        'border-theme rounded-2xl border bg-card shadow-soft',
+        'flex items-center gap-4 p-4 transition-all duration-300 sm:gap-6 sm:p-6',
+        'hover:bg-card-hover hover:border-zinc-500/20 dark:hover:border-zinc-500/30',
         'cursor-pointer active:scale-95 sm:active:scale-100',
         hovered ? 'shadow-glow ring-1 ring-zinc-400/10 dark:ring-zinc-400/20' : 'ring-0',
       )}
       style={{
-        transform: hovered ? 'translateY(-2px) scale(1.01)' : 'translateY(0) scale(1)'
+        transform: hovered ? 'translateY(-2px) scale(1.01)' : 'translateY(0) scale(1)',
       }}
     >
       <Image
@@ -71,9 +70,11 @@ export default function BookCard({ book }: { book: Book }) {
         width={180}
         height={240}
         className={clsx(
-          'rounded-lg shadow-book transition-transform duration-300 object-contain shrink-0 select-none',
-          'sm:w-36 sm:h-48', // Larger on desktop
-          hovered ? 'translate-x-[-4px] sm:translate-x-[-8px] scale-105' : 'translate-x-0 scale-100'
+          'shrink-0 select-none rounded-lg object-contain shadow-book transition-transform duration-300',
+          'sm:h-48 sm:w-36', // Larger on desktop
+          hovered
+            ? 'translate-x-[-4px] scale-105 sm:translate-x-[-8px]'
+            : 'translate-x-0 scale-100',
         )}
         priority={book.highlighted}
         quality={95}
@@ -82,24 +83,24 @@ export default function BookCard({ book }: { book: Book }) {
 
       <div className="min-w-0 flex-1 select-none">
         <h3
-          className="text-lg sm:text-xl font-semibold tracking-tight break-words select-none"
+          className="select-none break-words text-lg font-semibold tracking-tight sm:text-xl"
           title={book.title}
         >
           {book.title}
         </h3>
         {book.subtitle && (
-          <p className="text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">
+          <p className="mt-1 line-clamp-2 select-none text-sm text-muted sm:line-clamp-none">
             {book.subtitle}
           </p>
         )}
         {book.author && (
-          <p className="text-xs sm:text-sm text-muted mt-1 line-clamp-2 sm:line-clamp-none select-none">
+          <p className="mt-1 line-clamp-2 select-none text-xs text-muted sm:line-clamp-none sm:text-sm">
             {book.author}
           </p>
         )}
         {book.highlighted && (
           <div className="mt-2">
-            <span className="text-xs px-2 py-1 rounded-full shadow-soft bg-amber-100 text-gray dark:bg-amber-900/30 dark:text-amber-300 select-none">
+            <span className="text-gray select-none rounded-full bg-amber-100 px-2 py-1 text-xs shadow-soft dark:bg-amber-900/30 dark:text-amber-300">
               Featured
             </span>
           </div>

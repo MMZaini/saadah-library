@@ -14,8 +14,8 @@ export default function OptimizedImage(props: ImageProps & { unoptimized?: boole
     <Image
       {...(rest as ImageProps)}
       quality={quality}
-  // Force unoptimized to avoid upstream optimizer fetches/timeouts
-  unoptimized={true}
+      // Force unoptimized to avoid upstream optimizer fetches/timeouts
+      unoptimized={true}
     />
   )
 }

@@ -5,7 +5,14 @@ import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { IconSearch, IconFilter, IconChevronLeft, IconChevronRight, IconX } from './Icons'
 import { useSettings } from '@/lib/settings-context'
-import { isArabicQuery, matchesArabicText, normalizeArabic, flexibleEnglishMatch, smartSearch, flexibleArabicWordMatch } from '@/lib/search-utils'
+import {
+  isArabicQuery,
+  matchesArabicText,
+  normalizeArabic,
+  flexibleEnglishMatch,
+  smartSearch,
+  flexibleArabicWordMatch,
+} from '@/lib/search-utils'
 import clsx from 'clsx'
 
 interface SearchInterfaceProps {
@@ -29,7 +36,11 @@ const GRADING_OPTIONS = [
   { value: 'majhul', label: 'Majhul (مجهول)', keywords: ['مجهول'] },
   { value: 'mursal', label: 'Mursal (مرسل)', keywords: ['مرسل'] },
   { value: 'lam-yukhrijhu', label: 'Not Included (لم يخرجه)', keywords: ['لم يخرجه'] },
-  { value: 'other', label: 'Other Gradings', keywords: ['مقطوع', 'مدلس', 'غريب', 'عزيز', 'مشهور', 'متواتر', 'آحاد'] },
+  {
+    value: 'other',
+    label: 'Other Gradings',
+    keywords: ['مقطوع', 'مدلس', 'غريب', 'عزيز', 'مشهور', 'متواتر', 'آحاد'],
+  },
 ]
 
 // Helper function to get grading text color
@@ -62,7 +73,7 @@ export default function SearchInterface({
   isSearching,
   onSearch,
   onClearSearch,
-  searchContext = 'all-books'
+  searchContext = 'all-books',
 }: SearchInterfaceProps) {
   const { settings } = useSettings()
   const [currentPage, setCurrentPage] = useState(1)
@@ -73,31 +84,31 @@ export default function SearchInterface({
     exactPhrase: false,
     exactWords: false,
     flexibleMatching: false,
-    smartSearch: false
+    smartSearch: false,
   })
 
   // Helper function to handle search option changes
   const handleSearchOptionChange = (option: keyof typeof searchOptions, checked: boolean) => {
     // Special handling for mutually exclusive primary search modes
     const primarySearchModes = ['exactPhrase', 'exactWords', 'flexibleMatching', 'smartSearch']
-    
+
     if (primarySearchModes.includes(option)) {
       if (checked) {
         // If checking a primary mode, uncheck all other primary modes
-        setSearchOptions(prev => ({
+        setSearchOptions((prev) => ({
           ...prev,
           exactPhrase: option === 'exactPhrase',
           exactWords: option === 'exactWords',
           flexibleMatching: option === 'flexibleMatching',
-          smartSearch: option === 'smartSearch'
+          smartSearch: option === 'smartSearch',
         }))
       } else {
         // If unchecking a primary mode, just uncheck it
-        setSearchOptions(prev => ({ ...prev, [option]: false }))
+        setSearchOptions((prev) => ({ ...prev, [option]: false }))
       }
     } else {
       // For non-primary options (like caseInsensitive), toggle independently
-      setSearchOptions(prev => ({ ...prev, [option]: checked }))
+      setSearchOptions((prev) => ({ ...prev, [option]: checked }))
     }
   }
 
@@ -109,7 +120,11 @@ export default function SearchInterface({
   // Helper function to check if any specific grading is selected
   const hasActiveFilters = () => {
     const hasGradingFilters = !selectedGradings.includes('all') && selectedGradings.length > 0
-    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching || searchOptions.smartSearch
+    const hasSearchOptions =
+      searchOptions.exactPhrase ||
+      searchOptions.exactWords ||
+      searchOptions.flexibleMatching ||
+      searchOptions.smartSearch
     return hasGradingFilters || hasSearchOptions
   }
 
@@ -118,16 +133,16 @@ export default function SearchInterface({
     if (gradingValue === 'all') {
       setSelectedGradings(['all'])
     } else {
-      setSelectedGradings(prev => {
+      setSelectedGradings((prev) => {
         // Remove 'all' when selecting specific gradings
-        const withoutAll = prev.filter(g => g !== 'all')
-        
+        const withoutAll = prev.filter((g) => g !== 'all')
+
         if (checked) {
           // Add the new grading
           return [...withoutAll, gradingValue]
         } else {
           // Remove the grading
-          const updated = withoutAll.filter(g => g !== gradingValue)
+          const updated = withoutAll.filter((g) => g !== gradingValue)
           // If no specific gradings selected, default to 'all'
           return updated.length === 0 ? ['all'] : updated
         }
@@ -137,14 +152,18 @@ export default function SearchInterface({
 
   // Helper function to select all specific gradings (excluding 'all')
   const selectAllGradings = () => {
-    const allSpecificGradings = GRADING_OPTIONS.filter(opt => opt.value !== 'all').map(opt => opt.value)
+    const allSpecificGradings = GRADING_OPTIONS.filter((opt) => opt.value !== 'all').map(
+      (opt) => opt.value,
+    )
     setSelectedGradings(allSpecificGradings)
   }
 
   // Helper function to check if all specific gradings are selected
   const areAllGradingsSelected = () => {
-    const specificGradings = GRADING_OPTIONS.filter(opt => opt.value !== 'all').map(opt => opt.value)
-    return specificGradings.every(grading => selectedGradings.includes(grading))
+    const specificGradings = GRADING_OPTIONS.filter((opt) => opt.value !== 'all').map(
+      (opt) => opt.value,
+    )
+    return specificGradings.every((grading) => selectedGradings.includes(grading))
   }
 
   // Helper function to clear all filters
@@ -154,7 +173,7 @@ export default function SearchInterface({
       exactPhrase: false,
       exactWords: false,
       flexibleMatching: false,
-      smartSearch: false
+      smartSearch: false,
     })
   }
 
@@ -180,10 +199,14 @@ export default function SearchInterface({
     let filtered = [...searchResults]
 
     // Apply search options filtering first
-    const hasSearchOptions = searchOptions.exactPhrase || searchOptions.exactWords || searchOptions.flexibleMatching || searchOptions.smartSearch
-    
+    const hasSearchOptions =
+      searchOptions.exactPhrase ||
+      searchOptions.exactWords ||
+      searchOptions.flexibleMatching ||
+      searchOptions.smartSearch
+
     if (hasSearchOptions && searchQuery.trim()) {
-      filtered = searchResults.filter(hadith => {
+      filtered = searchResults.filter((hadith) => {
         const searchText = searchQuery.trim()
         const isArabic = isArabicQuery(searchText)
 
@@ -194,11 +217,14 @@ export default function SearchInterface({
         }
 
         const englishText = getProcessedText(hadith.englishText || hadith.thaqalaynMatn)
-        const arabicText = isArabic && hadith.arabicText ? normalizeArabic(hadith.arabicText) : getProcessedText(hadith.arabicText)
+        const arabicText =
+          isArabic && hadith.arabicText
+            ? normalizeArabic(hadith.arabicText)
+            : getProcessedText(hadith.arabicText)
         const allText = `${englishText} ${arabicText}`.trim()
 
         // Process search query based on language and case sensitivity
-  const processedQuery = isArabic ? normalizeArabic(searchText) : searchText.toLowerCase()
+        const processedQuery = isArabic ? normalizeArabic(searchText) : searchText.toLowerCase()
 
         if (searchOptions.exactPhrase) {
           // Exact phrase matching
@@ -207,17 +233,17 @@ export default function SearchInterface({
           }
           return allText.includes(processedQuery)
         }
-        
+
         if (searchOptions.exactWords) {
           // All words must appear exactly (not as substrings)
           const searchWords = processedQuery.split(/\s+/).filter(Boolean)
-          
+
           if (isArabic) {
             const textWords = new Set(arabicText.split(/\s+/).filter(Boolean))
-            return searchWords.every(w => textWords.has(w))
+            return searchWords.every((w) => textWords.has(w))
           }
-          
-          return searchWords.every(searchWord => {
+
+          return searchWords.every((searchWord) => {
             // Use word boundary regex for exact word matching
             const flags = ''
             const escapedWord = searchWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -229,7 +255,7 @@ export default function SearchInterface({
         if (searchOptions.flexibleMatching) {
           // Enhanced flexible matching
           const searchWords = processedQuery.split(/\s+/).filter(Boolean)
-          
+
           if (isArabic) {
             // Arabic flexible matching with article variations
             const alVariants = (w: string) => {
@@ -238,18 +264,17 @@ export default function SearchInterface({
               else vars.push('ال' + w)
               return Array.from(new Set(vars))
             }
-            
 
-            return searchWords.every(searchWord => {
+            return searchWords.every((searchWord) => {
               return flexibleArabicWordMatch(arabicText, searchWord)
             })
           }
-          
+
           // Enhanced English flexible matching with synonyms and stemming
           return flexibleEnglishMatch(allText, searchWords, {
             caseInsensitive: true,
             useSynonyms: true,
-            useStemming: true
+            useStemming: true,
           })
         }
 
@@ -258,9 +283,9 @@ export default function SearchInterface({
           if (isArabic) {
             return arabicText.includes(processedQuery)
           }
-          
+
           return smartSearch(allText, processedQuery, {
-            caseInsensitive: true
+            caseInsensitive: true,
           })
         }
 
@@ -270,25 +295,28 @@ export default function SearchInterface({
 
     // Apply grading filters - Skip for searches that don't support filters
     if (shouldShowFilters() && !selectedGradings.includes('all')) {
-      filtered = filtered.filter(hadith => {
+      filtered = filtered.filter((hadith) => {
         const gradingText = [
           hadith.majlisiGrading,
           hadith.mohseniGrading,
           hadith.behbudiGrading,
-          ...(hadith.gradingsFull || []).map(g => `${g.grade_en} ${g.grade_ar}`).join(' ')
-        ].join(' ').toLowerCase()
+          ...(hadith.gradingsFull || []).map((g) => `${g.grade_en} ${g.grade_ar}`).join(' '),
+        ]
+          .join(' ')
+          .toLowerCase()
 
         // Check if hadith matches any of the selected gradings
-        return selectedGradings.some(selectedGrading => {
-          const selectedOption = GRADING_OPTIONS.find(opt => opt.value === selectedGrading)
+        return selectedGradings.some((selectedGrading) => {
+          const selectedOption = GRADING_OPTIONS.find((opt) => opt.value === selectedGrading)
           if (!selectedOption) return false
 
           // Special case for "lam-yukhrijhu" - check for "لم يخرجه" OR no grading at all
           if (selectedGrading === 'lam-yukhrijhu') {
-            const hasNoGrading = !hadith.majlisiGrading && 
-                                !hadith.mohseniGrading && 
-                                !hadith.behbudiGrading && 
-                                (!hadith.gradingsFull || hadith.gradingsFull.length === 0)
+            const hasNoGrading =
+              !hadith.majlisiGrading &&
+              !hadith.mohseniGrading &&
+              !hadith.behbudiGrading &&
+              (!hadith.gradingsFull || hadith.gradingsFull.length === 0)
             const hasLamYukhrijhu = gradingText.includes('لم يخرجه')
             return hasNoGrading || hasLamYukhrijhu
           }
@@ -296,16 +324,25 @@ export default function SearchInterface({
           // Special case for "other" - check if it doesn't match common gradings but has some grading
           if (selectedGrading === 'other') {
             const hasGrading = gradingText.trim().length > 0
-            const isCommonGrading = ['صحيح', 'حسن', 'موثق', 'قوي', 'ضعيف', 'مجهول', 'مرسل', 'لم يخرجه'].some(common => 
-              gradingText.includes(common.toLowerCase())
-            )
+            const isCommonGrading = [
+              'صحيح',
+              'حسن',
+              'موثق',
+              'قوي',
+              'ضعيف',
+              'مجهول',
+              'مرسل',
+              'لم يخرجه',
+            ].some((common) => gradingText.includes(common.toLowerCase()))
             return hasGrading && !isCommonGrading
           }
 
           // Regular keyword matching for other grading types
-          return selectedOption?.keywords?.some(keyword => 
-            gradingText.includes(keyword.toLowerCase())
-          ) || false
+          return (
+            selectedOption?.keywords?.some((keyword) =>
+              gradingText.includes(keyword.toLowerCase()),
+            ) || false
+          )
         })
       })
     }
@@ -315,11 +352,11 @@ export default function SearchInterface({
       // First, sort by volume
       const volumeA = a.volume || 0
       const volumeB = b.volume || 0
-      
+
       if (volumeA !== volumeB) {
         return volumeA - volumeB
       }
-      
+
       // If volumes are the same, sort by hadith ID
       return (a.id || 0) - (b.id || 0)
     })
@@ -335,7 +372,7 @@ export default function SearchInterface({
   // Determine which hadiths should show Arabic by default
   const shouldShowArabicByDefault = useMemo(() => {
     if (!isArabicSearchQuery) return () => false
-    
+
     // For Arabic queries, show Arabic for all hadiths that have Arabic text
     return (hadith: Hadith) => {
       return Boolean(hadith.arabicText)
@@ -360,34 +397,40 @@ export default function SearchInterface({
   if (!searchQuery) return null
 
   return (
-    <section id="search-results" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
+    <section id="search-results" className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Search Header */}
-      <div className="flex flex-col gap-4 mb-6">
+      <div className="mb-6 flex flex-col gap-4">
         {/* Title and Clear Button Row */}
-        <div className="flex items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 sm:items-center">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-xl sm:text-2xl font-bold text-primary truncate">
-                Search Results {searchContext === 'al-kafi' ? 'in Al-Kāfi' : searchContext === 'uyun-akhbar-al-rida' ? 'in ʿUyūn akhbār al-Riḍā' : ''} for "{searchQuery}"
+            <div className="mb-2 flex items-center gap-3">
+              <h2 className="text-primary truncate text-xl font-bold sm:text-2xl">
+                Search Results{' '}
+                {searchContext === 'al-kafi'
+                  ? 'in Al-Kāfi'
+                  : searchContext === 'uyun-akhbar-al-rida'
+                    ? 'in ʿUyūn akhbār al-Riḍā'
+                    : ''}{' '}
+                for "{searchQuery}"
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
               <span className="flex items-center gap-1">
-                <span className="font-medium text-accent-primary">
+                <span className="text-accent-primary font-medium">
                   {filteredAndSortedResults.length}
                 </span>
                 {filteredAndSortedResults.length === 1 ? 'hadith' : 'hadiths'} found
               </span>
               {hasActiveFilters() && shouldShowFilters() && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedGradings.map(grading => {
-                    const option = GRADING_OPTIONS.find(opt => opt.value === grading)
+                  {selectedGradings.map((grading) => {
+                    const option = GRADING_OPTIONS.find((opt) => opt.value === grading)
                     return option ? (
-                      <span 
-                        key={grading} 
+                      <span
+                        key={grading}
                         className={clsx(
-                          "px-2 py-1 bg-accent-primary/10 rounded-full text-xs font-medium",
-                          getGradingTextColor(grading)
+                          'bg-accent-primary/10 rounded-full px-2 py-1 text-xs font-medium',
+                          getGradingTextColor(grading),
                         )}
                       >
                         {option.label}
@@ -395,37 +438,35 @@ export default function SearchInterface({
                     ) : null
                   })}
                   {searchOptions.exactPhrase && (
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                       Exact Phrase
                     </span>
                   )}
                   {searchOptions.exactWords && (
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                       Exact Words
                     </span>
                   )}
                   {searchOptions.flexibleMatching && (
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+                    <span className="rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
                       Flexible Match
                     </span>
                   )}
                 </div>
               )}
               {filteredAndSortedResults.length !== searchResults.length && shouldShowFilters() && (
-                <span className="text-muted/80">
-                  (filtered from {searchResults.length} total)
-                </span>
+                <span className="text-muted/80">(filtered from {searchResults.length} total)</span>
               )}
             </div>
           </div>
-          
+
           <button
             onClick={onClearSearch}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-theme hover:bg-hover-color text-secondary hover:text-primary transition-all active:scale-95 shadow-soft shrink-0 min-h-[44px]"
+            className="border-theme hover:bg-hover-color text-secondary hover:text-primary flex min-h-[44px] shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 shadow-soft transition-all active:scale-95"
             title="Clear search and go back"
           >
             <IconX className="h-4 w-4" />
-            <span className="text-sm font-medium hidden sm:inline">Clear</span>
+            <span className="hidden text-sm font-medium sm:inline">Clear</span>
           </button>
         </div>
 
@@ -439,18 +480,18 @@ export default function SearchInterface({
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={clsx(
-                'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all active:scale-95 min-h-[44px] select-none',
+                'flex min-h-[44px] select-none items-center gap-2 rounded-lg border px-4 py-2 transition-all active:scale-95',
                 showFilters
-                  ? 'bg-accent-primary text-white border-accent-primary shadow-soft'
-                  : 'bg-card text-primary border-theme hover:bg-hover-color'
+                  ? 'bg-accent-primary border-accent-primary text-white shadow-soft'
+                  : 'text-primary border-theme hover:bg-hover-color bg-card',
               )}
             >
               <IconFilter className="h-4 w-4" />
-              <span className="font-medium select-none">
+              <span className="select-none font-medium">
                 {showFilters ? 'Hide' : 'Show'} Filters
               </span>
               {hasActiveFilters() && (
-                <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium min-w-[20px] text-center select-none">
+                <span className="min-w-[20px] select-none rounded-full bg-white/20 px-2 py-0.5 text-center text-xs font-medium">
                   {selectedGradings.length}
                 </span>
               )}
@@ -460,49 +501,53 @@ export default function SearchInterface({
       </div>
 
       {/* Filters Panel */}
-      <div className={clsx(
-        "transition-all duration-300 ease-in-out overflow-hidden mb-6",
-        showFilters && shouldShowFilters() 
-          ? "max-h-[1000px] opacity-100" 
-          : "max-h-0 opacity-0"
-      )}>
+      <div
+        className={clsx(
+          'mb-6 overflow-hidden transition-all duration-300 ease-in-out',
+          showFilters && shouldShowFilters() ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0',
+        )}
+      >
         {shouldShowFilters() && (
-          <div className="bg-card border border-theme rounded-xl shadow-soft overflow-hidden">
+          <div className="border-theme overflow-hidden rounded-xl border bg-card shadow-soft">
             {/* Filter Header */}
-            <div className="bg-gradient-to-r from-card to-card-hover border-b border-theme px-4 sm:px-6 py-4">
+            <div className="to-card-hover border-theme border-b bg-gradient-to-r from-card px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <IconFilter className="h-5 w-5 text-accent-primary" />
-                  <h3 className="font-semibold text-primary select-none">Filter Options</h3>
+                  <IconFilter className="text-accent-primary h-5 w-5" />
+                  <h3 className="text-primary select-none font-semibold">Filter Options</h3>
                 </div>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="sm:hidden p-2 rounded-lg hover:bg-hover-color transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  className="hover:bg-hover-color flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-colors sm:hidden"
                 >
-                  <IconX className="h-4 w-4 text-secondary" />
+                  <IconX className="text-secondary h-4 w-4" />
                 </button>
               </div>
-              <p className="text-sm text-muted mt-1 select-none">
+              <p className="mt-1 select-none text-sm text-muted">
                 Select multiple grading types to refine your search results
                 {hasActiveFilters() && (
-                  <span className="text-accent-primary font-medium select-none"> • {selectedGradings.length} filter{selectedGradings.length > 1 ? 's' : ''} active</span>
+                  <span className="text-accent-primary select-none font-medium">
+                    {' '}
+                    • {selectedGradings.length} filter{selectedGradings.length > 1 ? 's' : ''}{' '}
+                    active
+                  </span>
                 )}
               </p>
             </div>
-            
+
             {/* Filter Content */}
             <div className="p-4 sm:p-6">
               {/* Grading Filter */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-primary select-none">
+                <div className="mb-4 flex items-center justify-between">
+                  <label className="text-primary block select-none text-sm font-medium">
                     Hadith Grading Classification
                   </label>
                   <div className="flex items-center gap-2">
                     {!areAllGradingsSelected() && !selectedGradings.includes('all') && (
                       <button
                         onClick={selectAllGradings}
-                        className="text-xs text-accent-primary hover:text-accent-secondary transition-colors px-2 py-1 rounded hover:bg-accent-primary/10 select-none"
+                        className="text-accent-primary hover:text-accent-secondary hover:bg-accent-primary/10 select-none rounded px-2 py-1 text-xs transition-colors"
                       >
                         Select all
                       </button>
@@ -510,28 +555,28 @@ export default function SearchInterface({
                     {hasActiveFilters() && (
                       <button
                         onClick={clearAllFilters}
-                        className="text-xs text-muted hover:text-primary transition-colors px-2 py-1 rounded hover:bg-hover-color select-none"
+                        className="hover:text-primary hover:bg-hover-color select-none rounded px-2 py-1 text-xs text-muted transition-colors"
                       >
                         Clear all
                       </button>
                     )}
                   </div>
                 </div>
-                
+
                 {/* Desktop: Grid Layout */}
-                <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3">
                   {GRADING_OPTIONS.map((option, index) => {
                     const isSelected = selectedGradings.includes(option.value)
                     const isAllOption = option.value === 'all'
                     return (
-                      <label 
-                        key={option.value} 
+                      <label
+                        key={option.value}
                         className={clsx(
-                          "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border transition-all duration-200 ease-out select-none",
-                          filtersLoaded ? "opacity-100" : "opacity-0",
-                          isSelected 
-                            ? "border-accent-primary bg-accent-primary/5 hover:bg-accent-primary/10" 
-                            : "border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30"
+                          'group flex cursor-pointer select-none items-center gap-3 rounded-lg border p-3 transition-all duration-200 ease-out',
+                          filtersLoaded ? 'opacity-100' : 'opacity-0',
+                          isSelected
+                            ? 'border-accent-primary bg-accent-primary/5 hover:bg-accent-primary/10'
+                            : 'border-theme/50 hover:bg-card-hover/30 hover:border-gray-200 dark:hover:border-gray-500',
                         )}
                       >
                         <input
@@ -546,33 +591,35 @@ export default function SearchInterface({
                               handleGradingChange(option.value, e.target.checked)
                             }
                           }}
-                          className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
+                          className="text-accent-primary border-theme h-4 w-4 focus:outline-none focus:ring-0 focus:ring-offset-0"
                         />
-                        <span className={clsx(
-                          "text-sm transition-colors font-medium leading-tight select-none",
-                          getGradingTextColor(option.value)
-                        )}>
+                        <span
+                          className={clsx(
+                            'select-none text-sm font-medium leading-tight transition-colors',
+                            getGradingTextColor(option.value),
+                          )}
+                        >
                           {option.label}
                         </span>
                       </label>
                     )
                   })}
                 </div>
-                
+
                 {/* Mobile: List Layout with better spacing */}
-                <div className="sm:hidden space-y-3">
+                <div className="space-y-3 sm:hidden">
                   {GRADING_OPTIONS.map((option, index) => {
                     const isSelected = selectedGradings.includes(option.value)
                     const isAllOption = option.value === 'all'
                     return (
-                      <label 
-                        key={option.value} 
+                      <label
+                        key={option.value}
                         className={clsx(
-                          "flex items-center gap-4 cursor-pointer group p-4 rounded-lg border transition-all duration-200 ease-out min-h-[56px] active:scale-[0.98] select-none",
-                          filtersLoaded ? "opacity-100" : "opacity-0",
-                          isSelected 
-                            ? "border-accent-primary bg-accent-primary/5" 
-                            : "border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30"
+                          'group flex min-h-[56px] cursor-pointer select-none items-center gap-4 rounded-lg border p-4 transition-all duration-200 ease-out active:scale-[0.98]',
+                          filtersLoaded ? 'opacity-100' : 'opacity-0',
+                          isSelected
+                            ? 'border-accent-primary bg-accent-primary/5'
+                            : 'border-theme/50 hover:bg-card-hover/30 hover:border-gray-200 dark:hover:border-gray-500',
                         )}
                       >
                         <input
@@ -587,12 +634,14 @@ export default function SearchInterface({
                               handleGradingChange(option.value, e.target.checked)
                             }
                           }}
-                          className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-5 h-5"
+                          className="text-accent-primary border-theme h-5 w-5 focus:outline-none focus:ring-0 focus:ring-offset-0"
                         />
-                        <span className={clsx(
-                          "transition-colors font-medium flex-1 select-none",
-                          getGradingTextColor(option.value)
-                        )}>
+                        <span
+                          className={clsx(
+                            'flex-1 select-none font-medium transition-colors',
+                            getGradingTextColor(option.value),
+                          )}
+                        >
                           {option.label}
                         </span>
                       </label>
@@ -602,76 +651,108 @@ export default function SearchInterface({
               </div>
 
               {/* Search Options */}
-              <div className="border-t border-theme pt-6 mt-6">
-                <label className="block text-sm font-medium text-primary mb-4 select-none">
-                  Search Mode <span className="text-xs text-muted font-normal select-none">(select one)</span>
+              <div className="border-theme mt-6 border-t pt-6">
+                <label className="text-primary mb-4 block select-none text-sm font-medium">
+                  Search Mode{' '}
+                  <span className="select-none text-xs font-normal text-muted">(select one)</span>
                 </label>
                 <div className="space-y-3">
-                  <label className={clsx(
-                    "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30 transition-all duration-200 ease-out select-none",
-                    filtersLoaded ? "opacity-100" : "opacity-0"
-                  )}>
+                  <label
+                    className={clsx(
+                      'border-theme/50 hover:bg-card-hover/30 group flex cursor-pointer select-none items-center gap-3 rounded-lg border p-3 transition-all duration-200 ease-out hover:border-gray-200 dark:hover:border-gray-500',
+                      filtersLoaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
                     <input
                       type="checkbox"
                       checked={searchOptions.smartSearch}
                       onChange={(e) => handleSearchOptionChange('smartSearch', e.target.checked)}
-                      className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
+                      className="text-accent-primary border-theme h-4 w-4 focus:outline-none focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Smart Search <span className="text-xs text-green-600 dark:text-green-400 font-medium">(Recommended)</span></span>
-                      <p className="text-xs text-muted mt-1 select-none">Automatically chooses the best search strategy. Includes synonyms for Islamic terms (e.g., "prayer" finds "salah")</p>
+                      <span className="text-primary select-none text-sm font-medium">
+                        Smart Search{' '}
+                        <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                          (Recommended)
+                        </span>
+                      </span>
+                      <p className="mt-1 select-none text-xs text-muted">
+                        Automatically chooses the best search strategy. Includes synonyms for
+                        Islamic terms (e.g., "prayer" finds "salah")
+                      </p>
                     </div>
                   </label>
-                  <label className={clsx(
-                    "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30 transition-all duration-200 ease-out select-none",
-                    filtersLoaded ? "opacity-100" : "opacity-0"
-                  )}>
+                  <label
+                    className={clsx(
+                      'border-theme/50 hover:bg-card-hover/30 group flex cursor-pointer select-none items-center gap-3 rounded-lg border p-3 transition-all duration-200 ease-out hover:border-gray-200 dark:hover:border-gray-500',
+                      filtersLoaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
                     <input
                       type="checkbox"
                       checked={searchOptions.flexibleMatching}
-                      onChange={(e) => handleSearchOptionChange('flexibleMatching', e.target.checked)}
-                      className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
+                      onChange={(e) =>
+                        handleSearchOptionChange('flexibleMatching', e.target.checked)
+                      }
+                      className="text-accent-primary border-theme h-4 w-4 focus:outline-none focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Enhanced Flexible Matching</span>
-                      <p className="text-xs text-muted mt-1 select-none">Advanced word variations + Islamic terminology synonyms (e.g., "praying" matches "prayer", "salah", "salat")</p>
+                      <span className="text-primary select-none text-sm font-medium">
+                        Enhanced Flexible Matching
+                      </span>
+                      <p className="mt-1 select-none text-xs text-muted">
+                        Advanced word variations + Islamic terminology synonyms (e.g., "praying"
+                        matches "prayer", "salah", "salat")
+                      </p>
                     </div>
                   </label>
-                  <label className={clsx(
-                    "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30 transition-all duration-200 ease-out select-none",
-                    filtersLoaded ? "opacity-100" : "opacity-0"
-                  )}>
+                  <label
+                    className={clsx(
+                      'border-theme/50 hover:bg-card-hover/30 group flex cursor-pointer select-none items-center gap-3 rounded-lg border p-3 transition-all duration-200 ease-out hover:border-gray-200 dark:hover:border-gray-500',
+                      filtersLoaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
                     <input
                       type="checkbox"
                       checked={searchOptions.exactWords}
                       onChange={(e) => handleSearchOptionChange('exactWords', e.target.checked)}
-                      className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
+                      className="text-accent-primary border-theme h-4 w-4 focus:outline-none focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Exact Words Only</span>
-                      <p className="text-xs text-muted mt-1 select-none">Match whole words exactly (not as parts of other words)</p>
+                      <span className="text-primary select-none text-sm font-medium">
+                        Exact Words Only
+                      </span>
+                      <p className="mt-1 select-none text-xs text-muted">
+                        Match whole words exactly (not as parts of other words)
+                      </p>
                     </div>
                   </label>
-                  <label className={clsx(
-                    "flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 hover:bg-card-hover/30 transition-all duration-200 ease-out select-none",
-                    filtersLoaded ? "opacity-100" : "opacity-0"
-                  )}>
+                  <label
+                    className={clsx(
+                      'border-theme/50 hover:bg-card-hover/30 group flex cursor-pointer select-none items-center gap-3 rounded-lg border p-3 transition-all duration-200 ease-out hover:border-gray-200 dark:hover:border-gray-500',
+                      filtersLoaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
                     <input
                       type="checkbox"
                       checked={searchOptions.exactPhrase}
                       onChange={(e) => handleSearchOptionChange('exactPhrase', e.target.checked)}
-                      className="text-accent-primary focus:ring-0 focus:ring-offset-0 focus:outline-none border-theme w-4 h-4"
+                      className="text-accent-primary border-theme h-4 w-4 focus:outline-none focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="select-none">
-                      <span className="text-sm font-medium text-primary select-none">Exact Phrase</span>
-                      <p className="text-xs text-muted mt-1 select-none">Search for the exact phrase as written</p>
+                      <span className="text-primary select-none text-sm font-medium">
+                        Exact Phrase
+                      </span>
+                      <p className="mt-1 select-none text-xs text-muted">
+                        Search for the exact phrase as written
+                      </p>
                     </div>
                   </label>
                 </div>
-                
+
                 {/* Additional Options */}
-                <div className="border-t border-theme/30 pt-4 mt-4">
-                  <label className="block text-sm font-medium text-primary mb-3 select-none">
+                <div className="border-theme/30 mt-4 border-t pt-4">
+                  <label className="text-primary mb-3 block select-none text-sm font-medium">
                     Additional Options
                   </label>
                   {/* Case-insensitive behavior is now fixed and always on; option removed */}
@@ -680,20 +761,23 @@ export default function SearchInterface({
 
               {/* Clear Filters */}
               {hasActiveFilters() && (
-                <div className="border-t border-theme pt-4 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="border-theme mt-6 flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex flex-col gap-2">
-                    <span className="text-sm text-muted font-medium">Active filters:</span>
+                    <span className="text-sm font-medium text-muted">Active filters:</span>
                     <div className="flex flex-wrap gap-2">
-                      {selectedGradings.map(grading => {
-                        const option = GRADING_OPTIONS.find(opt => opt.value === grading)
+                      {selectedGradings.map((grading) => {
+                        const option = GRADING_OPTIONS.find((opt) => opt.value === grading)
                         return option ? (
-                          <span key={grading} className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent-primary/10 border border-accent-primary/20 text-accent-primary rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-accent-primary/15 transition-all duration-200">
+                          <span
+                            key={grading}
+                            className="bg-accent-primary/10 border-accent-primary/20 text-accent-primary hover:bg-accent-primary/15 inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                          >
                             {option.label}
                             {/* Don't show X button for "All Gradings" */}
                             {grading !== 'all' && (
                               <button
                                 onClick={() => handleGradingChange(grading, false)}
-                                className="ml-1 hover:bg-accent-primary/20 dark:hover:bg-accent-primary/30 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                                className="hover:bg-accent-primary/20 dark:hover:bg-accent-primary/30 ml-1 flex items-center justify-center rounded-full p-0.5 transition-all duration-200 hover:scale-110"
                                 title={`Remove ${option.label} filter`}
                               >
                                 <IconX className="h-3 w-3" />
@@ -703,11 +787,11 @@ export default function SearchInterface({
                         ) : null
                       })}
                       {searchOptions.smartSearch && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700/50 text-green-700 dark:text-green-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-green-150 dark:hover:bg-green-900/40 transition-all duration-200">
+                        <span className="hover:bg-green-150 inline-flex items-center gap-1 rounded-lg border border-green-200 bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:border-green-700/50 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/40">
                           Smart Search
                           <button
                             onClick={() => handleSearchOptionChange('smartSearch', false)}
-                            className="ml-1 hover:bg-green-200 dark:hover:bg-green-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="ml-1 flex items-center justify-center rounded-full p-0.5 transition-all duration-200 hover:scale-110 hover:bg-green-200 dark:hover:bg-green-800/50"
                             title="Remove Smart Search filter"
                           >
                             <IconX className="h-3 w-3" />
@@ -715,11 +799,11 @@ export default function SearchInterface({
                         </span>
                       )}
                       {searchOptions.flexibleMatching && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-purple-150 dark:hover:bg-purple-900/40 transition-all duration-200">
+                        <span className="hover:bg-purple-150 inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-100 px-3 py-1.5 text-xs font-medium text-purple-700 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:border-purple-700/50 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/40">
                           Enhanced Flexible
                           <button
                             onClick={() => handleSearchOptionChange('flexibleMatching', false)}
-                            className="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="ml-1 flex items-center justify-center rounded-full p-0.5 transition-all duration-200 hover:scale-110 hover:bg-purple-200 dark:hover:bg-purple-800/50"
                             title="Remove Enhanced Flexible filter"
                           >
                             <IconX className="h-3 w-3" />
@@ -727,11 +811,11 @@ export default function SearchInterface({
                         </span>
                       )}
                       {searchOptions.exactWords && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-blue-150 dark:hover:bg-blue-900/40 transition-all duration-200">
+                        <span className="hover:bg-blue-150 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:border-blue-700/50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/40">
                           Exact Words
                           <button
                             onClick={() => handleSearchOptionChange('exactWords', false)}
-                            className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="ml-1 flex items-center justify-center rounded-full p-0.5 transition-all duration-200 hover:scale-110 hover:bg-blue-200 dark:hover:bg-blue-800/50"
                             title="Remove Exact Words filter"
                           >
                             <IconX className="h-3 w-3" />
@@ -739,11 +823,11 @@ export default function SearchInterface({
                         </span>
                       )}
                       {searchOptions.exactPhrase && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium shadow-sm hover:shadow-md hover:scale-105 hover:bg-blue-150 dark:hover:bg-blue-900/40 transition-all duration-200">
+                        <span className="hover:bg-blue-150 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:border-blue-700/50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/40">
                           Exact Phrase
                           <button
                             onClick={() => handleSearchOptionChange('exactPhrase', false)}
-                            className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-800/50 rounded-full p-0.5 flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="ml-1 flex items-center justify-center rounded-full p-0.5 transition-all duration-200 hover:scale-110 hover:bg-blue-200 dark:hover:bg-blue-800/50"
                             title="Remove Exact Phrase filter"
                           >
                             <IconX className="h-3 w-3" />
@@ -755,7 +839,7 @@ export default function SearchInterface({
                   </div>
                   <button
                     onClick={clearAllFilters}
-                    className="text-sm text-muted hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-hover-color font-medium border border-theme/50 hover:border-gray-200 dark:hover:border-gray-500 active:scale-95 min-h-[40px] shrink-0"
+                    className="hover:text-primary hover:bg-hover-color border-theme/50 min-h-[40px] shrink-0 rounded-lg border px-3 py-2 text-sm font-medium text-muted transition-colors hover:border-gray-200 active:scale-95 dark:hover:border-gray-500"
                   >
                     Clear all filters
                   </button>
@@ -778,34 +862,31 @@ export default function SearchInterface({
             />
           ))
         ) : !isSearching ? (
-          <div className="text-center py-12 pb-80">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-card border border-theme flex items-center justify-center">
+          <div className="py-12 pb-80 text-center">
+            <div className="mx-auto max-w-md">
+              <div className="border-theme mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border bg-card">
                 <IconSearch className="h-7 w-7 text-muted" />
               </div>
-              <h3 className="text-lg font-medium text-primary mb-2">
+              <h3 className="text-primary mb-2 text-lg font-medium">
                 {searchResults.length === 0 ? 'No Results Found' : 'No Results Match Filters'}
               </h3>
-              <p className="text-muted mb-4">
-                {searchResults.length === 0 
+              <p className="mb-4 text-muted">
+                {searchResults.length === 0
                   ? `No hadiths found for "${searchQuery}"${searchContext === 'al-kafi' ? ' in Al-Kāfi' : searchContext === 'uyun-akhbar-al-rida' ? ' in ʿUyūn akhbār al-Riḍā' : ''}`
-                  : 'No hadiths match the selected filters'
-                }
+                  : 'No hadiths match the selected filters'}
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
                 {searchResults.length === 0 ? (
                   <p className="text-sm text-muted">
                     Try a different search term or check your spelling
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm text-muted">
-                      Try adjusting your filters
-                    </p>
+                    <p className="text-sm text-muted">Try adjusting your filters</p>
                     {hasActiveFilters() && (
                       <button
                         onClick={clearAllFilters}
-                        className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-colors text-sm font-medium active:scale-95"
+                        className="bg-accent-primary hover:bg-accent-secondary rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors active:scale-95"
                       >
                         Clear all filters
                       </button>
@@ -820,18 +901,18 @@ export default function SearchInterface({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col items-center gap-4 mt-12 mb-8">
+        <div className="mb-8 mt-12 flex flex-col items-center gap-4">
           {/* Desktop Pagination */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
             {/* Previous Button */}
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className={clsx(
-                'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all active:scale-95',
+                'flex items-center gap-2 rounded-lg border px-4 py-2 transition-all active:scale-95',
                 currentPage === 1
-                  ? 'text-muted border-theme/50 cursor-not-allowed opacity-50'
-                  : 'text-primary border-theme hover:bg-hover-color'
+                  ? 'border-theme/50 cursor-not-allowed text-muted opacity-50'
+                  : 'text-primary border-theme hover:bg-hover-color',
               )}
             >
               <IconChevronLeft className="h-4 w-4" />
@@ -839,7 +920,7 @@ export default function SearchInterface({
             </button>
 
             {/* Page Numbers */}
-            <div className="flex items-center gap-1 mx-2">
+            <div className="mx-2 flex items-center gap-1">
               {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                 let pageNum
                 if (totalPages <= 7) {
@@ -857,10 +938,10 @@ export default function SearchInterface({
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
                     className={clsx(
-                      'w-10 h-10 rounded-lg border transition-all active:scale-95',
+                      'h-10 w-10 rounded-lg border transition-all active:scale-95',
                       currentPage === pageNum
-                        ? 'bg-accent-primary text-white border-accent-primary shadow-soft'
-                        : 'text-primary border-theme hover:bg-hover-color'
+                        ? 'bg-accent-primary border-accent-primary text-white shadow-soft'
+                        : 'text-primary border-theme hover:bg-hover-color',
                     )}
                   >
                     {pageNum}
@@ -874,10 +955,10 @@ export default function SearchInterface({
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className={clsx(
-                'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all active:scale-95',
+                'flex items-center gap-2 rounded-lg border px-4 py-2 transition-all active:scale-95',
                 currentPage === totalPages
-                  ? 'text-muted border-theme/50 cursor-not-allowed opacity-50'
-                  : 'text-primary border-theme hover:bg-hover-color'
+                  ? 'border-theme/50 cursor-not-allowed text-muted opacity-50'
+                  : 'text-primary border-theme hover:bg-hover-color',
               )}
             >
               <span>Next</span>
@@ -886,16 +967,16 @@ export default function SearchInterface({
           </div>
 
           {/* Mobile Pagination */}
-          <div className="sm:hidden flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between sm:hidden">
             {/* Previous Button */}
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className={clsx(
-                'flex items-center gap-2 px-4 py-3 rounded-lg border transition-all active:scale-95 min-h-[48px]',
+                'flex min-h-[48px] items-center gap-2 rounded-lg border px-4 py-3 transition-all active:scale-95',
                 currentPage === 1
-                  ? 'text-muted border-theme/50 cursor-not-allowed opacity-50'
-                  : 'text-primary border-theme hover:bg-hover-color'
+                  ? 'border-theme/50 cursor-not-allowed text-muted opacity-50'
+                  : 'text-primary border-theme hover:bg-hover-color',
               )}
             >
               <IconChevronLeft className="h-4 w-4" />
@@ -903,11 +984,11 @@ export default function SearchInterface({
             </button>
 
             {/* Page Info */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-card border border-theme rounded-lg">
+            <div className="border-theme flex items-center gap-2 rounded-lg border bg-card px-4 py-2">
               <span className="text-sm text-muted">Page</span>
-              <span className="text-sm font-medium text-primary">{currentPage}</span>
+              <span className="text-primary text-sm font-medium">{currentPage}</span>
               <span className="text-sm text-muted">of</span>
-              <span className="text-sm font-medium text-primary">{totalPages}</span>
+              <span className="text-primary text-sm font-medium">{totalPages}</span>
             </div>
 
             {/* Next Button */}
@@ -915,10 +996,10 @@ export default function SearchInterface({
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className={clsx(
-                'flex items-center gap-2 px-4 py-3 rounded-lg border transition-all active:scale-95 min-h-[48px]',
+                'flex min-h-[48px] items-center gap-2 rounded-lg border px-4 py-3 transition-all active:scale-95',
                 currentPage === totalPages
-                  ? 'text-muted border-theme/50 cursor-not-allowed opacity-50'
-                  : 'text-primary border-theme hover:bg-hover-color'
+                  ? 'border-theme/50 cursor-not-allowed text-muted opacity-50'
+                  : 'text-primary border-theme hover:bg-hover-color',
               )}
             >
               <span>Next</span>
@@ -928,7 +1009,8 @@ export default function SearchInterface({
 
           {/* Pagination Info */}
           <div className="text-center text-sm text-muted">
-            Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedResults.length)} of {filteredAndSortedResults.length} results
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedResults.length)} of{' '}
+            {filteredAndSortedResults.length} results
           </div>
         </div>
       )}

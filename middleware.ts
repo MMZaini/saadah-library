@@ -9,7 +9,12 @@ export function middleware(req: NextRequest) {
   const pathname = nextUrl.pathname
 
   // Ignore special paths immediately
-  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/static') || pathname.startsWith('/favicon.ico')) {
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/static') ||
+    pathname.startsWith('/favicon.ico')
+  ) {
     return
   }
 
@@ -22,14 +27,14 @@ export function middleware(req: NextRequest) {
   const firstLower = first.toLowerCase()
 
   // Build whitelist of known slugs (lowercased) from URL_TO_BOOK_ID_MAP and multi-volume book keys
-  const mapSlugs = Object.keys(URL_TO_BOOK_ID_MAP).map(k => k.toLowerCase())
-  const multiSlugs = Object.keys(MULTI_VOLUME_BOOKS).map(k => k.toLowerCase())
+  const mapSlugs = Object.keys(URL_TO_BOOK_ID_MAP).map((k) => k.toLowerCase())
+  const multiSlugs = Object.keys(MULTI_VOLUME_BOOKS).map((k) => k.toLowerCase())
   const known = new Set([...mapSlugs, ...multiSlugs])
 
   if (!known.has(firstLower)) return
 
   // Lowercase entire path
-  const lowerPath = '/' + segments.map(s => s.toLowerCase()).join('/')
+  const lowerPath = '/' + segments.map((s) => s.toLowerCase()).join('/')
   if (pathname === lowerPath) return
 
   const url = nextUrl.clone()
@@ -40,5 +45,5 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   // Run middleware for all paths at root (we filter inside middleware)
-  matcher: '/:path*'
+  matcher: '/:path*',
 }

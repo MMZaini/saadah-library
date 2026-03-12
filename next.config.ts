@@ -1,11 +1,12 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'thaqalayn.net' }
+      { protocol: 'https', hostname: 'thaqalayn.net' },
     ],
     // Allow larger image sizes for better quality
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -26,13 +27,12 @@ const nextConfig = {
     onDemandEntries: {
       maxInactiveAge: 25 * 1000,
       pagesBufferLength: 2,
-    }
-  })
-  ,
+    },
+  }),
   // Allow builds to succeed even if ESLint reports problems (repo contains many lint issues)
   eslint: {
     ignoreDuringBuilds: true,
-  }
+  },
 }
 
-module.exports = nextConfig
+export default nextConfig
