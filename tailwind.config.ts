@@ -31,7 +31,7 @@ export default {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        arabic: ['Amiri', 'Noto Sans Arabic', 'serif'],
+        arabic: ['Uthman Taha', 'Noto Sans Arabic', 'serif'],
         mono: ['"Space Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       keyframes: {

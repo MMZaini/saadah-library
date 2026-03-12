@@ -17,7 +17,7 @@ const isLocalStorageAvailable = () => {
 
 type Settings = {
   theme: 'dark' | 'light'
-  arabicFontSize: number // percentage (100 = 100% = default)
+  arabicFontSize: number // slider percentage (100 = default). Actual CSS = value × 1.485
   englishFontSize: number // percentage (100 = 100% = default)
   alwaysShowFullHadith: boolean // whether to show full hadith text by default
 }
@@ -88,7 +88,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       root.setAttribute('data-theme', settings.theme)
 
       // Set font size CSS custom properties
-      root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize}%`)
+      root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize * 1.485}%`)
       root.style.setProperty('--hadith-english-font-size', `${settings.englishFontSize}%`)
     } else {
       // Set initial theme immediately on load to prevent flash
@@ -119,7 +119,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (typeof document !== 'undefined') {
             const root = document.documentElement
             if (updated.arabicFontSize !== undefined) {
-              root.style.setProperty('--hadith-arabic-font-size', `${updated.arabicFontSize}%`)
+              root.style.setProperty('--hadith-arabic-font-size', `${updated.arabicFontSize * 1.485}%`)
             }
             if (updated.englishFontSize !== undefined) {
               root.style.setProperty('--hadith-english-font-size', `${updated.englishFontSize}%`)
