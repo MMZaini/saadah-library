@@ -5,9 +5,12 @@ import Link from 'next/link'
 import { BookmarkData } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
 import { useBookmarks } from '@/lib/bookmarks-context'
-import { IconBookmarkFilled, IconBook } from './Icons'
 import { useSettings } from '@/lib/settings-context'
-import clsx from 'clsx'
+import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Bookmark, ChevronRight, StickyNote } from 'lucide-react'
 
 interface BookmarkCardProps {
   bookmark: BookmarkData
@@ -24,15 +27,11 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
   const getHadithUrl = () => {
     try {
       const cfg = getBookConfig(bookmark.bookId)
-      if (cfg?.bookId === 'Al-Kafi') {
-        return `/al-kafi/hadith/${bookmark.id}`
-      } else if (bookmark.bookId.includes('Uyun')) {
-        return `/Uyun-akhbar-al-Rida/hadith/${bookmark.id}`
-      } else {
-        return `/${getBookUrlSlug(bookmark.bookId)}/hadith/${bookmark.id}`
-      }
+      if (cfg?.bookId === 'Al-Kafi') return `/al-kafi/hadith/${bookmark.id}`
+      if (bookmark.bookId.includes('Uyun')) return `/Uyun-akhbar-al-Rida/hadith/${bookmark.id}`
+      return `/${getBookUrlSlug(bookmark.bookId)}/hadith/${bookmark.id}`
     } catch {
-      return `/al-kafi/hadith/${bookmark.id}` // fallback
+      return `/al-kafi/hadith/${bookmark.id}`
     }
   }
 
@@ -48,108 +47,81 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
 
   return (
     <div
-      className={clsx(
-        'border-theme rounded-xl border bg-card p-4 shadow-soft sm:p-6',
-        'hover:border-accent-primary/20 hover:bg-card-hover hover:shadow-medium',
-        'transition-all duration-300',
+      className={cn(
+        'rounded-lg border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2',
         className,
       )}
     >
       {/* Header */}
-      <div className="mb-3 flex items-start justify-between sm:mb-4">
+      <div className="mb-3 flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-            <span className="bg-accent-primary w-fit rounded px-2 py-1 text-xs font-medium text-white shadow-soft sm:text-sm">
-              <span className="sm:hidden">
-                {bookmark.book}
-                {bookmark.volume && ` Vol.${bookmark.volume}`}
-              </span>
-              <span className="hidden sm:inline">
-                {bookmark.book}
-                {bookmark.volume && ` - Volume ${bookmark.volume}`}
-              </span>
-            </span>
-            <span className="text-xs text-muted">#{bookmark.id}</span>
+          <div className="mb-1 flex items-center gap-2">
+            <Badge variant="secondary">
+              {bookmark.book}
+              {bookmark.volume && ` Vol. ${bookmark.volume}`}
+            </Badge>
+            <span className="text-xs text-foreground-faint">#{bookmark.id}</span>
           </div>
-
-          <h3 className="text-secondary mb-1 line-clamp-2 text-sm font-medium leading-tight">
+          <h3 className="mb-0.5 line-clamp-2 text-sm font-medium text-foreground">
             {bookmark.category}
           </h3>
-
-          <p className="line-clamp-2 text-xs text-muted">{bookmark.chapter}</p>
+          <p className="line-clamp-2 text-xs text-foreground-muted">{bookmark.chapter}</p>
         </div>
 
-        <div className="ml-3 flex flex-shrink-0 items-center gap-2 sm:ml-4">
-          {/* Remove Bookmark Button */}
-          <button
+        <div className="ml-3 flex shrink-0 items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => removeBookmark(bookmark.bookId, bookmark.id)}
-            className="shadow-medium flex min-w-[28px] items-center justify-center rounded-lg bg-yellow-500 px-2 py-1 text-xs font-medium text-white shadow-soft transition-all hover:bg-yellow-600 active:scale-95 sm:min-w-[32px] sm:px-3"
             title="Remove bookmark"
+            className="text-bookmark hover:text-bookmark"
           >
-            <IconBookmarkFilled className="h-3 w-3 sm:h-4 sm:w-4" />
-          </button>
-
+            <Bookmark className="h-3.5 w-3.5 fill-current" />
+          </Button>
           {bookmark.arabicPreview && (
-            <button
+            <Button
+              variant={showArabic ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setShowArabic(!showArabic)}
-              className={clsx(
-                'min-w-[28px] rounded-lg px-2 py-1 text-xs font-medium shadow-soft transition-all sm:min-w-[32px] sm:px-3',
-                showArabic
-                  ? 'bg-accent-primary shadow-medium text-white'
-                  : 'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 active:scale-95',
-              )}
+              className="font-arabic text-xs"
             >
               ع
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Content */}
-      <div className="space-y-3 sm:space-y-4">
-        {showArabic && bookmark.arabicPreview ? (
-          <div className="hadith-block rounded-lg border border-amber-200/60 bg-amber-50/80 shadow-soft backdrop-blur-sm dark:border-amber-800/30 dark:bg-amber-900/20">
-            <div
-              className="hadith-arabic-text text-right font-arabic text-base leading-relaxed text-amber-900 dark:text-amber-100 sm:text-lg"
-              dir="rtl"
-            >
-              {bookmark.arabicPreview}
-            </div>
+      {showArabic && bookmark.arabicPreview ? (
+        <div className="rounded-md border border-border bg-surface-2 p-3">
+          <div
+            className="font-arabic text-base leading-loose text-foreground"
+            dir="rtl"
+            style={{ fontSize: `${settings.arabicFontSize}%` }}
+          >
+            {bookmark.arabicPreview}
           </div>
-        ) : (
-          <div className="text-primary leading-relaxed">
-            <div
-              className="hadith-english-text font-mono text-sm sm:text-base"
-              style={{
-                fontSize: `${settings.englishFontSize}%`,
-                fontFamily:
-                  '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace',
-              }}
-            >
-              {bookmark.preview}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div
+          className="font-mono text-sm leading-relaxed text-foreground"
+          style={{ fontSize: `${settings.englishFontSize}%` }}
+        >
+          {bookmark.preview}
+        </div>
+      )}
 
-      {/* Notes Section */}
-      <div className="mt-4 rounded-lg border border-blue-200/30 bg-blue-50/50 p-3 dark:border-blue-800/20 dark:bg-blue-900/10">
+      {/* Notes */}
+      <div className="mt-3 rounded-md border border-border bg-background p-3">
         <div className="mb-2 flex items-center justify-between">
-          <h4 className="text-primary flex items-center gap-2 text-xs font-semibold">
-            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            Personal Notes
-          </h4>
+          <span className="flex items-center gap-1.5 text-xs font-medium text-foreground-muted">
+            <StickyNote className="h-3 w-3" />
+            Notes
+          </span>
           {!isEditingNotes && (
             <button
               onClick={() => setIsEditingNotes(true)}
-              className="text-xs text-blue-600 transition-colors hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+              className="text-xs text-accent transition-colors hover:underline"
             >
               {bookmark.notes ? 'Edit' : 'Add Note'}
             </button>
@@ -161,54 +133,42 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
             <textarea
               value={notesValue}
               onChange={(e) => setNotesValue(e.target.value)}
-              className="w-full resize-none rounded-md border border-blue-200 bg-white p-2 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full resize-none rounded-md border border-border bg-surface-1 p-2 text-sm text-foreground placeholder:text-foreground-faint focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
               rows={3}
-              placeholder="Add your personal notes about this hadith..."
+              placeholder="Add your personal notes about this hadith…"
               autoFocus
             />
             <div className="flex gap-2">
-              <button
-                onClick={handleSaveNotes}
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
-              >
+              <Button size="sm" onClick={handleSaveNotes}>
                 Save
-              </button>
-              <button
-                onClick={handleCancelNotes}
-                className="rounded-md bg-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
-              >
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelNotes}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-gray-700 dark:text-gray-300">
+          <div className="text-sm text-foreground-muted">
             {bookmark.notes ? (
               <div className="whitespace-pre-wrap leading-relaxed">{bookmark.notes}</div>
             ) : (
-              <div className="italic text-gray-500 dark:text-gray-400">No notes added yet</div>
+              <div className="italic text-foreground-faint">No notes added yet</div>
             )}
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="border-theme mt-6 border-t pt-4">
-        <div className="flex items-center justify-between text-xs text-muted">
-          <div className="flex items-center gap-3">
-            <span>Bookmarked: {new Date(bookmark.timestamp).toLocaleDateString()}</span>
-          </div>
-
-          <Link
-            href={getHadithUrl()}
-            className="text-primary flex items-center gap-1 transition-colors hover:underline"
-          >
-            View Full Hadith
-            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+      <Separator className="my-3" />
+      <div className="flex items-center justify-between text-xs text-foreground-faint">
+        <span>Bookmarked: {new Date(bookmark.timestamp).toLocaleDateString()}</span>
+        <Link
+          href={getHadithUrl()}
+          className="flex items-center gap-0.5 text-foreground-muted transition-colors hover:text-foreground"
+        >
+          View Full Hadith
+          <ChevronRight className="h-3 w-3" />
+        </Link>
       </div>
     </div>
   )

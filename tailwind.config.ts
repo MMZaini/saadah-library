@@ -11,24 +11,44 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0b0b0b',
-        card: '#101012',
-        muted: '#9ca3af',
-        accent: {
-          gold1: '#facc15',
-          gold2: '#f59e0b',
+        background: 'var(--background)',
+        foreground: {
+          DEFAULT: 'var(--foreground)',
+          muted: 'var(--foreground-muted)',
+          faint: 'var(--foreground-faint)',
         },
-      },
-      boxShadow: {
-        soft: '0 10px 30px rgba(0,0,0,.45)',
-        glow: '0 10px 30px rgba(245, 158, 11, .35)',
-        book: '0 12px 40px rgba(0,0,0,.55)',
+        'surface-1': 'var(--surface-1)',
+        'surface-2': 'var(--surface-2)',
+        border: 'var(--border)',
+        ring: 'var(--ring)',
+        accent: {
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
+        },
+        destructive: 'var(--destructive)',
+        input: 'var(--input)',
+        bookmark: 'var(--bookmark)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)'],
-        arabic: ['Amiri', 'Noto Sans Arabic', 'serif', 'Inter'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        arabic: ['Amiri', 'Noto Sans Arabic', 'serif'],
+        mono: ['"Space Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
     },
   },
-  plugins: [],
+  plugins: [require('tailwindcss-animate')],
 } satisfies Config

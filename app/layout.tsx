@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import ClientProviders from '@/components/ClientProviders'
 import TopBar from '@/components/TopBar'
 import SettingsSidebar from '@/components/SettingsSidebar'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import favicon from './favicon.ico'
 
 const inter = Inter({
@@ -16,18 +17,9 @@ const inter = Inter({
 export const metadata = {
   title: 'مكتبة السعادة',
   description: 'Comprehensive Shia Library – UI recreation',
-  // Performance and SEO improvements
-  robots: {
-    index: true,
-    follow: true,
-  },
-  // Preload critical resources
-  other: {
-    'X-UA-Compatible': 'IE=edge',
-  },
+  robots: { index: true, follow: true },
 }
 
-// Next 14+ requires viewport to be exported separately using the `viewport` export
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -36,7 +28,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="icon" href={favicon.src} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -44,39 +36,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://www.thaqalayn-api.net" />
         <link rel="dns-prefetch" href="https://thaqalayn.net" />
       </head>
-      <body suppressHydrationWarning>
-        {/* Clean up VS Code injected classes immediately */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-          (function(){
-            try {
-              function cleanVSCodeClasses() {
-                var body = document.body;
-                var html = document.documentElement;
-                if (body && body.className) {
-                  body.className = body.className.replace(/\\bvsc-[^\\s]*\\b/g, '').replace(/\\bvsc-initialized\\b/g, '').trim();
-                }
-                if (html && html.className) {
-                  html.className = html.className.replace(/\\bvsc-[^\\s]*\\b/g, '').replace(/\\bvsc-initialized\\b/g, '').trim();
-                }
-              }
-              // Clean immediately
-              cleanVSCodeClasses();
-              // Clean after a short delay in case classes are added asynchronously
-              setTimeout(cleanVSCodeClasses, 0);
-              setTimeout(cleanVSCodeClasses, 100);
-            } catch(e) {}
-          })();
-        `,
-          }}
-        />
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <ClientProviders>
-          <div className="bg-color flex min-h-screen flex-col antialiased duration-200">
-            <SettingsSidebar />
-            <TopBar />
-            <main className="flex-1">{children}</main>
-          </div>
+          <TooltipProvider delayDuration={300}>
+            <div className="flex min-h-screen flex-col">
+              <TopBar />
+              <main className="flex-1">{children}</main>
+              <SettingsSidebar />
+            </div>
+          </TooltipProvider>
         </ClientProviders>
       </body>
     </html>

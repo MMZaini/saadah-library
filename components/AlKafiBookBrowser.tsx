@@ -11,8 +11,8 @@ import {
   BookInfo,
 } from '@/lib/api'
 import HadithCard from './HadithCard'
-import { IconBook, IconChevronDown, IconChevronRight } from './Icons'
-import clsx from 'clsx'
+import { Book, ChevronDown, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface ChapterSummary {
   chapter: string
@@ -206,19 +206,19 @@ export default function AlKafiBookBrowser({
   }
 
   return (
-    <div className={clsx('space-y-6', className)}>
+    <div className={cn('space-y-6', className)}>
       {/* Volume Selector */}
-      <div className="rounded-2xl border border-slate-200/60 bg-gradient-to-r from-white to-slate-50/80 p-6 shadow-sm dark:border-slate-700/50 dark:from-slate-800/50 dark:to-slate-900/30">
+      <div className="rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-4">
-          <IconBook className="text-primary h-8 w-8" />
+          <Book className="h-8 w-8 text-foreground-muted" />
           <div>
-            <h3 className="mb-1 text-xl font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="mb-1 text-xl font-bold text-foreground">
               Al-Kāfi Complete Chapter Tree
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Browse the complete structure of Al-Kāfi. Select a specific volume or "All Volumes",
-              expand categories, and select chapters to read all hadiths with full details including
-              gradings.
+            <p className="text-sm text-foreground-muted">
+              Browse the complete structure of Al-Kāfi. Select a specific volume or &quot;All
+              Volumes&quot;, expand categories, and select chapters to read all hadiths with full
+              details including gradings.
             </p>
           </div>
         </div>
@@ -235,12 +235,12 @@ export default function AlKafiBookBrowser({
                   setSelectedVolume(parsed)
                 }}
                 disabled={loading}
-                className={clsx(
-                  'appearance-none border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800',
-                  'rounded-xl px-4 py-2.5 pr-12 font-semibold text-slate-900 dark:text-slate-100',
-                  'shadow-sm transition-all duration-200 hover:shadow-md',
-                  'focus:ring-primary/20 focus:border-primary focus:outline-none focus:ring-2',
-                  'hover:border-primary/50 min-w-[130px] cursor-pointer',
+                className={cn(
+                  'appearance-none border border-border bg-background',
+                  'rounded-lg px-4 py-2.5 pr-12 font-semibold text-foreground',
+                  'transition-colors duration-200',
+                  'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                  'min-w-[130px] cursor-pointer hover:border-zinc-600/50',
                   loading && 'cursor-not-allowed opacity-50',
                 )}
               >
@@ -254,7 +254,7 @@ export default function AlKafiBookBrowser({
               {/* Custom dropdown arrow */}
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                 <svg
-                  className="h-4 w-4 text-slate-500 dark:text-slate-400"
+                  className="h-4 w-4 text-foreground-muted"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -273,20 +273,20 @@ export default function AlKafiBookBrowser({
           {!loading && getTotalHadithsCount() > 0 && (
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-green-500 shadow-sm"></div>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <div className="h-3 w-3 rounded-full bg-accent"></div>
+                <span className="font-semibold text-foreground-muted">
                   {getTotalHadithsCount().toLocaleString()} hadiths
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500 shadow-sm"></div>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
+                <span className="font-semibold text-foreground-muted">
                   {Object.keys(volumeSummary).length} categories
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-purple-500 shadow-sm"></div>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
+                <span className="font-semibold text-foreground-muted">
                   {selectedVolume === 'all' ? 'All Volumes' : `Volume ${selectedVolume}`}
                 </span>
               </div>
@@ -296,10 +296,10 @@ export default function AlKafiBookBrowser({
       </div>
 
       {loading && (
-        <div className="border-theme rounded-xl border bg-card p-12 shadow-soft">
+        <div className="border-theme bg-card shadow-soft rounded-xl border p-12">
           <div className="flex items-center justify-center">
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-            <span className="ml-3 text-muted">Loading book structure...</span>
+            <span className="text-muted ml-3">Loading book structure...</span>
           </div>
         </div>
       )}
@@ -314,13 +314,13 @@ export default function AlKafiBookBrowser({
         <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
           {/* Chapter Navigation */}
           <div className="lg:col-span-1">
-            <div className="border-theme max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border bg-card shadow-soft sm:max-h-[70vh] lg:max-h-[80vh]">
-              <div className="border-theme sticky top-0 z-10 border-b bg-card p-3 sm:p-4">
+            <div className="border-theme bg-card shadow-soft max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border sm:max-h-[70vh] lg:max-h-[80vh]">
+              <div className="border-theme bg-card sticky top-0 z-10 border-b p-3 sm:p-4">
                 <h4 className="text-primary text-sm font-semibold sm:text-base">
                   <span className="sm:hidden">Categories</span>
                   <span className="hidden sm:inline">Categories & Chapters</span>
                 </h4>
-                <p className="mt-1 hidden text-xs text-muted sm:block">
+                <p className="text-muted mt-1 hidden text-xs sm:block">
                   Click to expand categories
                 </p>
               </div>
@@ -334,15 +334,15 @@ export default function AlKafiBookBrowser({
                       className="hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3"
                     >
                       {expandedCategories.has(categoryKey) ? (
-                        <IconChevronDown className="h-4 w-4 flex-shrink-0 text-muted" />
+                        <ChevronDown className="text-muted h-4 w-4 flex-shrink-0" />
                       ) : (
-                        <IconChevronRight className="h-4 w-4 flex-shrink-0 text-muted" />
+                        <ChevronRight className="text-muted h-4 w-4 flex-shrink-0" />
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="text-primary text-sm font-medium leading-tight">
                           {categoryInfo.category}
                         </div>
-                        <div className="mt-1 text-xs text-muted">
+                        <div className="text-muted mt-1 text-xs">
                           {categoryInfo.totalHadiths} hadiths •{' '}
                           {Object.keys(categoryInfo.chapters).length} chapters
                         </div>
@@ -363,7 +363,7 @@ export default function AlKafiBookBrowser({
                                 chapterInfo.chapterInCategoryId,
                               )
                             }
-                            className={clsx(
+                            className={cn(
                               'w-full rounded p-2 text-left text-sm transition-colors',
                               selectedChapter?.category === categoryKey &&
                                 selectedChapter?.chapter === chapterKey
@@ -372,7 +372,7 @@ export default function AlKafiBookBrowser({
                             )}
                           >
                             <div className="leading-tight">{chapterInfo.chapter}</div>
-                            <div className="mt-1 text-xs text-muted">
+                            <div className="text-muted mt-1 text-xs">
                               {chapterInfo.hadithCount} hadiths
                             </div>
                           </button>
@@ -390,16 +390,16 @@ export default function AlKafiBookBrowser({
             {selectedChapter ? (
               <div className="space-y-4">
                 {/* Chapter Header */}
-                <div className="border-theme rounded-xl border bg-card p-6 shadow-soft">
+                <div className="border-theme bg-card shadow-soft rounded-xl border p-6">
                   <h4 className="text-primary mb-2 font-semibold">{selectedChapter.category}</h4>
                   <h5 className="text-secondary mb-4">{selectedChapter.chapter}</h5>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted">
+                    <p className="text-muted text-sm">
                       {chapterHadiths.length} {chapterHadiths.length === 1 ? 'hadith' : 'hadiths'}{' '}
                       in this chapter
                     </p>
                     {loadingChapter && (
-                      <div className="flex items-center gap-2 text-sm text-muted">
+                      <div className="text-muted flex items-center gap-2 text-sm">
                         <div className="border-primary h-4 w-4 animate-spin rounded-full border-b-2"></div>
                         Loading hadiths...
                       </div>
@@ -410,30 +410,35 @@ export default function AlKafiBookBrowser({
                 {/* Hadiths */}
                 <div className="max-h-[80vh] space-y-6 overflow-y-auto overflow-x-visible">
                   {loadingChapter ? (
-                    <div className="border-theme rounded-xl border bg-card p-12 text-center shadow-soft">
+                    <div className="border-theme bg-card shadow-soft rounded-xl border p-12 text-center">
                       <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
                       <p className="text-muted">Loading chapter hadiths...</p>
                     </div>
                   ) : chapterHadiths.length > 0 ? (
-                    chapterHadiths.map((hadith) => <HadithCard key={hadith._id} hadith={hadith} />)
+                    chapterHadiths.map((hadith, idx) => (
+                      <HadithCard
+                        key={hadith._id ?? `alkafi-${hadith.id ?? idx}`}
+                        hadith={hadith}
+                      />
+                    ))
                   ) : (
-                    <div className="border-theme rounded-xl border bg-card p-8 text-center shadow-soft">
+                    <div className="border-theme bg-card shadow-soft rounded-xl border p-8 text-center">
                       <p className="text-muted">No hadiths found in this chapter.</p>
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="border-theme rounded-xl border bg-card p-12 text-center shadow-soft">
-                <IconBook className="mx-auto mb-4 h-12 w-12 text-muted" />
+              <div className="border-theme bg-card shadow-soft rounded-xl border p-12 text-center">
+                <Book className="text-muted mx-auto mb-4 h-12 w-12" />
                 <h4 className="text-primary mb-2 text-lg font-medium">
                   Select a Chapter to Begin Reading
                 </h4>
-                <p className="mb-4 text-muted">
+                <p className="text-muted mb-4">
                   Expand a category on the left and select a chapter to view its hadiths with
                   complete text, Arabic content, and grading information.
                 </p>
-                <div className="text-sm text-muted">
+                <div className="text-muted text-sm">
                   <p>📖 Each hadith includes:</p>
                   <ul className="mt-2 space-y-1">
                     <li>• Complete English and Arabic text</li>

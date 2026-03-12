@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
-import { IconBook, IconChevronDown, IconChevronRight } from '@/components/Icons'
+import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { useNavigation } from '@/lib/navigation-context'
-import clsx from 'clsx'
+import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 
 interface ChapterSummary {
@@ -340,14 +340,14 @@ export default function VolumeStructure({
   }
 
   return (
-    <div className={clsx('space-y-6', className)}>
+    <div className={cn('space-y-6', className)}>
       {/* Volume Selection */}
-      <div className="border-theme rounded-2xl border bg-gradient-to-r from-white/90 to-gray-50/90 p-6 shadow-soft backdrop-blur-sm dark:from-gray-800/50 dark:to-gray-900/30">
+      <div className="rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
-            <div className="from-accent-primary/20 to-accent-secondary/10 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2">
               <svg
-                className="text-accent-primary h-6 w-6"
+                className="h-5 w-5 text-foreground-muted"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -381,12 +381,12 @@ export default function VolumeStructure({
                     setSelectedVolume(val)
                   }}
                   disabled={loading}
-                  className={clsx(
-                    'border-theme appearance-none border bg-card',
+                  className={cn(
+                    'border-theme bg-card appearance-none border',
                     'text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold',
                     'hover:shadow-medium shadow-soft transition-all duration-200',
-                    'focus:ring-accent-primary/20 focus:border-accent-primary focus:outline-none focus:ring-2',
-                    'hover:border-accent-primary/50 min-w-[200px] max-w-[300px] cursor-pointer',
+                    'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                    'min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50',
                     loading && 'cursor-not-allowed opacity-50',
                   )}
                 >
@@ -426,21 +426,21 @@ export default function VolumeStructure({
           <div>
             <div className="border-theme flex flex-wrap items-center gap-4 border-t pt-4">
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-green-500 shadow-soft dark:bg-green-400"></div>
+                <div className="h-3 w-3 rounded-full bg-accent"></div>
                 <span className="text-primary text-sm font-semibold">
                   {getTotalHadithsCount().toLocaleString()} hadiths
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500 shadow-soft dark:bg-blue-400"></div>
+                <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
                 <span className="text-primary text-sm font-semibold">
                   {Object.keys(volumeSummary).length} categories
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-purple-500 shadow-soft dark:bg-purple-400"></div>
+                <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
                 <span className="text-primary text-sm font-semibold">
                   {selectedVolume === 'all'
                     ? bookId.includes('Al-Kafi')
@@ -461,9 +461,9 @@ export default function VolumeStructure({
 
       {/* Loading State */}
       {loading && (
-        <div className="border-theme rounded-xl border bg-card p-12 shadow-soft">
+        <div className="border-theme bg-card shadow-soft rounded-xl border p-12">
           <div className="flex items-center justify-center">
-            <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-zinc-400"></div>
             <span className="text-secondary ml-3">Loading book structure...</span>
           </div>
         </div>
@@ -471,7 +471,7 @@ export default function VolumeStructure({
 
       {/* Error State */}
       {error && (
-        <div className="rounded-xl border border-red-200/60 bg-red-50/80 p-6 shadow-soft dark:border-red-800/30 dark:bg-red-900/20">
+        <div className="shadow-soft rounded-xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/30 dark:bg-red-900/20">
           <p className="text-red-800 dark:text-red-300">{error}</p>
         </div>
       )}
@@ -482,7 +482,7 @@ export default function VolumeStructure({
           {Object.entries(volumeSummary).map(([categoryKey, category]) => (
             <div
               key={categoryKey}
-              className="border-theme hover:shadow-medium overflow-y-hidden overflow-x-visible rounded-2xl border bg-card shadow-soft transition-all duration-200"
+              className="border-theme hover:shadow-medium bg-card shadow-soft overflow-y-hidden overflow-x-visible rounded-2xl border transition-all duration-200"
             >
               {/* Category Header */}
               <button
@@ -493,9 +493,9 @@ export default function VolumeStructure({
                   <div
                     className={`transition-transform duration-200 ${expandedCategories.has(categoryKey) ? 'rotate-90' : 'rotate-0'}`}
                   >
-                    <div className="from-accent-primary/20 to-accent-primary/10 group-hover:from-accent-primary/30 group-hover:to-accent-primary/20 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br transition-all duration-200">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 transition-all duration-200 group-hover:bg-zinc-700">
                       <svg
-                        className="text-accent-primary h-4 w-4"
+                        className="h-4 w-4 text-zinc-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -509,7 +509,7 @@ export default function VolumeStructure({
                       </svg>
                     </div>
                   </div>
-                  <h3 className="text-primary group-hover:text-accent-primary text-left text-lg font-bold transition-colors">
+                  <h3 className="text-primary text-left text-lg font-bold transition-colors group-hover:text-foreground">
                     {category.category}
                   </h3>
                 </div>
@@ -522,13 +522,13 @@ export default function VolumeStructure({
                       {Object.keys(category.chapters).length} chapters
                     </div>
                   </div>
-                  <div className="from-accent-primary/20 via-accent-primary/10 h-12 w-2 rounded-full bg-gradient-to-b to-transparent"></div>
+                  <div className="h-12 w-1 rounded-full bg-zinc-700"></div>
                 </div>
               </button>
 
               {/* Chapters */}
               {expandedCategories.has(categoryKey) && (
-                <div className="border-theme animate-in slide-in-from-top-2 border-t bg-gradient-to-r from-card/50 to-card/30 p-4 duration-300 sm:p-6">
+                <div className="border-theme from-card/50 to-card/30 border-t bg-gradient-to-r p-4 duration-300 animate-in slide-in-from-top-2 sm:p-6">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                     {Object.entries(category.chapters).map(([chapterKey, chapter]) => {
                       const key = getChapterKey(category.categoryId, chapter.chapterInCategoryId)
@@ -570,69 +570,53 @@ export default function VolumeStructure({
                             el.style.setProperty('--mx', `${x}px`)
                             el.style.setProperty('--my', `${y}px`)
                           }}
-                          className={clsx(
-                            'border-theme group relative rounded-xl border bg-card text-left',
-                            'duration-900 p-4 transition-all ease-out sm:p-5',
+                          className={cn(
+                            'border-theme bg-card group relative rounded-xl border text-left',
+                            'p-4 transition-all duration-500 ease-out sm:p-5',
                             'touch-manipulation select-none',
-                            'hover:shadow-medium shadow-soft',
-                            'hover:border-accent-primary/15 md:hover:ring-accent-primary/10 md:hover:ring-1',
-                            'md:hover:translate-y-[-3px] md:hover:scale-[1.02]',
-                            // Simplified mobile expansion (no ring/glow, gentler lift/scale); keep desktop subtle
+                            'shadow-soft hover:shadow-md',
+                            'hover:border-zinc-600 md:hover:ring-1 md:hover:ring-zinc-700/30',
+                            'md:hover:translate-y-[-2px]',
                             isExpanded &&
-                              'border-accent-primary/15 md:ring-accent-primary/15 md:shadow-medium z-10 translate-y-[-2px] scale-[1.02] md:translate-y-[-3px] md:scale-[1.02] md:p-5 md:ring-1',
+                              'z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30',
                           )}
                           style={{
-                            transform: isExpanded ? 'translateY(-3px) scale(1.02)' : undefined,
+                            transform: isExpanded ? 'translateY(-2px)' : undefined,
                           }}
                         >
                           {/* Subtle sliding gradient background (visible on mobile when expanded) */}
                           <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-xl">
                             <div
-                              className={clsx(
-                                'absolute inset-0 bg-gradient-to-r from-[#15171b] via-[#111318] to-[#0f1114]',
-                                'duration-900 transition-all ease-in-out',
-                                hoveredKey === key && 'translate-x-0 opacity-100',
-                                leavingKey === key && 'translate-x-full opacity-0',
-                                hoveredKey !== key &&
-                                  leavingKey !== key &&
-                                  '-translate-x-full opacity-0',
-                                isExpanded && 'translate-x-0 opacity-100',
+                              className={cn(
+                                'absolute inset-0 bg-zinc-900/40',
+                                'transition-opacity duration-500 ease-in-out',
+                                hoveredKey === key && 'opacity-100',
+                                hoveredKey !== key && 'opacity-0',
+                                isExpanded && 'opacity-100',
                               )}
                             />
-                            {/* Cursor-following subtle glow (neutral, toned down) — desktop only */}
+                            {/* Cursor-following subtle glow — desktop only */}
                             <div
-                              className={clsx(
-                                'duration-900 absolute inset-0 opacity-0 transition-opacity ease-out md:group-hover:opacity-90',
-                                isExpanded && 'md:opacity-100',
+                              className={cn(
+                                'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-40',
+                                isExpanded && 'md:opacity-40',
                               )}
                               style={{
                                 background:
-                                  'radial-gradient(200px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.06), rgba(0,0,0,0) 60%)',
-                              }}
-                            />
-                            {/* Outside-the-box cursor-following glow (neutral, toned down) — desktop only */}
-                            <div
-                              className={clsx(
-                                'duration-900 absolute -inset-6 opacity-0 transition-opacity ease-out md:group-hover:opacity-80',
-                                isExpanded && 'md:opacity-100',
-                              )}
-                              style={{
-                                background:
-                                  'radial-gradient(240px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.04), rgba(0,0,0,0) 65%)',
-                                filter: 'blur(14px)',
+                                  'radial-gradient(180px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.035), rgba(0,0,0,0) 60%)',
                               }}
                             />
                           </div>
                           {/* Chapter number indicator */}
-                          <div className="from-accent-primary to-accent-secondary shadow-medium absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-white">
+                          <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs font-bold text-zinc-200">
                             {chapter.chapterInCategoryId}
                           </div>
 
                           {/* Chapter content (expands height smoothly) */}
                           <div
-                            className={clsx(
+                            className={cn(
                               'overflow-hidden pr-4',
-                              'relative z-10 transition-[max-height] duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] md:duration-[1100ms]',
+                              'duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] md:duration-[1100ms] relative z-10 transition-[max-height]',
                               'max-h-24',
                               'md:group-hover:max-h-[500px]',
                             )}
@@ -642,10 +626,10 @@ export default function VolumeStructure({
                             }}
                           >
                             <h4
-                              className={clsx(
+                              className={cn(
                                 'text-primary mb-3 font-semibold leading-snug transition-colors',
-                                'group-hover:text-accent-primary/70',
-                                isExpanded && 'text-accent-primary/80',
+                                'group-hover:text-foreground',
+                                isExpanded && 'text-foreground',
                                 'line-clamp-2',
                                 'md:group-hover:line-clamp-none',
                                 isExpanded && 'line-clamp-none',
@@ -656,14 +640,14 @@ export default function VolumeStructure({
 
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400"></div>
+                                <div className="h-2 w-2 rounded-full bg-accent"></div>
                                 <span className="text-secondary text-sm font-medium">
                                   {chapter.hadithCount}{' '}
                                   {chapter.hadithCount === 1 ? 'hadith' : 'hadiths'}
                                 </span>
                               </div>
 
-                              <div className="text-secondary group-hover:text-accent-primary flex items-center gap-1 transition-colors">
+                              <div className="text-secondary flex items-center gap-1 transition-colors group-hover:text-foreground-muted">
                                 <svg
                                   className="h-4 w-4"
                                   fill="none"
@@ -682,7 +666,6 @@ export default function VolumeStructure({
                           </div>
 
                           {/* Subtle hover gradient overlay */}
-                          <div className="from-accent-primary/5 pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"></div>
                         </button>
                       )
                     })}
@@ -696,10 +679,10 @@ export default function VolumeStructure({
 
       {/* Empty State */}
       {!loading && !error && Object.keys(volumeSummary).length === 0 && (
-        <div className="border-theme rounded-2xl border bg-gradient-to-br from-card to-card/50 p-12 text-center shadow-soft">
-          <div className="from-accent-primary/20 to-accent-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br">
+        <div className="border-theme from-card to-card/50 shadow-soft rounded-2xl border bg-gradient-to-br p-12 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800">
             <svg
-              className="text-accent-primary/60 h-8 w-8"
+              className="h-8 w-8 text-zinc-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

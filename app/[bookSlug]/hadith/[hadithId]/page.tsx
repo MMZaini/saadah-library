@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { thaqalaynApi, Hadith } from '@/lib/api'
-import { getBookConfig, getBookIdFromUrlSlug, getBookUrlSlug } from '@/lib/books-config'
+import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import HadithCard from '@/components/HadithCard'
-import { IconArrowLeft } from '@/components/Icons'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function HadithPage() {
   const router = useRouter()
@@ -35,80 +36,38 @@ export default function HadithPage() {
       setError(null)
 
       try {
-        console.log('Loading hadith with ID:', hadithId, 'from book:', bookId, 'urlSlug:', urlSlug)
-        console.log('hadithId type:', typeof hadithId, 'isNaN:', isNaN(hadithId))
-
         let foundHadith: Hadith | null = null
-
-        // Check if this is a multi-volume book that needs special handling
-        console.log(
-          'Checking if bookId contains Uyun-akhbar-al-Rida:',
-          bookId?.includes('Uyun-akhbar-al-Rida'),
-        )
-        console.log(
-          'urlSlug:',
-          urlSlug,
-          'urlSlug === Uyun-akhbar-al-Rida:',
-          urlSlug === 'Uyun-akhbar-al-Rida',
-        )
 
         if (
           (bookId && bookId.includes('Uyun-akhbar-al-Rida')) ||
           urlSlug === 'Uyun-akhbar-al-Rida'
         ) {
-          // Handle ʿUyūn akhbār al-Riḍā multi-volume search
           const uyunVolumes = [
             'Uyun-akhbar-al-Rida-Volume-1-Saduq',
             'Uyun-akhbar-al-Rida-Volume-2-Saduq',
           ]
 
-          console.log('Starting multi-volume search for ʿUyūn hadith', hadithId)
-
           for (const volumeBookId of uyunVolumes) {
             try {
-              console.log(`Searching ${volumeBookId} for hadith ${hadithId}`)
               const volumeHadiths = await thaqalaynApi.getBookHadiths(volumeBookId)
-              console.log(`${volumeBookId} has ${volumeHadiths.length} hadiths`)
-
-              // Log first few hadith IDs to see what we're working with
-              if (volumeHadiths.length > 0) {
-                console.log(
-                  'First 5 hadith IDs in',
-                  volumeBookId,
-                  ':',
-                  volumeHadiths.slice(0, 5).map((h) => h.id),
-                )
-              }
-
               foundHadith = volumeHadiths.find((h) => h.id === hadithId) || null
-              if (foundHadith) {
-                console.log(`Found hadith ${hadithId} in ${volumeBookId}:`, foundHadith)
-                break
-              } else {
-                console.log(`Hadith ${hadithId} not found in ${volumeBookId}`)
-              }
-            } catch (err) {
-              console.error(`Error loading ${volumeBookId}:`, err)
+              if (foundHadith) break
+            } catch {
               continue
             }
           }
         } else {
-          // Handle single-volume books
-          console.log('Loading single-volume book:', bookId)
           const allHadiths = await thaqalaynApi.getBookHadiths(bookId)
           foundHadith = allHadiths.find((h) => h.id === hadithId) || null
         }
 
         if (!foundHadith) {
-          console.log(`Hadith ${hadithId} not found`)
           setError('Hadith not found')
           return
         }
 
-        console.log('Setting hadith:', foundHadith)
         setHadith(foundHadith)
 
-        // Set chapter context for TopBar navigation
         setChapterInfo({
           volumeId: foundHadith.volume,
           category: foundHadith.category || 'Unknown Category',
@@ -117,24 +76,18 @@ export default function HadithPage() {
           categoryId: foundHadith.categoryId,
           chapterInCategoryId: foundHadith.chapterInCategoryId,
         })
-      } catch (err) {
+      } catch {
         setError('Failed to load hadith')
       } finally {
         setLoading(false)
       }
     }
 
-    if (hadithId && bookId) {
-      loadHadith()
-    }
+    if (hadithId && bookId) loadHadith()
 
-    // Clean up chapter context when leaving
-    return () => {
-      setChapterInfo(null)
-    }
+    return () => setChapterInfo(null)
   }, [hadithId, bookId, setChapterInfo])
 
-  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [hadithId])
@@ -146,10 +99,8 @@ export default function HadithPage() {
       hadith?.chapterInCategoryId !== null &&
       hadith?.chapterInCategoryId !== undefined
     ) {
-      // Navigate back to the chapter this hadith belongs to
       router.push(`/${urlSlug}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
     } else {
-      // Fallback to book main page
       router.push(`/${urlSlug}`)
     }
   }
@@ -159,11 +110,9 @@ export default function HadithPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="flex min-h-[50vh] items-center justify-center">
-            <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-          </div>
+      <main className="min-h-screen">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-foreground-muted" />
         </div>
       </main>
     )
@@ -171,28 +120,25 @@ export default function HadithPage() {
 
   if (error || !hadith) {
     return (
-      <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="min-h-screen">
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
           <button
             onClick={handleBackClick}
-            className="text-primary/70 hover:text-primary mb-6 flex items-center gap-2 transition-colors"
+            className="mb-6 flex items-center gap-1.5 text-sm text-foreground-muted transition-colors hover:text-foreground"
           >
-            <IconArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             Back to {displayBookTitle}
           </button>
 
           <div className="flex min-h-[50vh] items-center justify-center">
             <div className="text-center">
-              <h1 className="text-primary mb-4 text-2xl font-bold">
+              <h1 className="mb-2 text-xl font-bold text-foreground">
                 {error || 'Hadith Not Found'}
               </h1>
-              <p className="text-secondary mb-6">The requested hadith could not be found.</p>
-              <button
-                onClick={handleBackClick}
-                className="bg-accent-primary hover:bg-accent-secondary rounded-lg px-6 py-3 text-white transition-colors"
-              >
-                Return to {displayBookTitle}
-              </button>
+              <p className="mb-5 text-sm text-foreground-muted">
+                The requested hadith could not be found.
+              </p>
+              <Button onClick={handleBackClick}>Return to {displayBookTitle}</Button>
             </div>
           </div>
         </div>
@@ -201,34 +147,31 @@ export default function HadithPage() {
   }
 
   return (
-    <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         <button
           onClick={handleBackClick}
-          className="text-primary/70 hover:text-primary mb-6 flex items-center gap-2 transition-colors"
+          className="mb-6 flex items-center gap-1.5 text-sm text-foreground-muted transition-colors hover:text-foreground"
         >
-          <IconArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back to Chapter
         </button>
 
-        <div className="space-y-6">
-          <div className="mb-8 text-center">
-            <h1 className="text-primary mb-2 text-2xl font-bold">
-              {displayBookTitle} Hadith #{hadith.id}
-            </h1>
-            <p className="text-secondary">
-              Volume {hadith.volume} • {hadith.category} • {hadith.chapter}
-            </p>
-          </div>
+        <div className="mb-6 text-center">
+          <h1 className="text-xl font-bold text-foreground">
+            {displayBookTitle} Hadith #{hadith.id}
+          </h1>
+          <p className="mt-1 text-sm text-foreground-muted">
+            Volume {hadith.volume} · {hadith.category} · {hadith.chapter}
+          </p>
+        </div>
 
-          {/* Match chapter card layout with index bubble */}
-          <div className="relative">
-            <div className="bg-accent-primary shadow-medium absolute -left-4 top-6 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
-              1
-            </div>
-            <div className="ml-8">
-              <HadithCard hadith={hadith} className="mb-6" showViewChapter={false} />
-            </div>
+        <div className="relative">
+          <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+            1
+          </div>
+          <div className="ml-6">
+            <HadithCard hadith={hadith} showViewChapter={false} />
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
-import clsx from 'clsx'
+import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 
 export default function GenericVolumeExplorer({ bookConfig, className }: any) {
@@ -61,13 +61,13 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
   }
 
   return (
-    <div className={clsx('space-y-6', className)}>
+    <div className={cn('space-y-6', className)}>
       {/* Volume Selector */}
-      <div className="rounded-2xl border border-slate-200/60 bg-gradient-to-r from-white to-slate-50/80 p-6 shadow-sm dark:border-slate-700/50 dark:from-slate-800/50 dark:to-slate-900/30">
+      <div className="rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-4">
-          <div className="from-primary/20 to-primary/10 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2">
             <svg
-              className="text-primary h-6 w-6"
+              className="h-5 w-5 text-foreground-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -81,12 +81,12 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
             </svg>
           </div>
           <div>
-            <h3 className="mb-1 text-lg font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="mb-1 text-lg font-bold text-foreground">
               {displayTitle} Volume Explorer
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-foreground-muted">
               {displayTitle} consists of {volumesCount} volume{volumesCount === 1 ? '' : 's'}.
-              Select a specific volume or "All Volumes" to explore random hadiths.
+              Select a specific volume or &quot;All Volumes&quot; to explore random hadiths.
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
               <>
                 <label
                   htmlFor="volume-select"
-                  className="whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-300"
+                  className="whitespace-nowrap text-sm font-semibold text-foreground-muted"
                 >
                   Volume:
                 </label>
@@ -109,12 +109,12 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
                       handleVolumeSelect(e.target.value === 'all' ? 'all' : e.target.value)
                     }
                     disabled={loading}
-                    className={clsx(
-                      'appearance-none border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800',
-                      'rounded-xl px-4 py-2.5 pr-12 font-semibold text-slate-900 dark:text-slate-100',
-                      'shadow-sm transition-all duration-200 hover:shadow-md',
-                      'focus:ring-primary/20 focus:border-primary focus:outline-none focus:ring-2',
-                      'hover:border-primary/50 min-w-[130px] cursor-pointer',
+                    className={cn(
+                      'appearance-none border border-border bg-background',
+                      'rounded-lg px-4 py-2.5 pr-12 font-semibold text-foreground',
+                      'transition-colors duration-200',
+                      'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                      'min-w-[130px] cursor-pointer hover:border-zinc-600/50',
                       loading && 'cursor-not-allowed opacity-50',
                     )}
                   >
@@ -127,7 +127,7 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
 
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                     <svg
-                      className="h-4 w-4 text-slate-500 dark:text-slate-400"
+                      className="h-4 w-4 text-foreground-muted"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -143,7 +143,7 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
                 </div>
               </>
             ) : (
-              <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <div className="text-sm font-semibold text-foreground-muted">
                 Volume:{' '}
                 <span className="font-medium">
                   {getVolumeLabelForValue(volumesList, volumeOptions[0]?.value)}
@@ -155,11 +155,10 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
           <button
             onClick={() => loadRandomHadithFromVolume(selectedVolume)}
             disabled={loading}
-            className={clsx(
-              'rounded-xl px-6 py-2.5 font-semibold shadow-sm transition-all duration-200 hover:shadow-md',
-              'from-primary to-primary/90 bg-gradient-to-r text-white',
-              'hover:from-primary/90 hover:to-primary/80 hover:scale-105',
-              loading && 'cursor-not-allowed opacity-50 hover:scale-100',
+            className={cn(
+              'rounded-lg bg-accent px-6 py-2.5 font-semibold text-accent-foreground',
+              'hover:bg-accent/90 transition-colors duration-200',
+              loading && 'cursor-not-allowed opacity-50',
             )}
           >
             {loading ? (
@@ -182,18 +181,18 @@ export default function GenericVolumeExplorer({ bookConfig, className }: any) {
       )}
 
       {loading && (
-        <div className="border-theme rounded-xl border bg-card p-12 shadow-soft">
+        <div className="border-theme bg-card shadow-soft rounded-xl border p-12">
           <div className="flex items-center justify-center">
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-            <span className="ml-3 text-muted">Loading hadith...</span>
+            <span className="text-muted ml-3">Loading hadith...</span>
           </div>
         </div>
       )}
 
       {!loading && !error && randomHadith && (
         <>
-          <div className="flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <div className="bg-primary/60 h-2 w-2 rounded-full"></div>
+          <div className="flex items-center justify-center gap-2 text-sm text-foreground-muted">
+            <div className="bg-accent/60 h-2 w-2 rounded-full"></div>
             <span>
               Random hadith from{' '}
               {selectedVolume === 'all'

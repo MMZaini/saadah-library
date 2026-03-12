@@ -1,5 +1,4 @@
-/* Google fonts via CSS fallback (Next/font is used in layout for best perf) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
@@ -7,505 +6,202 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile-first responsive optimizations */
+/* ── Design tokens ── */
 @layer base {
+  :root,
+  [data-theme='dark'] {
+    --background: #09090b;
+    --foreground: #fafafa;
+    --foreground-muted: #a1a1aa;
+    --foreground-faint: #52525b;
+
+    --surface-1: #18181b;
+    --surface-2: #27272a;
+
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #3f3f46;
+
+    --accent: #22c55e;
+    --accent-foreground: #09090b;
+
+    --destructive: #ef4444;
+    --bookmark: #eab308;
+
+    color-scheme: dark;
+  }
+
+  [data-theme='light'] {
+    --background: #fafafa;
+    --foreground: #09090b;
+    --foreground-muted: #71717a;
+    --foreground-faint: #a1a1aa;
+
+    --surface-1: #ffffff;
+    --surface-2: #f4f4f5;
+
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #a1a1aa;
+
+    --accent: #16a34a;
+    --accent-foreground: #ffffff;
+
+    --destructive: #dc2626;
+    --bookmark: #ca8a04;
+
+    color-scheme: light;
+  }
+
   * {
-    /* Improved touch targets on mobile */
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    -webkit-tap-highlight-color: transparent;
   }
 
   html {
-    /* Prevent horizontal scrolling on mobile */
     overflow-x: hidden;
-    /* Better font rendering on mobile */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
 
   body {
-    /* Better scrolling on iOS */
+    background-color: var(--background);
+    color: var(--foreground);
     -webkit-overflow-scrolling: touch;
-    /* Prevent bounce scrolling */
     overscroll-behavior-y: none;
-  }
-
-  /* Better button touch targets */
-  button,
-  [role='button'] {
-    min-height: 44px; /* iOS recommended touch target */
-    min-width: 44px;
-  }
-
-  /* Better input touch targets */
-  input[type='text'],
-  input[type='search'],
-  textarea {
-    min-height: 44px;
-  }
-
-  /* Improve select dropdown on mobile */
-  select {
-    min-height: 44px;
-    -webkit-appearance: none;
-    appearance: none;
   }
 }
 
+/* ── Backward-compat utility classes (used across existing components) ── */
 @layer utilities {
   .bg-color {
-    background-color: var(--bg-color);
+    background-color: var(--background);
   }
-
   .text-primary {
-    color: var(--text-primary);
+    color: var(--foreground);
   }
-
   .text-secondary {
-    color: var(--text-secondary);
+    color: var(--foreground-muted);
   }
-
   .text-muted {
-    color: var(--text-muted);
+    color: var(--foreground-faint);
   }
-
   .bg-card {
-    background-color: var(--card-bg);
+    background-color: var(--surface-1);
   }
-
   .hover\:bg-card-hover:hover {
-    background-color: var(--card-hover);
+    background-color: var(--surface-2);
   }
-
   .border-theme {
-    border-color: var(--border-color);
+    border-color: var(--border);
   }
-
   .bg-input {
-    background-color: var(--input-bg);
+    background-color: var(--input);
   }
-
   .text-brand {
-    color: var(--text-brand);
+    color: var(--accent);
   }
-
   .bg-accent-primary {
-    background-color: var(--accent-primary);
+    background-color: var(--accent);
   }
-
   .bg-accent-secondary {
-    background-color: var(--accent-secondary);
+    background-color: var(--accent);
   }
-
   .text-accent-primary {
-    color: var(--accent-primary);
+    color: var(--accent);
   }
-
   .text-accent-secondary {
-    color: var(--accent-secondary);
+    color: var(--accent);
   }
-
   .hover\:bg-hover-color:hover {
-    background-color: var(--hover-color);
+    background-color: var(--surface-2);
+  }
+  .hover\:bg-accent-secondary:hover {
+    background-color: color-mix(in srgb, var(--accent) 85%, black);
   }
 
   .font-arabic {
     font-family: 'Amiri', 'Noto Sans Arabic', serif;
   }
 
-  /* Hadith text font size utilities */
+  /* Hadith text sizing */
   .hadith-arabic-text {
-    font-size: var(--hadith-arabic-font-size, 100%) !important;
-    /* Improve Arabic readability */
-    line-height: 1.95; /* generous line-height for Arabic scripts */
-    word-spacing: 0.15em; /* slight extra space between words */
-    letter-spacing: 0.01em; /* small letter spacing to reduce crowding */
+    font-size: var(--hadith-arabic-font-size, 100%);
+    line-height: 2;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     hyphens: none;
-    white-space: pre-wrap; /* preserve deliberate line breaks */
-    direction: rtl; /* ensure correct direction by default */
+    white-space: pre-wrap;
+    direction: rtl;
     unicode-bidi: embed;
   }
 
-  /* Container utility for hadith blocks to provide breathing room */
   .hadith-block {
-    padding: 0.85rem; /* balanced padding */
-    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
   }
 
   .hadith-english-text {
     font-size: var(--hadith-english-font-size, 100%);
   }
 
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
-  .line-clamp-3 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-  }
-
-  .line-clamp-6 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 6;
-    line-clamp: 6;
-  }
-
-  /* Tooltip container that allows overflow */
-  .tooltip-container {
-    position: static !important;
-  }
-
-  .tooltip-container > .tooltip {
-    position: fixed !important;
-    z-index: 999999 !important;
-  }
-
-  /* Modern shadow system for both themes */
+  /* Shadows mapped to new tokens */
   .shadow-soft {
-    box-shadow:
-      0 1px 3px 0 var(--shadow-color),
-      0 1px 2px -1px var(--shadow-color);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   }
-
   .shadow-medium {
-    box-shadow:
-      0 4px 6px -1px var(--shadow-color),
-      0 2px 4px -2px var(--shadow-color);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
   }
 
-  /* Light theme specific enhancements */
-  [data-theme='light'] .shadow-soft {
-    box-shadow:
-      0 1px 3px 0 rgba(0, 0, 0, 0.1),
-      0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  }
-
-  [data-theme='light'] .shadow-medium {
-    box-shadow:
-      0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Improved card styling for light mode */
-  [data-theme='light'] .bg-card {
-    background-color: #ffffff;
-    border: 1px solid rgba(26, 26, 26, 0.08);
-  }
-
-  [data-theme='light'] .hover\:bg-card-hover:hover {
-    background-color: #fafafa;
-    border-color: rgba(26, 26, 26, 0.12);
-  }
-}
-
-@layer base {
-  /* Dark theme */
-  :root,
-  [data-theme='dark'] {
-    --bg-gradient: radial-gradient(1200px 600px at 50% -10%, var(--gradient-color), transparent);
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.45);
-    --text-brand: #18181b;
-    --bg-color: #0b0b0b;
-    --card-bg: #101012;
-    --topbar-bg: #000000;
-    --card-hover: #151517;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --hover-color: rgba(255, 255, 255, 0.05);
-    --gradient-color: rgba(255, 255, 255, 0.04);
-    --shadow-color: rgba(0, 0, 0, 0.45);
-    --accent-primary: #ad9636;
-    --accent-secondary: #f59e0b;
-    --input-bg: rgba(0, 0, 0, 0.3);
-    color-scheme: dark;
-  }
-
-  /* Light theme */
-  [data-theme='light'] {
-    --bg-gradient: radial-gradient(1200px 600px at 50% -10%, var(--gradient-color), transparent);
-    --text-primary: #1a1a1a;
-    --text-secondary: rgba(26, 26, 26, 0.8);
-    --text-muted: rgba(26, 26, 26, 0.6);
-    --text-brand: #1a1a1a;
-    --bg-color: #fafafa;
-    --card-bg: #ffffff;
-    --topbar-bg: #ffffff;
-    --card-hover: #f5f5f5;
-    --border-color: rgba(26, 26, 26, 0.12);
-    --hover-color: rgba(26, 26, 26, 0.06);
-    --gradient-color: rgba(26, 26, 26, 0.04);
-    --shadow-color: rgba(26, 26, 26, 0.15);
-    --accent-primary: #f59e0b;
-    --accent-secondary: #d97706;
-    --input-bg: rgba(26, 26, 26, 0.04);
-    color-scheme: light;
-  }
-}
-
-/* Apply theme colors */
-.settings-theme {
-  color: var(--text-primary);
-  background: var(--bg-gradient), var(--bg-color);
-}
-
-/* Font size utilities */
-.arabic-text {
-  font-size: var(--arabic-font-size, 16px);
-}
-
-.english-text {
-  font-size: var(--english-font-size, 16px);
-}
-
-/* --- Fancy gold swipe for logo text --- */
-.gold-swipe {
-  position: relative;
-  display: inline-block;
-  line-height: 1.2;
-  padding-bottom: 0.1em;
-  direction: rtl;
-}
-.gold-swipe .base {
-  color: #e5e7eb;
-  transition: opacity 0.25s ease;
-  font-weight: 600;
-}
-:root[data-theme='dark'] .gold-swipe .base {
-  color: #27272a; /* zinc-800 */
-}
-
-.gold-swipe .gold {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: -0.1em;
-  background: linear-gradient(
-    90deg,
-    #15803d 0%,
-    #22c55e 15%,
-    #16a34a 30%,
-    #059669 60%,
-    #10b981 85%,
-    #15803d 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  pointer-events: none;
-  height: 120%; /* Ensure full coverage of descenders */
-  will-change: clip-path;
-  clip-path: inset(0 100% 0 0);
-}
-
-/* Hover animation - slide in from left */
-.gold-swipe:hover .gold {
-  animation:
-    slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards,
-    shine 3s linear infinite;
-}
-
-/* Exit animation - slide out to right */
-.gold-swipe:not(:hover) .gold {
-  animation: slideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* Responsive utility classes */
-@layer utilities {
-  /* Line clamping for mobile text truncation */
   .line-clamp-1 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
   }
-
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
-
   .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
-
-  /* Touch-friendly active states */
-  .active\:scale-95:active {
-    transform: scale(0.95);
+  .line-clamp-6 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
   }
 
-  /* Better mobile spacing */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Library title gradient hover effect */
+  /* Legacy class aliases that some components still reference */
   .library-title-gradient {
-    position: relative;
-    color: var(--text-primary);
-    background: linear-gradient(
-      90deg,
-      #065f46 0%,
-      #047857 10%,
-      #059669 20%,
-      #10b981 30%,
-      #34d399 40%,
-      #6ee7b7 50%,
-      var(--text-primary) 50%,
-      var(--text-primary) 100%
-    );
-    background-size: 200% 100%;
-    background-position: 100% 0; /* Start with white text visible */
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    /* Remove transition for manual animations */
+    color: var(--foreground);
   }
-
-  /* Slide in gradient on hover */
-  .library-title-gradient:hover {
-    animation: slideIn 0.4s ease-in-out forwards;
+  .shadow-glow {
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
   }
-
-  /* Slide out gradient to left when hover off */
-  .library-title-gradient:not(:hover) {
-    animation: slideOutLeft 0.4s ease-in-out forwards;
-  }
-
-  /* Filter animations */
-  .animate-fade-in-up {
-    animation: fadeInUp 0.3s ease-out forwards;
-  }
-
-  .animate-stagger-fade-in {
-    animation: staggerFadeIn 0.4s ease-out forwards;
+  .shadow-book {
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.3);
   }
 }
 
-/* Mobile-specific media queries */
-@media (max-width: 640px) {
-  /* Reduce motion for users who prefer it */
-  @media (prefers-reduced-motion: reduce) {
-    .transition-all,
-    .transition-transform,
-    .transition-colors {
-      transition: none !important;
-    }
-
-    .animate-spin,
-    .animate-pulse {
-      animation: none !important;
-    }
-  }
-
-  /* Better button spacing on mobile */
-  .space-y-3 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.75rem;
-  }
-}
-
-@keyframes shine {
-  to {
-    background-position: 200% center;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    background-position: 100% 0;
-  }
-  to {
-    background-position: 0% 0;
-  }
-}
-
-@keyframes slideOut {
-  0% {
-    clip-path: inset(0 0 0 0);
-  } /* Start fully visible */
-  100% {
-    clip-path: inset(0 0 0 100%);
-  } /* Slide out to right */
-}
-
-@keyframes slideOutLeft {
-  from {
-    background-position: 0% 0;
-  }
-  to {
-    background-position: -100% 0;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes staggerFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Subtle focus ring for keyboard users */
+/* ── Focus styles ── */
 :focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* Card outline on hover (soft gold glow) */
-.card-outline {
-  transition:
-    box-shadow 0.35s cubic-bezier(0.22, 0.8, 0.25, 1),
-    transform 0.35s cubic-bezier(0.22, 0.8, 0.25, 1),
-    border-color 0.35s;
-}
-
-/* Fake caret blink in search input */
-.input-caret::after {
-  content: '';
-  width: 1px;
-  height: 1.2em;
-  background: #ffffff66;
-  display: inline-block;
-  margin-left: 2px;
-  animation: blink 1s step-end infinite;
-}
-@keyframes blink {
-  50% {
-    opacity: 0;
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

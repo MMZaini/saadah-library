@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Use separate output dirs so `yarn dev` and `yarn build` can run simultaneously
+  distDir: process.env.BUILD_ENV === 'build' ? '.next-build' : '.next',
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },

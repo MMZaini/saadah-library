@@ -5,17 +5,13 @@ import { SettingsProvider } from '@/lib/settings-context'
 import { ChapterProvider } from '@/lib/chapter-context'
 import { NavigationProvider } from '@/lib/navigation-context'
 import { BookmarksProvider } from '@/lib/bookmarks-context'
-import VSCodeClassCleaner from './VSCodeClassCleaner'
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
     <SettingsProvider>
       <ChapterProvider>
         <NavigationProvider>
-          <BookmarksProvider>
-            <VSCodeClassCleaner />
-            {children}
-          </BookmarksProvider>
+          <BookmarksProvider>{children}</BookmarksProvider>
         </NavigationProvider>
       </ChapterProvider>
     </SettingsProvider>

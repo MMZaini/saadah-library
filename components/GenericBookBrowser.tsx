@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { bookApi, ChapterStructure, Hadith } from '@/lib/api'
 import HadithCard from '@/components/HadithCard'
-import { IconBook, IconChevronDown, IconChevronRight } from '@/components/Icons'
-import clsx from 'clsx'
+import { Book, ChevronDown, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 
 interface GenericBookBrowserProps {
@@ -194,12 +194,12 @@ export default function GenericBookBrowser({
   }
 
   return (
-    <div className={clsx('space-y-6', className)}>
-      <div className="rounded-2xl border border-slate-200/60 bg-gradient-to-r from-white to-slate-50/80 p-6 shadow-sm dark:border-slate-700/50 dark:from-slate-800/50 dark:to-slate-900/30">
+    <div className={cn('space-y-6', className)}>
+      <div className="rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-4">
-          <div className="from-accent-primary/20 to-accent-secondary/10 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2">
             <svg
-              className="text-accent-primary h-6 w-6"
+              className="h-5 w-5 text-foreground-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -231,12 +231,12 @@ export default function GenericBookBrowser({
                   setSelectedVolume(val as any)
                 }}
                 disabled={loading}
-                className={clsx(
-                  'border-theme appearance-none border bg-card',
+                className={cn(
+                  'border-theme bg-card appearance-none border',
                   'text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold',
                   'hover:shadow-medium shadow-soft transition-all duration-200',
-                  'focus:ring-accent-primary/20 focus:border-accent-primary focus:outline-none focus:ring-2',
-                  'hover:border-accent-primary/50 min-w-[200px] max-w-[300px] cursor-pointer',
+                  'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                  'min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50',
                   loading && 'cursor-not-allowed opacity-50',
                 )}
               >
@@ -268,19 +268,19 @@ export default function GenericBookBrowser({
           {!loading && getTotalHadithsCount() > 0 && (
             <div className="border-theme flex flex-wrap items-center gap-4 border-t pt-4">
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-green-500 shadow-soft"></div>
+                <div className="shadow-soft h-3 w-3 rounded-full bg-green-500"></div>
                 <span className="text-primary text-sm font-semibold">
                   {getTotalHadithsCount().toLocaleString()} hadiths
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500 shadow-soft"></div>
+                <div className="shadow-soft h-3 w-3 rounded-full bg-blue-500"></div>
                 <span className="text-primary text-sm font-semibold">
                   {Object.keys(volumeSummary).length} categories
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-purple-500 shadow-soft"></div>
+                <div className="shadow-soft h-3 w-3 rounded-full bg-purple-500"></div>
                 <span className="text-primary text-sm font-semibold">
                   {selectedVolume === 'all'
                     ? 'All Volumes'
@@ -298,10 +298,10 @@ export default function GenericBookBrowser({
       </div>
 
       {loading && (
-        <div className="border-theme rounded-xl border bg-card p-12 shadow-soft">
+        <div className="border-theme bg-card shadow-soft rounded-xl border p-12">
           <div className="flex items-center justify-center">
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-            <span className="ml-3 text-muted">Loading book structure...</span>
+            <span className="text-muted ml-3">Loading book structure...</span>
           </div>
         </div>
       )}
@@ -316,13 +316,13 @@ export default function GenericBookBrowser({
         <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
           {/* Chapter Navigation */}
           <div className="lg:col-span-1">
-            <div className="border-theme max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border bg-card shadow-soft sm:max-h-[70vh] lg:max-h-[80vh]">
-              <div className="border-theme sticky top-0 z-10 border-b bg-card p-3 sm:p-4">
+            <div className="border-theme bg-card shadow-soft max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border sm:max-h-[70vh] lg:max-h-[80vh]">
+              <div className="border-theme bg-card sticky top-0 z-10 border-b p-3 sm:p-4">
                 <h4 className="text-primary text-sm font-semibold sm:text-base">
                   <span className="sm:hidden">Categories</span>
                   <span className="hidden sm:inline">Categories & Chapters</span>
                 </h4>
-                <p className="mt-1 hidden text-xs text-muted sm:block">
+                <p className="text-muted mt-1 hidden text-xs sm:block">
                   Click to expand categories
                 </p>
               </div>
@@ -336,15 +336,15 @@ export default function GenericBookBrowser({
                       className="hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3"
                     >
                       {expandedCategories.has(categoryKey) ? (
-                        <IconChevronDown className="h-4 w-4 flex-shrink-0 text-muted" />
+                        <ChevronDown className="text-muted h-4 w-4 flex-shrink-0" />
                       ) : (
-                        <IconChevronRight className="h-4 w-4 flex-shrink-0 text-muted" />
+                        <ChevronRight className="text-muted h-4 w-4 flex-shrink-0" />
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="text-primary text-sm font-medium leading-tight">
                           {categoryInfo.category}
                         </div>
-                        <div className="mt-1 text-xs text-muted">
+                        <div className="text-muted mt-1 text-xs">
                           {categoryInfo.totalHadiths} hadiths •{' '}
                           {Object.keys(categoryInfo.chapters).length} chapters
                         </div>
@@ -366,7 +366,7 @@ export default function GenericBookBrowser({
                                   chapterInfo.chapterInCategoryId,
                                 )
                               }
-                              className={clsx(
+                              className={cn(
                                 'w-full rounded p-2 text-left text-sm transition-colors',
                                 selectedChapter?.category === categoryKey &&
                                   selectedChapter?.chapter === chapterKey
@@ -375,7 +375,7 @@ export default function GenericBookBrowser({
                               )}
                             >
                               <div className="leading-tight">{chapterInfo.chapter}</div>
-                              <div className="mt-1 text-xs text-muted">
+                              <div className="text-muted mt-1 text-xs">
                                 {chapterInfo.hadithCount} hadiths
                               </div>
                             </button>
@@ -394,22 +394,22 @@ export default function GenericBookBrowser({
             {selectedChapter ? (
               <div className="space-y-4">
                 {/* Chapter Header */}
-                <div className="mb-8 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50/80 to-yellow-50/80 p-6 shadow-soft backdrop-blur-sm dark:border-amber-800/30 dark:from-amber-900/20 dark:to-yellow-900/20">
+                <div className="mb-8 rounded-xl border border-border bg-surface-1 p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="mb-2 text-2xl font-bold text-amber-900 dark:text-amber-100">
+                      <h2 className="mb-2 text-2xl font-bold text-foreground">
                         {selectedChapter.category}
                       </h2>
-                      <p className="mb-3 font-medium text-amber-700 dark:text-amber-300">
+                      <p className="mb-3 font-medium text-foreground-muted">
                         {selectedChapter.chapter}
                       </p>
                       <div className="flex items-center gap-3 text-sm">
-                        <span className="rounded-full bg-amber-200/80 px-3 py-1.5 font-medium text-amber-900 shadow-soft dark:bg-amber-800/80 dark:text-amber-100">
+                        <span className="rounded-full bg-surface-2 px-3 py-1.5 font-medium text-foreground">
                           {selectedVolume === 'all'
                             ? 'All Volumes'
                             : getVolumeLabelForValue(volumesList, selectedVolume)}
                         </span>
-                        <span className="rounded-full bg-amber-200/80 px-3 py-1.5 font-medium text-amber-900 shadow-soft dark:bg-amber-800/80 dark:text-amber-100">
+                        <span className="rounded-full bg-surface-2 px-3 py-1.5 font-medium text-foreground">
                           {chapterHadiths.length}{' '}
                           {chapterHadiths.length === 1 ? 'Hadith' : 'Hadiths'}
                         </span>
@@ -417,8 +417,8 @@ export default function GenericBookBrowser({
                     </div>
 
                     {loadingChapter && (
-                      <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
-                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-amber-900 dark:border-amber-100"></div>
+                      <div className="flex items-center gap-2 text-sm text-foreground-muted">
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-foreground-muted"></div>
                         Loading hadiths...
                       </div>
                     )}
@@ -428,7 +428,7 @@ export default function GenericBookBrowser({
                 {/* Hadiths */}
                 <div className="max-h-[80vh] space-y-6 overflow-y-auto overflow-x-visible">
                   {loadingChapter ? (
-                    <div className="border-theme rounded-xl border bg-card p-12 text-center shadow-soft">
+                    <div className="border-theme bg-card shadow-soft rounded-xl border p-12 text-center">
                       <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
                       <p className="text-muted">Loading chapter hadiths...</p>
                     </div>
@@ -440,23 +440,23 @@ export default function GenericBookBrowser({
                       />
                     ))
                   ) : (
-                    <div className="border-theme rounded-xl border bg-card p-8 text-center shadow-soft">
+                    <div className="border-theme bg-card shadow-soft rounded-xl border p-8 text-center">
                       <p className="text-muted">No hadiths found in this chapter.</p>
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="border-theme rounded-xl border bg-card p-12 text-center shadow-soft">
-                <IconBook className="mx-auto mb-4 h-12 w-12 text-muted" />
+              <div className="border-theme bg-card shadow-soft rounded-xl border p-12 text-center">
+                <Book className="text-muted mx-auto mb-4 h-12 w-12" />
                 <h4 className="text-primary mb-2 text-lg font-medium">
                   Select a Chapter to Begin Reading
                 </h4>
-                <p className="mb-4 text-muted">
+                <p className="text-muted mb-4">
                   Expand a category on the left and select a chapter to view its hadiths with
                   complete text, Arabic content, and grading information.
                 </p>
-                <div className="text-sm text-muted">
+                <div className="text-muted text-sm">
                   <p>📖 Each hadith includes:</p>
                   <ul className="mt-2 space-y-1">
                     <li>• Complete English and Arabic text</li>

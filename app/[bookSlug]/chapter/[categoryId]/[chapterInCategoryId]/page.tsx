@@ -5,9 +5,11 @@ import { useRouter, useParams } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
 import { getBookIdFromUrlSlug } from '@/lib/books-config'
 import HadithCard from '@/components/HadithCard'
-import { IconArrowLeft } from '@/components/Icons'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function GenericChapterDetailPage() {
   const router = useRouter()
@@ -59,11 +61,9 @@ export default function GenericChapterDetailPage() {
           hadithCount: info.hadithCount,
         })
 
-        // sort by id
         chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(chapterHadiths)
-      } catch (err) {
-        // Failed to load chapter content
+      } catch {
         setError('Failed to load chapter content')
       } finally {
         setLoading(false)
@@ -77,14 +77,10 @@ export default function GenericChapterDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="border-theme rounded-xl border bg-card p-12 shadow-soft">
-            <div className="flex items-center justify-center">
-              <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2" />
-              <span className="text-secondary ml-3">Loading chapter hadiths...</span>
-            </div>
-          </div>
+      <main className="min-h-screen">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-foreground-muted" />
+          <span className="ml-3 text-sm text-foreground-muted">Loading chapter…</span>
         </div>
       </main>
     )
@@ -92,10 +88,10 @@ export default function GenericChapterDetailPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="rounded-xl border border-red-200/60 bg-red-50/80 p-6 shadow-soft dark:border-red-800/30 dark:bg-red-900/20">
-            <p className="text-red-800 dark:text-red-300">{error}</p>
+      <main className="min-h-screen">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+          <div className="border-destructive/30 bg-destructive/10 rounded-lg border p-4">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       </main>
@@ -103,36 +99,39 @@ export default function GenericChapterDetailPage() {
   }
 
   return (
-    <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        {/* Chapter header */}
         {chapterInfo && (
-          <div className="border-theme mb-6 rounded-xl border bg-card p-6 shadow-soft">
-            <h2 className="text-2xl font-bold">{chapterInfo.chapter}</h2>
-            <p className="text-sm text-muted">Category: {chapterInfo.category}</p>
+          <div className="mb-6 rounded-lg border border-border bg-surface-1 p-5">
+            <h2 className="text-xl font-bold text-foreground">{chapterInfo.chapter}</h2>
+            <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            <div className="mt-2 flex gap-1.5">
+              <Badge variant="secondary">{chapterInfo.hadithCount} Hadiths</Badge>
+            </div>
           </div>
         )}
 
-        <div className="space-y-6">
+        {/* Hadiths */}
+        <div className="space-y-5">
           {hadiths.map((h, idx) => (
             <div key={h._id || h.id || idx} className="relative">
-              <div className="bg-accent-primary shadow-medium absolute -left-4 top-6 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
+              <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {idx + 1}
               </div>
-              <div className="ml-8">
+              <div className="ml-6">
                 <HadithCard hadith={h} />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="border-theme mt-12 border-t pt-8">
-          <button
-            onClick={() => router.push('/')}
-            className="border-theme hover:bg-hover-color text-primary inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2"
-          >
-            <IconArrowLeft className="h-4 w-4" />
+        {/* Back */}
+        <div className="mt-10 border-t border-border pt-6">
+          <Button variant="outline" onClick={() => router.push('/')}>
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back
-          </button>
+          </Button>
         </div>
       </div>
     </main>

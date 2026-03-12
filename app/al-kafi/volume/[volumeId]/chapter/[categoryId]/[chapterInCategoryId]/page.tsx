@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, Hadith } from '@/lib/api'
 import HadithCard from '@/components/HadithCard'
-import { IconArrowLeft } from '@/components/Icons'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function ChapterDetailPage() {
   const router = useRouter()
@@ -33,10 +35,7 @@ export default function ChapterDetailPage() {
       setError(null)
 
       try {
-        // Get all hadiths for the volume first
         const allHadiths = await alKafiApi.getVolumeHadiths(volumeId)
-
-        // Filter hadiths for this specific chapter
         const chapterHadiths = allHadiths.filter(
           (hadith) =>
             hadith.categoryId === categoryId && hadith.chapterInCategoryId === chapterInCategoryId,
@@ -47,7 +46,6 @@ export default function ChapterDetailPage() {
           return
         }
 
-        // Get chapter info from first hadith
         const firstHadith = chapterHadiths[0]
         const info = {
           category: firstHadith.category || 'Unknown Category',
@@ -56,8 +54,6 @@ export default function ChapterDetailPage() {
         }
 
         setLocalChapterInfo(info)
-
-        // Update global chapter context for TopBar
         setChapterInfo({
           volumeId,
           category: info.category,
@@ -65,15 +61,10 @@ export default function ChapterDetailPage() {
           hadithCount: info.hadithCount,
         })
 
-        // Sort hadiths by hadith id if available
-        const sortedHadiths = chapterHadiths.sort((a, b) => {
-          return a.id - b.id
-        })
-
+        const sortedHadiths = chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(sortedHadiths)
-      } catch (err) {
+      } catch {
         setError('Failed to load chapter hadiths')
-        // Error handled silently
       } finally {
         setLoading(false)
       }
@@ -88,27 +79,19 @@ export default function ChapterDetailPage() {
       loadChapterHadiths()
     }
 
-    // Clean up chapter context when leaving
-    return () => {
-      setChapterInfo(null)
-    }
+    return () => setChapterInfo(null)
   }, [volumeId, categoryId, chapterInCategoryId, setChapterInfo])
 
-  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [volumeId, categoryId, chapterInCategoryId])
 
   if (loading) {
     return (
-      <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="border-theme rounded-xl border bg-card p-12 shadow-soft">
-            <div className="flex items-center justify-center">
-              <div className="border-accent-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-              <span className="text-secondary ml-3">Loading chapter hadiths...</span>
-            </div>
-          </div>
+      <main className="min-h-screen">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-foreground-muted" />
+          <span className="ml-3 text-sm text-foreground-muted">Loading chapter…</span>
         </div>
       </main>
     )
@@ -116,10 +99,10 @@ export default function ChapterDetailPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen" data-theme={settings.theme}>
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="rounded-xl border border-red-200/60 bg-red-50/80 p-6 shadow-soft dark:border-red-800/30 dark:bg-red-900/20">
-            <p className="text-red-800 dark:text-red-300">{error}</p>
+      <main className="min-h-screen">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+          <div className="border-destructive/30 bg-destructive/10 rounded-lg border p-4">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       </main>
@@ -127,57 +110,40 @@ export default function ChapterDetailPage() {
   }
 
   return (
-    <main className="min-h-screen" data-theme={settings.theme}>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Chapter Header */}
+    <main className="min-h-screen">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        {/* Chapter header */}
         {chapterInfo && (
-          <div className="mb-8 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50/80 to-yellow-50/80 p-6 shadow-soft backdrop-blur-sm dark:border-amber-800/30 dark:from-amber-900/20 dark:to-yellow-900/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="mb-2 text-2xl font-bold text-amber-900 dark:text-amber-100">
-                  {chapterInfo.chapter}
-                </h2>
-                <p className="mb-3 font-medium text-amber-700 dark:text-amber-300">
-                  Category: {chapterInfo.category}
-                </p>
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="rounded-full bg-amber-200/80 px-3 py-1.5 font-medium text-amber-900 shadow-soft dark:bg-amber-800/80 dark:text-amber-100">
-                    Volume {volumeId}
-                  </span>
-                  <span className="rounded-full bg-amber-200/80 px-3 py-1.5 font-medium text-amber-900 shadow-soft dark:bg-amber-800/80 dark:text-amber-100">
-                    {chapterInfo.hadithCount} Hadiths
-                  </span>
-                </div>
-              </div>
+          <div className="mb-6 rounded-lg border border-border bg-surface-1 p-5">
+            <h2 className="text-xl font-bold text-foreground">{chapterInfo.chapter}</h2>
+            <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            <div className="mt-2 flex gap-1.5">
+              <Badge variant="secondary">Volume {volumeId}</Badge>
+              <Badge variant="secondary">{chapterInfo.hadithCount} Hadiths</Badge>
             </div>
           </div>
         )}
 
         {/* Hadiths */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {hadiths.map((hadith, index) => (
             <div key={hadith._id || hadith.id || index} className="relative">
-              {/* Hadith number indicator */}
-              <div className="bg-accent-primary shadow-medium absolute -left-4 top-6 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
+              <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {index + 1}
               </div>
-              <div className="ml-8">
+              <div className="ml-6">
                 <HadithCard hadith={hadith} />
               </div>
             </div>
           ))}
         </div>
 
-        {/* Navigation */}
-        <div className="border-theme mt-12 border-t pt-8">
-          <button
-            onClick={() => router.push('/al-kafi')}
-            className="border-theme hover:bg-hover-color text-primary inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-3 font-medium transition-all hover:shadow-soft active:scale-95"
-            title="Return to Al-Kāfi main page"
-          >
-            <IconArrowLeft className="h-4 w-4" />
-            <span>Back to Al-Kāfi Explorer</span>
-          </button>
+        {/* Back */}
+        <div className="mt-10 border-t border-border pt-6">
+          <Button variant="outline" onClick={() => router.push('/al-kafi')}>
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            Back to Al-Kāfi Explorer
+          </Button>
         </div>
       </div>
     </main>
