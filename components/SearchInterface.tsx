@@ -225,7 +225,8 @@ export default function SearchInterface({
 
   const isArabicSearch = useMemo(() => isArabicQuery(searchQuery), [searchQuery])
   const showArabicDefault = useMemo(
-    () => (hadith: Hadith) => isArabicSearch && Boolean(hadith.arabicText),
+    () => (hadith: Hadith) =>
+      (isArabicSearch && Boolean(hadith.arabicText)) ? true : undefined,
     [isArabicSearch],
   )
 

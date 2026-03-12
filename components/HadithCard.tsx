@@ -150,13 +150,16 @@ const HadithCard = ({
   showNotesToggle = false,
   notesVisible = false,
   onToggleNotes,
-  showArabicByDefault = false,
+  showArabicByDefault,
   highlightQuery,
 }: HadithCardProps) => {
   const { settings } = useSettings()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
 
-  const [showArabic, setShowArabic] = useState(showArabicByDefault)
+  // Resolve initial Arabic visibility: explicit prop wins, otherwise use the global setting
+  const resolvedArabicDefault = showArabicByDefault ?? settings.defaultLanguage === 'arabic'
+
+  const [showArabic, setShowArabic] = useState(resolvedArabicDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(true)
   const arabicRef = useRef<HTMLDivElement | null>(null)
@@ -170,8 +173,8 @@ const HadithCard = ({
   }, [settings.alwaysShowFullHadith])
 
   useEffect(() => {
-    setShowArabic(showArabicByDefault)
-  }, [showArabicByDefault])
+    setShowArabic(showArabicByDefault ?? settings.defaultLanguage === 'arabic')
+  }, [showArabicByDefault, settings.defaultLanguage])
 
   // Memoize text processing
   const { englishText, arabicText, isLongText } = useMemo(() => {
