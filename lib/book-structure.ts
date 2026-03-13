@@ -1,6 +1,11 @@
 // Client-side helper for fetching lightweight book structure metadata.
 // Instead of downloading entire hadith payloads (2-36 MB), this fetches
 // a structure-only summary (~5-50 KB) from the server-side API route.
+//
+// On app load the prefetchAllStructures() function is called in the
+// background.  It pulls every book's structure in a single request and
+// seeds IndexedDB so all subsequent book navigations are instant (zero
+// network request).
 
 import { cacheGet, cacheSet } from './hadith-cache'
 
@@ -27,12 +32,77 @@ interface BookStructureResponse {
   bookIds: string[]
 }
 
+interface AllStructuresResponse {
+  structures: Record<
+    string,
+    {
+      structure: BookStructureMap
+      totalHadiths: number
+      volumeIds: string[]
+    }
+  >
+}
+
 // ── Cache key helper ─────────────────────────────────────────────────────
 
-const STRUCTURE_TTL = 6 * 60 * 60 * 1000 // 6 hours
+const STRUCTURE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 function structureCacheKey(bookIds: string[]): string {
   return `book-structure:${bookIds.slice().sort().join('|')}`
+}
+
+// ── Prefetch state ───────────────────────────────────────────────────────
+
+let prefetchPromise: Promise<void> | null = null
+let prefetchDone = false
+
+/**
+ * Prefetch ALL book structures in a single request and seed IndexedDB.
+ * Safe to call multiple times — only the first invocation does work.
+ * Designed to be called from a useEffect / requestIdleCallback on app load.
+ */
+export function prefetchAllStructures(): Promise<void> {
+  if (prefetchDone) return Promise.resolve()
+  if (prefetchPromise) return prefetchPromise
+
+  prefetchPromise = _doPrefetch()
+  return prefetchPromise
+}
+
+async function _doPrefetch(): Promise<void> {
+  try {
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+    const res = await fetch(`${basePath}/api/all-book-structures`)
+    if (!res.ok) return
+
+    const data: AllStructuresResponse = await res.json()
+    if (!data.structures) return
+
+    // Store every entry in IndexedDB with the correct cache key
+    const storeOps: Promise<void>[] = []
+
+    for (const [entryKey, entry] of Object.entries(data.structures)) {
+      if (!entry.structure) continue
+
+      // Determine the client cache key
+      let cacheKeyStr: string
+      if (entryKey.startsWith('__merged__:')) {
+        // Multi-volume aggregate — key encodes the sorted volume IDs
+        const sortedIds = entryKey.replace('__merged__:', '').split('|')
+        cacheKeyStr = structureCacheKey(sortedIds)
+      } else {
+        // Single volume
+        cacheKeyStr = structureCacheKey([entryKey])
+      }
+
+      storeOps.push(cacheSet(cacheKeyStr, entry.structure, STRUCTURE_TTL))
+    }
+
+    await Promise.all(storeOps)
+    prefetchDone = true
+  } catch {
+    // Non-critical — components will fall back to on-demand fetch
+  }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────
