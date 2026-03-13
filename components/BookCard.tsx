@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Image from './OptimizedImage'
 import Link from 'next/link'
 import { getBookUrlSlug } from '@/lib/books-config'
+import { cn } from '@/lib/utils'
 
 type Book = {
   id: number
@@ -38,31 +40,58 @@ const bookIdMap: Record<number, string> = {
 }
 
 export default function BookCard({ book }: { book: Book }) {
+  const [hovered, setHovered] = useState(false)
   const bookId = book.bookId || bookIdMap[book.id]
   const href = book.id === 1 ? '/al-kafi' : bookId ? `/${getBookUrlSlug(bookId)}` : '#'
 
   const card = (
-    <div className="group flex items-center gap-4 rounded-lg border border-border bg-surface-1 p-3 transition-colors hover:bg-surface-2 sm:gap-5 sm:p-4">
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={cn(
+        'shadow-soft rounded-2xl border border-border bg-surface-1',
+        'flex items-center gap-4 p-4 transition-all duration-300 sm:gap-6 sm:p-6',
+        'hover:bg-surface-2',
+        'cursor-pointer active:scale-95 sm:active:scale-100',
+        hovered && 'shadow-glow ring-1 ring-white/10',
+      )}
+      style={{
+        transform: hovered ? 'translateY(-2px) scale(1.01)' : 'translateY(0) scale(1)',
+      }}
+    >
       <Image
         src={book.image}
         alt={`${book.title} cover`}
         width={180}
         height={240}
-        className="h-28 w-20 shrink-0 rounded object-contain sm:h-36 sm:w-24"
+        className={cn(
+          'shadow-book shrink-0 select-none rounded-lg object-contain transition-transform duration-300',
+          'h-28 w-20 sm:h-48 sm:w-36',
+          hovered
+            ? 'translate-x-[-4px] scale-105 sm:translate-x-[-8px]'
+            : 'translate-x-0 scale-100',
+        )}
         priority={book.highlighted}
         quality={95}
-        sizes="(max-width: 640px) 80px, 96px"
+        sizes="(max-width: 640px) 80px, (max-width: 1024px) 144px, 180px"
       />
 
-      <div className="min-w-0 flex-1">
-        <h3 className="text-base font-semibold leading-snug tracking-tight text-foreground sm:text-lg">
+      <div className="min-w-0 flex-1 select-none">
+        <h3
+          className="select-none break-words text-lg font-semibold tracking-tight text-foreground sm:text-xl"
+          title={book.title}
+        >
           {book.title}
         </h3>
         {book.subtitle && (
-          <p className="mt-0.5 line-clamp-2 text-sm text-foreground-muted">{book.subtitle}</p>
+          <p className="mt-1 line-clamp-2 select-none text-sm text-foreground-muted sm:line-clamp-none">
+            {book.subtitle}
+          </p>
         )}
         {book.author && (
-          <p className="mt-1 text-xs text-foreground-faint sm:text-sm">{book.author}</p>
+          <p className="mt-1 line-clamp-2 select-none text-xs text-foreground-faint sm:line-clamp-none sm:text-sm">
+            {book.author}
+          </p>
         )}
       </div>
     </div>

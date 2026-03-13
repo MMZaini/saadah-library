@@ -13,7 +13,8 @@
   /* Exclude U+060C (Arabic comma ،) and U+061B (Arabic semicolon ؛) so the browser
      falls through to Noto Sans Arabic instead of rendering them as Quranic ayah symbols. */
   unicode-range:
-    U+0600-060B, U+060D-061A, U+061C-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2028-202F, U+0020-007E;
+    U+0600-060B, U+060D-061A, U+061C-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F,
+    U+2028-202F, U+0020-007E;
 }
 
 @tailwind base;
@@ -24,20 +25,20 @@
 @layer base {
   :root,
   [data-theme='dark'] {
-    --background: #09090b;
+    --background: #0b0b0b;
     --foreground: #fafafa;
     --foreground-muted: #a1a1aa;
     --foreground-faint: #52525b;
 
-    --surface-1: #18181b;
-    --surface-2: #27272a;
+    --surface-1: #101012;
+    --surface-2: #1a1a1c;
 
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #3f3f46;
+    --border: rgba(255, 255, 255, 0.08);
+    --input: #151517;
+    --ring: #2a2a2e;
 
     --accent: #22c55e;
-    --accent-foreground: #09090b;
+    --accent-foreground: #0b0b0b;
 
     --destructive: #ef4444;
     --bookmark: #eab308;
