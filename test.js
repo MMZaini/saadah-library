@@ -1,0 +1,1 @@
+console.log(/\\bsad\\b/.test(\'maʿsad \\n\'))

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo, useEffect } from 'react'
 import { Hadith } from '@/lib/api'
@@ -42,18 +42,18 @@ const RESULTS_PER_PAGE = 10
 
 const GRADING_OPTIONS = [
   { value: 'all', label: 'All Gradings' },
-  { value: 'sahih', label: 'Sahih (صحيح)', keywords: ['صحيح', 'sahih', 'authentic'] },
-  { value: 'hasan', label: 'Hasan (حسن)', keywords: ['حسن', 'hasan', 'good'] },
-  { value: 'muwathaq', label: 'Muwathaq (موثق)', keywords: ['موثق', 'muwathaq', 'reliable'] },
-  { value: 'qawi', label: 'Qawi (قوي)', keywords: ['قوي', 'qawi', 'strong'] },
-  { value: 'daif', label: 'Daif (ضعيف)', keywords: ['ضعيف', 'daif', 'weak'] },
-  { value: 'majhul', label: 'Majhul (مجهول)', keywords: ['مجهول', 'majhul', 'unknown'] },
-  { value: 'mursal', label: 'Mursal (مرسل)', keywords: ['مرسل', 'mursal'] },
-  { value: 'lam-yukhrijhu', label: 'Not Included (لم يخرجه)', keywords: ['لم يخرجه'] },
+  { value: 'sahih', label: 'Sahih (ØµØ­ÙŠØ­)', keywords: ['ØµØ­ÙŠØ­', 'sahih', 'authentic'] },
+  { value: 'hasan', label: 'Hasan (Ø­Ø³Ù†)', keywords: ['Ø­Ø³Ù†', 'hasan', 'good'] },
+  { value: 'muwathaq', label: 'Muwathaq (Ù…ÙˆØ«Ù‚)', keywords: ['Ù…ÙˆØ«Ù‚', 'muwathaq', 'reliable'] },
+  { value: 'qawi', label: 'Qawi (Ù‚ÙˆÙŠ)', keywords: ['Ù‚ÙˆÙŠ', 'qawi', 'strong'] },
+  { value: 'daif', label: 'Daif (Ø¶Ø¹ÙŠÙ)', keywords: ['Ø¶Ø¹ÙŠÙ', 'daif', 'weak'] },
+  { value: 'majhul', label: 'Majhul (Ù…Ø¬Ù‡ÙˆÙ„)', keywords: ['Ù…Ø¬Ù‡ÙˆÙ„', 'majhul', 'unknown'] },
+  { value: 'mursal', label: 'Mursal (Ù…Ø±Ø³Ù„)', keywords: ['Ù…Ø±Ø³Ù„', 'mursal'] },
+  { value: 'lam-yukhrijhu', label: 'Not Included (Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡)', keywords: ['Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡'] },
   {
     value: 'other',
     label: 'Other Gradings',
-    keywords: ['مقطوع', 'مدلس', 'غريب', 'عزيز', 'مشهور', 'متواتر', 'آحاد'],
+    keywords: ['Ù…Ù‚Ø·ÙˆØ¹', 'Ù…Ø¯Ù„Ø³', 'ØºØ±ÙŠØ¨', 'Ø¹Ø²ÙŠØ²', 'Ù…Ø´Ù‡ÙˆØ±', 'Ù…ØªÙˆØ§ØªØ±', 'Ø¢Ø­Ø§Ø¯'],
   },
 ]
 
@@ -171,7 +171,7 @@ export default function SearchInterface({
   const shouldShowFilters = true
 
   // Derive unique books/volumes from results for filter chips.
-  // When all results share the same display name (e.g. all Al-Kāfi volumes),
+  // When all results share the same display name (e.g. all Al-KÄfi volumes),
   // present them as selectable volumes instead of duplicate book names.
   const { availableBooks, isVolumeMode } = useMemo(() => {
     const bookMap = new Map<string, { name: string; volume?: number }>() // bookId -> info
@@ -202,7 +202,7 @@ export default function SearchInterface({
       return { availableBooks: sorted, isVolumeMode: true }
     }
 
-    // Normal book mode — sort alphabetically
+    // Normal book mode â€” sort alphabetically
     const sorted = entries
       .map(({ id, name }) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name))
@@ -242,11 +242,11 @@ export default function SearchInterface({
     setCurrentPage(1)
   }, [searchQuery, selectedGradings, selectedBooks, activeModes, scopeBooks, scopeVolumes])
 
-  // ── Filter + sort logic ──
+  // â”€â”€ Filter + sort logic â”€â”€
   const filteredResults = useMemo(() => {
     let filtered = [...searchResults]
 
-    // Apply search mode filtering (OR across selected modes — hadith passes if ANY mode matches)
+    // Apply search mode filtering (OR across selected modes â€” hadith passes if ANY mode matches)
     if (activeModes.size > 0 && searchQuery.trim()) {
       filtered = searchResults.filter((hadith) => {
         const text = searchQuery.trim()
@@ -261,7 +261,12 @@ export default function SearchInterface({
         // Return true if the hadith matches at least one selected mode
         for (const mode of activeModes) {
           if (mode === 'exactPhrase') {
-            if (arabic ? ar.includes(q) : all.includes(q)) return true
+            if (arabic) {
+              if (ar.includes(q)) return true
+            } else {
+              const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              if (new RegExp('(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])', 'iu').test(all)) return true
+            }
           }
           if (mode === 'exactWords') {
             const words = q.split(/\s+/).filter(Boolean)
@@ -272,7 +277,7 @@ export default function SearchInterface({
               if (
                 words.every((w) => {
                   const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                  return new RegExp('\\b' + esc + '\\b').test(all)
+                  return new RegExp('(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])', 'iu').test(all)
                 })
               )
                 return true
@@ -325,10 +330,10 @@ export default function SearchInterface({
               !hadith.mohseniGrading &&
               !hadith.behbudiGrading &&
               (!hadith.gradingsFull || hadith.gradingsFull.length === 0)
-            return none || gradingText.includes('لم يخرجه')
+            return none || gradingText.includes('Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡')
           }
           if (sel === 'other') {
-            const common = ['صحيح', 'حسن', 'موثق', 'قوي', 'ضعيف', 'مجهول', 'مرسل', 'لم يخرجه']
+            const common = ['ØµØ­ÙŠØ­', 'Ø­Ø³Ù†', 'Ù…ÙˆØ«Ù‚', 'Ù‚ÙˆÙŠ', 'Ø¶Ø¹ÙŠÙ', 'Ù…Ø¬Ù‡ÙˆÙ„', 'Ù…Ø±Ø³Ù„', 'Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡']
             return (
               gradingText.trim().length > 0 &&
               !common.some((c) => gradingText.includes(c.toLowerCase()))
@@ -371,14 +376,14 @@ export default function SearchInterface({
 
   const contextLabel =
     searchContext === 'al-kafi'
-      ? ' in Al-Kāfi'
+      ? ' in Al-KÄfi'
       : searchContext === 'uyun-akhbar-al-rida'
-        ? ' in ʿUyūn akhbār al-Riḍā'
+        ? ' in Ê¿UyÅ«n akhbÄr al-Riá¸Ä'
         : ''
 
   return (
     <section id="search-results" className="mx-auto mt-6 max-w-5xl px-4 sm:px-6">
-      {/* ── Header ── */}
+      {/* â”€â”€ Header â”€â”€ */}
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-lg font-semibold text-foreground sm:text-xl">
@@ -388,7 +393,7 @@ export default function SearchInterface({
             {isSearching ? (
               <span className="flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 animate-spin text-accent" />
-                Searching…
+                Searchingâ€¦
               </span>
             ) : (
               <>
@@ -410,7 +415,7 @@ export default function SearchInterface({
         </Button>
       </div>
 
-      {/* ── Error banner ── */}
+      {/* â”€â”€ Error banner â”€â”€ */}
       {searchError && (
         <div className="border-destructive/30 bg-destructive/5 mb-4 flex items-center gap-2 rounded-lg border px-3.5 py-2.5">
           <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
@@ -418,7 +423,7 @@ export default function SearchInterface({
         </div>
       )}
 
-      {/* ── Filter toggle ── */}
+      {/* â”€â”€ Filter toggle â”€â”€ */}
       {shouldShowFilters && (
         <div className="mb-4 flex items-center gap-2">
           <Button
@@ -450,7 +455,7 @@ export default function SearchInterface({
         </div>
       )}
 
-      {/* ── Filter panel ── */}
+      {/* â”€â”€ Filter panel â”€â”€ */}
       {showFilters && shouldShowFilters && (
         <div className="mb-5 rounded-lg border border-border bg-surface-1 p-4 sm:p-5">
           {/* Book scope selector (global search) */}
@@ -606,7 +611,7 @@ export default function SearchInterface({
                   <Info className="h-3.5 w-3.5 cursor-help text-foreground-faint" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[220px] text-center">
-                  Gradings are mainly available for Al-Kāfi. Most other books do not include grading
+                  Gradings are mainly available for Al-KÄfi. Most other books do not include grading
                   data.
                 </TooltipContent>
               </Tooltip>
@@ -721,7 +726,7 @@ export default function SearchInterface({
         </div>
       )}
 
-      {/* ── Results list ── */}
+      {/* â”€â”€ Results list â”€â”€ */}
       <div className="space-y-4">
         {isSearching && pageResults.length === 0 ? (
           <div className="flex items-center justify-center py-20">
@@ -735,6 +740,7 @@ export default function SearchInterface({
               showViewChapter
               showArabicByDefault={showArabicDefault(hadith)}
               highlightQuery={highlightQuery || searchQuery}
+                exactMatch={activeModes.has('exactWords') || activeModes.has('exactPhrase')}
             />
           ))
         ) : (
@@ -759,7 +765,7 @@ export default function SearchInterface({
         )}
       </div>
 
-      {/* ── Pagination ── */}
+      {/* â”€â”€ Pagination â”€â”€ */}
       {totalPages > 1 && (
         <div className="mb-8 mt-8 flex flex-col items-center gap-3">
           <div className="flex items-center gap-1">
@@ -809,7 +815,7 @@ export default function SearchInterface({
           </div>
 
           <p className="text-xs text-foreground-faint">
-            {start + 1}–{Math.min(start + RESULTS_PER_PAGE, filteredResults.length)} of{' '}
+            {start + 1}â€“{Math.min(start + RESULTS_PER_PAGE, filteredResults.length)} of{' '}
             {filteredResults.length}
           </p>
         </div>

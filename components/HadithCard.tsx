@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback, memo, ReactNode } from 'react'
 import { Hadith } from '@/lib/api'
@@ -43,9 +43,10 @@ interface HadithCardProps {
   onToggleNotes?: () => void
   showArabicByDefault?: boolean
   highlightQuery?: string
+  exactMatch?: boolean
 }
 
-// ── Helpers ──
+// â”€â”€ Helpers â”€â”€
 
 function removeChainFromMatn(matn: string, chain: string): string {
   if (!matn || !chain) return matn
@@ -131,17 +132,17 @@ function getChapterUrl(hadith: Hadith): string {
     : `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
 }
 
-// ── Grading badge color mapping ──
+// â”€â”€ Grading badge color mapping â”€â”€
 
 function gradingVariant(grading: string): 'sahih' | 'hasan' | 'daif' | 'secondary' {
   const g = grading.toLowerCase()
-  if (g.includes('sahih') || g.includes('صحيح')) return 'sahih'
-  if (g.includes('hasan') || g.includes('حسن') || g.includes('good')) return 'hasan'
-  if (g.includes('daif') || g.includes('ضعيف') || g.includes('weak')) return 'daif'
+  if (g.includes('sahih') || g.includes('ØµØ­ÙŠØ­')) return 'sahih'
+  if (g.includes('hasan') || g.includes('Ø­Ø³Ù†') || g.includes('good')) return 'hasan'
+  if (g.includes('daif') || g.includes('Ø¶Ø¹ÙŠÙ') || g.includes('weak')) return 'daif'
   return 'secondary'
 }
 
-// ── Main component ──
+// â”€â”€ Main component â”€â”€
 
 const HadithCard = ({
   hadith,
@@ -152,6 +153,7 @@ const HadithCard = ({
   onToggleNotes,
   showArabicByDefault,
   highlightQuery,
+  exactMatch = false,
 }: HadithCardProps) => {
   const { settings } = useSettings()
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks()
@@ -196,13 +198,13 @@ const HadithCard = ({
       if (!text) return null
       const display = truncate ? text.slice(0, 750) + '...' : text
       if (!highlightQuery?.trim()) return display
-      const segments = getHighlightSegments(display, highlightQuery)
+      const segments = getHighlightSegments(display, highlightQuery, { exactMatch })
       if (segments.length === 1 && !segments[0].highlight) return display
       return segments.map((seg, i) =>
         seg.highlight ? (
           <mark
             key={i}
-            className="bg-accent/15 rounded-sm text-inherit underline decoration-accent decoration-1 underline-offset-2"
+            className="bg-yellow-300/80 dark:bg-yellow-500/50 text-inherit rounded-sm px-0.5"
           >
             {seg.text}
           </mark>
@@ -211,7 +213,7 @@ const HadithCard = ({
         ),
       )
     },
-    [highlightQuery],
+    [highlightQuery, exactMatch],
   )
 
   // Arabic overflow detection
@@ -371,12 +373,12 @@ const HadithCard = ({
 
   return (
     <article className={cn('rounded-lg border border-border bg-surface-1 p-4 sm:p-5', className)}>
-      {/* ── Header ── */}
+      {/* â”€â”€ Header â”€â”€ */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className="text-[11px]">
-              {hadith.book} {hadith.volume ? `· Vol. ${hadith.volume}` : ''}
+              {hadith.book} {hadith.volume ? `Â· Vol. ${hadith.volume}` : ''}
             </Badge>
             <span className="text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
           </div>
@@ -411,7 +413,7 @@ const HadithCard = ({
                   className="h-7 w-7 font-arabic text-xs"
                   onClick={() => setShowArabic(!showArabic)}
                 >
-                  ع
+                  Ø¹
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{showArabic ? 'Hide Arabic' : 'Show Arabic'}</TooltipContent>
@@ -429,7 +431,7 @@ const HadithCard = ({
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* â”€â”€ Content â”€â”€ */}
       <div className="space-y-3">
         {showArabic && arabicText ? (
           <div className="hadith-block bg-surface-2/50 rounded-md border border-border">
@@ -448,7 +450,7 @@ const HadithCard = ({
                 onClick={() => setArabicExpanded(!arabicExpanded)}
                 className="mt-1 text-xs font-medium text-accent transition-colors hover:underline"
               >
-                {arabicExpanded ? 'اعرض أقل' : 'اقرأ المزيد'}
+                {arabicExpanded ? 'Ø§Ø¹Ø±Ø¶ Ø£Ù‚Ù„' : 'Ø§Ù‚Ø±Ø£ Ø§Ù„Ù…Ø²ÙŠØ¯'}
               </button>
             )}
           </div>
@@ -482,7 +484,7 @@ const HadithCard = ({
         )}
       </div>
 
-      {/* ── Gradings ── */}
+      {/* â”€â”€ Gradings â”€â”€ */}
       {(hadith.majlisiGrading || hadith.mohseniGrading || hadith.behbudiGrading) && (
         <>
           <Separator className="my-3" />
@@ -545,7 +547,7 @@ const HadithCard = ({
         </>
       )}
 
-      {/* ── Footer actions ── */}
+      {/* â”€â”€ Footer actions â”€â”€ */}
       <Separator className="my-3" />
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">

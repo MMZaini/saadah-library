@@ -421,7 +421,7 @@ export interface HighlightSegment {
   highlight: boolean
 }
 
-export function getHighlightSegments(text: string, query: string): HighlightSegment[] {
+export function getHighlightSegments(text: string, query: string, options: { exactMatch?: boolean } = {}): HighlightSegment[] {
   if (!text || !query?.trim()) return [{ text, highlight: false }]
 
   const trimmed = query.trim()
@@ -430,10 +430,10 @@ export function getHighlightSegments(text: string, query: string): HighlightSegm
   if (arabic) {
     return highlightArabicSegments(text, trimmed)
   }
-  return highlightEnglishSegments(text, trimmed)
+  return highlightEnglishSegments(text, trimmed, options)
 }
 
-function highlightEnglishSegments(text: string, query: string): HighlightSegment[] {
+function highlightEnglishSegments(text: string, query: string, options: { exactMatch?: boolean } = {}): HighlightSegment[] {
   // Escape regex special chars and split query into words
   const words = query
     .split(/\s+/)
@@ -444,7 +444,10 @@ function highlightEnglishSegments(text: string, query: string): HighlightSegment
 
   // Try full phrase first, then individual words
   const patterns = [words.join('\\s+'), ...words.filter((w) => w.length >= 2)]
-  const regex = new RegExp(`(${patterns.join('|')})`, 'gi')
+  const joined = patterns.join('|')
+  const regex = options.exactMatch
+    ? new RegExp(`(?<![\\p{L}\\p{M}\\p{N}_])(${joined})(?![\\p{L}\\p{M}\\p{N}_])`, 'giu')
+    : new RegExp(`(${joined})`, 'gi')
 
   return splitByRegex(text, regex)
 }
