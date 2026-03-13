@@ -123,10 +123,12 @@ export default function BookPage() {
     if (!value.trim()) {
       debouncedSearch.cancel()
       setSearchResults([])
+      setIsSearching(false)
       setSearchError(null)
       saveSearchState(null)
       return
     }
+    setIsSearching(true)
     debouncedSearch(value)
   }
 
@@ -134,6 +136,7 @@ export default function BookPage() {
     debouncedSearch.cancel()
     setSearchQuery('')
     setSearchResults([])
+    setIsSearching(false)
     setSearchError(null)
     saveSearchState(null)
     setShowHistory(false)
@@ -147,6 +150,7 @@ export default function BookPage() {
   const handleHistorySelect = (query: string) => {
     setSearchQuery(query)
     setShowHistory(false)
+    setIsSearching(true)
     debouncedSearch(query)
   }
 

@@ -96,10 +96,12 @@ export default function Page() {
     if (!value.trim()) {
       debouncedSearch.cancel()
       setSearchResults([])
+      setIsSearching(false)
       setSearchError(null)
       saveSearchState(null)
       return
     }
+    setIsSearching(true)
     debouncedSearch(value)
   }
 
@@ -107,6 +109,7 @@ export default function Page() {
     debouncedSearch.cancel()
     setSearchQuery('')
     setSearchResults([])
+    setIsSearching(false)
     setSearchError(null)
     saveSearchState(null)
     setShowHistory(false)
@@ -121,6 +124,7 @@ export default function Page() {
     (ids: string[]) => {
       bookScopeRef.current = ids
       if (searchQuery.trim()) {
+        setIsSearching(true)
         debouncedSearch(searchQuery)
       }
     },
@@ -130,6 +134,7 @@ export default function Page() {
   const handleHistorySelect = (query: string) => {
     setSearchQuery(query)
     setShowHistory(false)
+    setIsSearching(true)
     debouncedSearch(query)
   }
 
