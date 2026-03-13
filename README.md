@@ -1,6 +1,6 @@
 # Saadah Library
 
-Saadah Library ("The Library of Happiness") is a free, non-profit online platform that makes classical and modern Islamic texts more accessible to readers worldwide. The project grew from a personal connection to a family library in Iraq and is intended as a public service: a reliable, well?-organized digital library for students, researchers, scholars, and the curious public.
+Saadah Library ("The Library of Happiness") is a free, non-profit online platform that makes classical Islamic texts more accessible to readers worldwide. The project grew from a personal connection to a family library in Iraq and is intended as a public service: a reliable, well-organized digital library for students, researchers, scholars, and the curious public.
 
 ## Purpose
 
@@ -12,10 +12,10 @@ Saadah Library ("The Library of Happiness") is a free, non-profit online platfor
 ## What the app provides
 
 - A browsable collection of key works including Al-Kāfi.
-- Side-by-side translations and original-language text.
+- English translations and arabic text.
 - Bookmarks and personal saved items for study and review.
 - Hadith sharing and grading classifications with verifiable source references.
-- Responsive, accessible UI with dark mode, adjustable text size, and keyboard-friendly navigation.
+- Responsive, accessible UI with adjustable text size, and keyboard-friendly navigation.
 
 ## Who it's for
 
@@ -25,20 +25,15 @@ Saadah Library ("The Library of Happiness") is a free, non-profit online platfor
 
 ## Tech stack
 
-- Built with React and Next.js (App Router) for server-side rendering and fast page loads.
-- Styling with Tailwind CSS and optimized image handling for performance.
-- Search utilities and indexing for Arabic text (server-side APIs and client helpers).
-- Deployed on Vercel (currently), with an emphasis on performance, accessibility, and minimal hosting cost.
-
-## Contributing and collaboration
-
-This project welcomes collaboration from developers, translators, and scholars. Contributions can include:
-
-- Improvements to front-end components and accessibility.
-- Adding verified texts, translations, and source metadata.
-- Implementing editorial features requested by scholars (for example: graded annotations, verified chains, or new text collections).
-
-If you're a scholar or community member interested in contributing content or review, please open an issue or reach out through the repository so we can discuss verification and attribution workflows.
+- **Framework:** Next.js 15 (App Router, Turbopack) with React 19
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 3, tailwindcss-animate
+- **UI primitives:** Radix UI (dialog, dropdown-menu, accordion, select, tooltip, etc.)
+- **Icons:** Lucide React
+- **Utilities:** class-variance-authority, clsx, tailwind-merge
+- **Linting / Formatting:** ESLint 9, Prettier (with prettier-plugin-tailwindcss)
+- **Package manager:** Yarn
+- **Deployment:** Vercel
 
 For developers:
 
@@ -51,8 +46,8 @@ For developers:
 Install dependencies and run the dev server:
 
 ```bash
-npm install
-npm run dev
+yarn install
+yarn dev
 ```
 
 Open http://localhost:3000 in your browser.
@@ -61,10 +56,10 @@ Open http://localhost:3000 in your browser.
 
 The project is intended as a charitable, educational resource. If parts of the repository are published under a specific license, they will be noted in their respective directories. If you need specific licensing or permission information for a given text or translation, please check the source files or contact the maintainers.
 
+## Data sources
+
+Hadith data is sourced from [thaqalayn.net](http://thaqalayn.net/) via the [ThaqalaynAPI](https://github.com/MohammedArab1/ThaqalaynAPI) by Mohammed Arab. We are grateful for their work in making this content programmatically accessible.
+
 ## Acknowledgements
 
-This project is inspired by family history and a commitment to public knowledge. Special thanks to contributors, reviewers, and the scholars helping to improve the quality and scope of the library.
-
----
-
-If you'd like the repository to be fully open-source or to include additional attribution/licensing details, I can help add an explicit LICENSE file and contribution guidelines.
+This project is inspired by family history and a commitment to public knowledge. Special thanks to the team behind [thaqalayn.net](http://thaqalayn.net/) and [MohammedArab1](https://github.com/MohammedArab1) for the ThaqalaynAPI, as well as all contributors, reviewers, and scholars helping to improve the quality and scope of the library.
