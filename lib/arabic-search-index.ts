@@ -179,7 +179,6 @@ export async function searchArabicLocally(
 
   // Return as Hadith[] (drop the helper fields)
   return {
-     
     results: results.map(
       ({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest,
     ),
@@ -216,7 +215,6 @@ export async function searchEnglishLocally(
   )
 
   return {
-     
     results: results.map(
       ({ normalizedArabicText: _a, normalizedEnglishText: _e, ...rest }) => rest,
     ),

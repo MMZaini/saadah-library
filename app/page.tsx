@@ -123,7 +123,7 @@ export default function Page() {
   return (
     <div className="min-h-screen">
       {/* Search bar */}
-      <div className="mx-auto max-w-2xl px-4 pt-6 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
         <div className="relative">
           <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5">
             <Search className="h-4 w-4 shrink-0 text-foreground-faint" />
@@ -195,15 +195,16 @@ export default function Page() {
 
       {/* Book grid */}
       {!searchQuery && (
-        <section className="mx-auto mt-8 max-w-5xl px-4 pb-12 sm:px-6">
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold text-foreground sm:text-xl">Browse Books</h2>
-            <p className="mt-0.5 text-sm text-foreground-muted">
-              Select a book to explore its hadiths
+        <section className="mx-auto mt-8 max-w-[1800px] px-4 pb-12 sm:mt-12 sm:px-8 sm:pb-16 md:px-16 lg:px-20 xl:px-32">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Browse Books</h2>
+            <p className="text-sm text-foreground-faint">
+              <span className="sm:hidden">Tap any book to explore</span>
+              <span className="hidden sm:inline">Click on any book to explore its hadiths</span>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 gap-y-8 sm:grid-cols-2 sm:gap-8 sm:gap-y-12 md:gap-12 md:gap-y-16 lg:gap-16 xl:grid-cols-3 xl:gap-24">
             {books.map((b) => (
               <BookCard key={b.id} book={b} />
             ))}
