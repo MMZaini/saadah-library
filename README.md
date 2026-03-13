@@ -1,6 +1,6 @@
 # Saadah Library
 
-Saadah Library ("The Library of Happiness") is a free, non-profit online platform that makes classical and modern Islamic texts more accessible to readers worldwide. The project grew from a personal connection to a family library in Iraq and is intended as a public service: a reliable, well?-organized digital library for students, researchers, scholars, and the curious public.
+Saadah Library ("The Library of Happiness") is a free, non-profit online platform that makes classical and modern Islamic texts more accessible to readers worldwide. The project grew from a personal connection to a family library in Iraq and is intended as a public service: a reliable, well-organized digital library for students, researchers, scholars, and the curious public.
 
 ## Purpose
 
