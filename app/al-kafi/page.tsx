@@ -103,10 +103,12 @@ export default function AlKafiPage() {
     if (!value.trim()) {
       debouncedSearch.cancel()
       setSearchResults([])
+      setIsSearching(false)
       setSearchError(null)
       saveSearchState(null)
       return
     }
+    setIsSearching(true)
     debouncedSearch(value)
   }
 
@@ -114,6 +116,7 @@ export default function AlKafiPage() {
     debouncedSearch.cancel()
     setSearchQuery('')
     setSearchResults([])
+    setIsSearching(false)
     setSearchError(null)
     saveSearchState(null)
     setShowHistory(false)
@@ -127,6 +130,7 @@ export default function AlKafiPage() {
   const handleHistorySelect = (query: string) => {
     setSearchQuery(query)
     setShowHistory(false)
+    setIsSearching(true)
     debouncedSearch(query)
   }
 
