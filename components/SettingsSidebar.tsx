@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { SteppedSlider } from '@/components/ui/stepped-slider'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, ChevronDown } from 'lucide-react'
 
 export default function SettingsSidebar() {
   const {
@@ -68,9 +68,9 @@ export default function SettingsSidebar() {
 
           <Separator className="-mx-6 w-auto" />
 
-          {/* Font Sizes */}
+          {/* Typography */}
           <section className="space-y-5">
-            <h3 className="text-sm font-medium text-foreground">Text Size</h3>
+            <h3 className="text-sm font-medium text-foreground">Typography</h3>
 
             {/* Arabic slider */}
             <div className="space-y-3">
@@ -126,6 +126,26 @@ export default function SettingsSidebar() {
                 value={settings.englishFontSize}
                 onValueChange={(v) => updateSettings({ englishFontSize: v })}
               />
+            </div>
+
+            {/* English Font Family */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground-muted">English Font</span>
+              </div>
+              <div className="relative">
+                <select
+                  className="w-full appearance-none rounded-md border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  value={settings.englishFontFamily}
+                  onChange={(e) => updateSettings({ englishFontFamily: e.target.value as any })}
+                >
+                  <option value="inter">Inter (Default)</option>
+                  <option value="merriweather">Merriweather (Serif)</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground-muted">
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+              </div>
             </div>
           </section>
         </div>

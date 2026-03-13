@@ -162,6 +162,11 @@
 
   .hadith-english-text {
     font-size: var(--hadith-english-font-size, 100%);
+    font-family: var(--hadith-english-font-family, var(--font-inter), system-ui, sans-serif);
+  }
+
+  .hadith-english-size-only {
+    font-size: var(--hadith-english-font-size, 100%);
   }
 
   /* Shadows mapped to new tokens */

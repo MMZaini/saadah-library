@@ -19,6 +19,7 @@ type Settings = {
   theme: 'dark' | 'light'
   arabicFontSize: number // slider percentage (100 = default). Actual CSS = value × 1.485
   englishFontSize: number // percentage (100 = 100% = default)
+  englishFontFamily: 'inter' | 'merriweather'
   alwaysShowFullHadith: boolean // whether to show full hadith text by default
   defaultLanguage: 'english' | 'arabic' // which language to show on hadith open
 }
@@ -38,6 +39,7 @@ const defaultSettings: Settings = {
   theme: 'dark',
   arabicFontSize: 100,
   englishFontSize: 100,
+  englishFontFamily: 'inter', // Default to inter
   alwaysShowFullHadith: false, // false = collapsed by default (current behavior)
   defaultLanguage: 'english', // english = show English by default (new users)
 }
@@ -82,6 +84,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 Math.max(75, parsed.englishFontSize ?? defaultSettings.englishFontSize),
               ) / 5,
             ) * 5,
+          englishFontFamily: parsed.englishFontFamily ?? defaultSettings.englishFontFamily,
         }
 
         setSettings(mergedSettings)
@@ -99,9 +102,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const root = document.documentElement
       root.setAttribute('data-theme', settings.theme)
 
-      // Set font size CSS custom properties
+      // Set font size/family CSS custom properties
       root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize * 1.485}%`)
       root.style.setProperty('--hadith-english-font-size', `${settings.englishFontSize}%`)
+
+      const getFontFamily = (font: Settings['englishFontFamily']) => {
+        switch (font) {
+          case 'merriweather':
+            return 'var(--font-merriweather), serif'
+          default:
+            return 'var(--font-inter), system-ui, sans-serif'
+        }
+      }
+      root.style.setProperty(
+        '--hadith-english-font-family',
+        getFontFamily(settings.englishFontFamily),
+      )
     } else {
       // Set initial theme immediately on load to prevent flash
       if (typeof document !== 'undefined') {
@@ -112,6 +128,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     settings.theme,
     settings.arabicFontSize,
     settings.englishFontSize,
+    settings.englishFontFamily,
     settings.alwaysShowFullHadith,
     isHydrated,
   ])
@@ -138,6 +155,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             }
             if (updated.englishFontSize !== undefined) {
               root.style.setProperty('--hadith-english-font-size', `${updated.englishFontSize}%`)
+            }
+            if (updated.englishFontFamily !== undefined) {
+              const getFontFamily = (font: Settings['englishFontFamily']) => {
+                switch (font) {
+                  case 'merriweather':
+                    return 'var(--font-merriweather), serif'
+                  default:
+                    return 'var(--font-inter), system-ui, sans-serif'
+                }
+              }
+              root.style.setProperty(
+                '--hadith-english-font-family',
+                getFontFamily(updated.englishFontFamily),
+              )
             }
           }
         } catch {

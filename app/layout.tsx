@@ -1,5 +1,5 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
+import { Inter, Lora, Merriweather } from 'next/font/google'
 import ClientProviders from '@/components/ClientProviders'
 import TopBar from '@/components/TopBar'
 import SettingsSidebar from '@/components/SettingsSidebar'
@@ -12,6 +12,19 @@ const inter = Inter({
   display: 'swap',
   preload: true,
   fallback: ['system-ui', 'arial'],
+})
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-lora',
+  display: 'swap',
+})
+
+const merriweather = Merriweather({
+  subsets: ['latin'],
+  weight: ['300', '400', '700'],
+  variable: '--font-merriweather',
+  display: 'swap',
 })
 
 export const metadata = {
@@ -28,7 +41,11 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${lora.variable} ${merriweather.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="icon" href={favicon.src} />
         <link

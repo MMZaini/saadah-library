@@ -33,6 +33,14 @@ export default {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         arabic: ['Uthman Taha', 'Noto Sans Arabic', 'serif'],
         mono: ['"Space Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        'hadith-english': [
+          'var(--hadith-english-font-family)',
+          'var(--font-inter)',
+          'system-ui',
+          'sans-serif',
+        ],
+        lora: ['var(--font-lora)', 'serif'],
+        merriweather: ['var(--font-merriweather)', 'serif'],
       },
       keyframes: {
         'accordion-down': {
