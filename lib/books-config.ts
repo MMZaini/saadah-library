@@ -144,3 +144,134 @@ export const getBookConfig = (bookId: string): BookConfig | null => {
 
   return null
 }
+
+// Unified searchable book list for the global search scope selector
+export interface SearchableBook {
+  key: string // unique identifier
+  displayName: string // shown in UI chips
+  volumeIds: string[] // API book IDs (one per volume)
+  volumeCount: number // total number of volumes
+}
+
+export const SEARCHABLE_BOOKS: SearchableBook[] = [
+  {
+    key: 'Al-Kafi',
+    displayName: 'Al-Kāfi',
+    volumeIds: MULTI_VOLUME_BOOKS['Al-Kafi'].volumes!,
+    volumeCount: 8,
+  },
+  {
+    key: 'Uyun-akhbar-al-Rida',
+    displayName: 'ʿUyūn akhbār al-Riḍā',
+    volumeIds: MULTI_VOLUME_BOOKS['Uyun-akhbar-al-Rida'].volumes!,
+    volumeCount: 2,
+  },
+  {
+    key: 'Al-Amali-Mufid',
+    displayName: 'Al-Amālī (Mufīd)',
+    volumeIds: ['Al-Amali-Mufid'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Al-Amali-Saduq',
+    displayName: 'Al-Amālī (Ṣaduq)',
+    volumeIds: ['Al-Amali-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Man-La-Yahduruh-al-Faqih',
+    displayName: 'Man lā yaḥḍuruh al-Faqīh',
+    volumeIds: MULTI_VOLUME_BOOKS['Man-La-Yahduruh-al-Faqih'].volumes!,
+    volumeCount: 5,
+  },
+  {
+    key: 'Al-Tawhid-Saduq',
+    displayName: 'Al-Tawḥīd',
+    volumeIds: ['Al-Tawhid-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kitab-al-Ghayba-Numani',
+    displayName: 'Kitāb al-Ghayba (Nuʿmānī)',
+    volumeIds: ['Kitab-al-Ghayba-Numani'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kitab-al-Ghayba-Tusi',
+    displayName: 'Kitāb al-Ghayba (Ṭūsī)',
+    volumeIds: ['Kitab-al-Ghayba-Tusi'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Nahj-al-Balagha-Radi',
+    displayName: 'Nahj al-Balāgha',
+    volumeIds: ['Nahj-al-Balagha-Radi'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Sifat-al-Shia-Saduq',
+    displayName: 'Ṣifāt al-Shīʿa',
+    volumeIds: ['Sifat-al-Shia-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Fadail-al-Shia-Saduq',
+    displayName: 'Faḍāʾil al-Shīʿa',
+    volumeIds: ['Fadail-al-Shia-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kitab-al-Mumin-Ahwazi',
+    displayName: 'Kitāb al-Muʾmin',
+    volumeIds: ['Kitab-al-Mumin-Ahwazi'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kitab-al-Zuhd-Ahwazi',
+    displayName: 'Kitāb al-Zuhd',
+    volumeIds: ['Kitab-al-Zuhd-Ahwazi'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Risalat-al-Huquq-Abidin',
+    displayName: 'Risālat al-Ḥuqūq',
+    volumeIds: ['Risalat-al-Huquq-Abidin'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
+    displayName: 'Thawāb al-Aʿmāl',
+    volumeIds: ['Thawab-al-Amal-wa-iqab-al-Amal-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Al-Khisal-Saduq',
+    displayName: 'Al-Khiṣāl',
+    volumeIds: ['Al-Khisal-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kamil-al-Ziyarat-Qummi',
+    displayName: 'Kāmil al-Ziyārāt',
+    volumeIds: ['Kamil-al-Ziyarat-Qummi'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kitab-al-Duafa-Ghadairi',
+    displayName: 'Kitāb al-Ḍuʿafāʾ',
+    volumeIds: ['Kitab-al-Duafa-Ghadairi'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Maani-al-Akhbar-Saduq',
+    displayName: 'Maʿānī al-Akhbār',
+    volumeIds: ['Maani-al-Akhbar-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Mujam-al-Ahadith-al-Mutabara-Muhsini',
+    displayName: 'Muʿjam al-Aḥādīth al-Muʿtabara',
+    volumeIds: ['Mujam-al-Ahadith-al-Mutabara-Muhsini'],
+    volumeCount: 1,
+  },
+]

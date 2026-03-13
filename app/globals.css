@@ -23,6 +23,11 @@
 
 /* ── Design tokens ── */
 @layer base {
+  /* Reset browser default <mark> styling so Tailwind classes take precedence */
+  mark {
+    background-color: transparent;
+    color: inherit;
+  }
   :root,
   [data-theme='dark'] {
     --background: #0b0b0b;

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
+import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import { useNavigation } from '@/lib/navigation-context'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
@@ -73,86 +74,98 @@ export default function VolumeStructure({
       setExpandedCategories(new Set())
 
       try {
-        let hadiths
-
+        // Determine which book IDs to fetch structure for
+        let targetBookIds: string[]
         if (selectedVolume === 'all') {
-          // Load hadiths from all volumes
           if (bookId.includes('Al-Kafi')) {
-            const allVolumeHadiths = await Promise.all(
-              volumes.map((vol) => alKafiApi.getVolumeHadiths(Number(vol))),
-            )
-            hadiths = allVolumeHadiths.flat()
+            targetBookIds = volumes.map((vol) => `Al-Kafi-Volume-${vol}-Kulayni`)
           } else {
-            // For non-Al-Kafi multi-volume books, aggregate results from each volume book id
-            const allResponses = await Promise.all(
-              (volumes || []).map((vol) => thaqalaynApi.searchBook(String(vol), '')),
-            )
-            hadiths = allResponses.flatMap((r) => (r && r.results ? r.results : []))
+            targetBookIds = (volumes || []).map(String)
           }
         } else {
-          // Load hadiths from specific volume
           if (bookId.includes('Al-Kafi')) {
-            hadiths = await alKafiApi.getVolumeHadiths(Number(selectedVolume))
+            targetBookIds = [`Al-Kafi-Volume-${selectedVolume}-Kulayni`]
           } else {
-            // selectedVolume is expected to be a volume book id (string) for Thaqalayn-sourced books
-            const targetBookId = String(selectedVolume)
-            const response = await thaqalaynApi.searchBook(targetBookId, '')
-            hadiths = response.results || []
+            targetBookIds = [String(selectedVolume)]
           }
         }
 
-        if (!hadiths || hadiths.length === 0) {
-          setError('No hadiths found for this selection')
-          return
+        // Try the lightweight structure API first
+        let summary: VolumeSummary | null = null
+        if (targetBookIds.length === 1) {
+          summary = (await fetchBookStructure(targetBookIds[0])) as VolumeSummary | null
+        } else {
+          summary = (await fetchMultiVolumeStructure(targetBookIds)) as VolumeSummary | null
         }
 
-        // Build summary structure
-        const summary: VolumeSummary = {}
-
-        hadiths.forEach((hadith) => {
-          const categoryKey = hadith.category || 'Uncategorized'
-          const chapterKey = hadith.chapter || 'No Chapter'
-
-          if (!summary[categoryKey]) {
-            summary[categoryKey] = {
-              category: categoryKey,
-              categoryId: hadith.categoryId || '',
-              chapters: {},
-              totalHadiths: 0,
+        // Fallback: download full hadiths and build summary client-side
+        if (!summary || Object.keys(summary).length === 0) {
+          let hadiths
+          if (selectedVolume === 'all') {
+            if (bookId.includes('Al-Kafi')) {
+              const allVolumeHadiths = await Promise.all(
+                volumes.map((vol) => alKafiApi.getVolumeHadiths(Number(vol))),
+              )
+              hadiths = allVolumeHadiths.flat()
+            } else {
+              const allResponses = await Promise.all(
+                (volumes || []).map((vol) => thaqalaynApi.searchBook(String(vol), '')),
+              )
+              hadiths = allResponses.flatMap((r) => (r && r.results ? r.results : []))
+            }
+          } else {
+            if (bookId.includes('Al-Kafi')) {
+              hadiths = await alKafiApi.getVolumeHadiths(Number(selectedVolume))
+            } else {
+              const response = await thaqalaynApi.searchBook(String(selectedVolume), '')
+              hadiths = response.results || []
             }
           }
 
-          if (!summary[categoryKey].chapters[chapterKey]) {
-            summary[categoryKey].chapters[chapterKey] = {
-              chapter: chapterKey,
-              chapterInCategoryId: hadith.chapterInCategoryId || 0,
-              hadithCount: 0,
-            }
+          if (!hadiths || hadiths.length === 0) {
+            setError('No hadiths found for this selection')
+            return
           }
 
-          summary[categoryKey].chapters[chapterKey].hadithCount++
-          summary[categoryKey].totalHadiths++
-        })
-
-        // Sort chapters within each category
-        Object.values(summary).forEach((category) => {
-          const sortedChapters: Record<string, ChapterSummary> = {}
-          const sortedEntries = Object.entries(category.chapters).sort(
-            ([, a], [, b]) => a.chapterInCategoryId - b.chapterInCategoryId,
-          )
-
-          sortedEntries.forEach(([key, value]) => {
-            sortedChapters[key] = value
+          summary = {}
+          hadiths.forEach((hadith) => {
+            const categoryKey = hadith.category || 'Uncategorized'
+            const chapterKey = hadith.chapter || 'No Chapter'
+            if (!summary![categoryKey]) {
+              summary![categoryKey] = {
+                category: categoryKey,
+                categoryId: hadith.categoryId || '',
+                chapters: {},
+                totalHadiths: 0,
+              }
+            }
+            if (!summary![categoryKey].chapters[chapterKey]) {
+              summary![categoryKey].chapters[chapterKey] = {
+                chapter: chapterKey,
+                chapterInCategoryId: hadith.chapterInCategoryId || 0,
+                hadithCount: 0,
+              }
+            }
+            summary![categoryKey].chapters[chapterKey].hadithCount++
+            summary![categoryKey].totalHadiths++
           })
 
-          category.chapters = sortedChapters
-        })
+          // Sort chapters within each category
+          Object.values(summary).forEach((category) => {
+            const sortedChapters: Record<string, ChapterSummary> = {}
+            Object.entries(category.chapters)
+              .sort(([, a], [, b]) => a.chapterInCategoryId - b.chapterInCategoryId)
+              .forEach(([k, v]) => {
+                sortedChapters[k] = v
+              })
+            category.chapters = sortedChapters
+          })
+        }
 
         // Sort categories to ensure Introduction comes before Content
         const sortedSummary: VolumeSummary = {}
         const categoryEntries = Object.entries(summary)
 
-        // Custom sort function for categories
         const sortCategories = (
           [keyA]: [string, CategorySummary],
           [keyB]: [string, CategorySummary],
@@ -160,14 +173,10 @@ export default function VolumeStructure({
           const normalizeKey = (key: string) => key.toLowerCase().trim()
           const normalizedA = normalizeKey(keyA)
           const normalizedB = normalizeKey(keyB)
-
-          // Introduction should come first
           if (normalizedA.includes('introduction') && !normalizedB.includes('introduction'))
             return -1
           if (!normalizedA.includes('introduction') && normalizedB.includes('introduction'))
             return 1
-
-          // Content should come after Introduction but before other categories
           if (
             normalizedA.includes('content') &&
             !normalizedB.includes('content') &&
@@ -180,8 +189,6 @@ export default function VolumeStructure({
             !normalizedA.includes('introduction')
           )
             return 1
-
-          // Default alphabetical sort for other categories
           return normalizedA.localeCompare(normalizedB)
         }
 
@@ -192,7 +199,6 @@ export default function VolumeStructure({
         setVolumeSummary(sortedSummary)
       } catch {
         setError(`Failed to load structure for selected volume(s)`)
-        // Error logging removed
       } finally {
         setLoading(false)
       }

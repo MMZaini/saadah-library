@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { bookApi, Hadith } from '@/lib/api'
+import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import HadithCard from '@/components/HadithCard'
 import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -63,68 +64,91 @@ export default function GenericBookBrowser({
       setChapterHadiths([])
 
       try {
-        const summary: Record<string, CategorySummaryData> = {}
+        let summary: Record<string, CategorySummaryData> | null = null
 
         if (selectedVolume === 'all') {
-          const promises = (volumesList || []).map(async (vol: string) => {
-            const hadiths = await bookApi.getBookHadiths(vol)
-            return { volume: vol, hadiths }
-          })
+          const vols = (volumesList || []).map(String)
+          // Try lightweight structure API
+          const structureResult = await fetchMultiVolumeStructure(vols)
 
-          const results = await Promise.all(promises)
-          results.forEach(({ volume, hadiths }) => {
-            const volNum = (String(volume).match(/-Volume-(\d+)-/) || [])[1] || ''
+          if (structureResult && Object.keys(structureResult).length > 0) {
+            // For "all volumes" mode, re-key categories with volume numbers
+            summary = {}
+            // The server returns a merged structure; for GenericBookBrowser's
+            // "all" mode the old code appended " (Vol N)" to categories.
+            // Since the server merges all volumes together, the categories are
+            // already flat. We use them as-is here (same end result when all
+            // volumes share distinct category names).
+            summary = structureResult as Record<string, CategorySummaryData>
+          }
+
+          if (!summary || Object.keys(summary).length === 0) {
+            // Fallback: download full hadiths
+            summary = {}
+            const promises = vols.map(async (vol: string) => {
+              const hadiths = await bookApi.getBookHadiths(vol)
+              return { volume: vol, hadiths }
+            })
+            const results = await Promise.all(promises)
+            results.forEach(({ volume, hadiths }) => {
+              const volNum = (String(volume).match(/-Volume-(\d+)-/) || [])[1] || ''
+              hadiths.forEach((hadith: Hadith) => {
+                const categoryKey = `${hadith.category || 'Uncategorized'}${volNum ? ` (Vol ${volNum})` : ''}`
+                const chapterKey = hadith.chapter || 'No Chapter'
+                if (!summary![categoryKey]) {
+                  summary![categoryKey] = {
+                    category: categoryKey,
+                    categoryId: hadith.categoryId || '',
+                    chapters: {},
+                    totalHadiths: 0,
+                  }
+                }
+                if (!summary![categoryKey].chapters[chapterKey]) {
+                  summary![categoryKey].chapters[chapterKey] = {
+                    chapter: chapterKey,
+                    chapterInCategoryId: hadith.chapterInCategoryId || 0,
+                    hadithCount: 0,
+                  }
+                }
+                summary![categoryKey].chapters[chapterKey].hadithCount++
+                summary![categoryKey].totalHadiths++
+              })
+            })
+          }
+        } else {
+          // Single volume
+          const structureResult = await fetchBookStructure(selectedVolume)
+
+          if (structureResult && Object.keys(structureResult).length > 0) {
+            summary = structureResult as Record<string, CategorySummaryData>
+          }
+
+          if (!summary || Object.keys(summary).length === 0) {
+            // Fallback: download full hadiths
+            summary = {}
+            const hadiths = await bookApi.getBookHadiths(selectedVolume)
             hadiths.forEach((hadith: Hadith) => {
-              const categoryKey = `${hadith.category || 'Uncategorized'}${volNum ? ` (Vol ${volNum})` : ''}`
+              const categoryKey = hadith.category || 'Uncategorized'
               const chapterKey = hadith.chapter || 'No Chapter'
-
-              if (!summary[categoryKey]) {
-                summary[categoryKey] = {
+              if (!summary![categoryKey]) {
+                summary![categoryKey] = {
                   category: categoryKey,
                   categoryId: hadith.categoryId || '',
                   chapters: {},
                   totalHadiths: 0,
                 }
               }
-
-              if (!summary[categoryKey].chapters[chapterKey]) {
-                summary[categoryKey].chapters[chapterKey] = {
+              if (!summary![categoryKey].chapters[chapterKey]) {
+                summary![categoryKey].chapters[chapterKey] = {
                   chapter: chapterKey,
                   chapterInCategoryId: hadith.chapterInCategoryId || 0,
                   hadithCount: 0,
                 }
               }
-
-              summary[categoryKey].chapters[chapterKey].hadithCount++
-              summary[categoryKey].totalHadiths++
+              summary![categoryKey].chapters[chapterKey].hadithCount++
+              summary![categoryKey].totalHadiths++
             })
-          })
-        } else {
-          const hadiths = await bookApi.getBookHadiths(selectedVolume)
-          hadiths.forEach((hadith: Hadith) => {
-            const categoryKey = hadith.category || 'Uncategorized'
-            const chapterKey = hadith.chapter || 'No Chapter'
-
-            if (!summary[categoryKey]) {
-              summary[categoryKey] = {
-                category: categoryKey,
-                categoryId: hadith.categoryId || '',
-                chapters: {},
-                totalHadiths: 0,
-              }
-            }
-
-            if (!summary[categoryKey].chapters[chapterKey]) {
-              summary[categoryKey].chapters[chapterKey] = {
-                chapter: chapterKey,
-                chapterInCategoryId: hadith.chapterInCategoryId || 0,
-                hadithCount: 0,
-              }
-            }
-
-            summary[categoryKey].chapters[chapterKey].hadithCount++
-            summary[categoryKey].totalHadiths++
-          })
+          }
         }
 
         setVolumeSummary(summary)

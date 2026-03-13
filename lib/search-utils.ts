@@ -410,45 +410,6 @@ export function flexibleEnglishMatch(
   })
 }
 
-/**
- * Smart search that automatically determines the best search strategy
- */
-export function smartSearch(
-  text: string,
-  query: string,
-  options: {
-    caseInsensitive?: boolean
-  } = {},
-): boolean {
-  const { caseInsensitive = true } = options
-
-  const processedText = caseInsensitive ? text.toLowerCase() : text
-  const processedQuery = caseInsensitive ? query.toLowerCase() : query
-
-  // If query is short (1-2 words), use flexible matching
-  const words = processedQuery.trim().split(/\s+/)
-
-  if (words.length <= 2) {
-    return flexibleEnglishMatch(processedText, words, {
-      caseInsensitive,
-      useSynonyms: true,
-      useStemming: true,
-    })
-  }
-
-  // For longer queries, use phrase matching with some flexibility
-  if (processedText.includes(processedQuery)) {
-    return true
-  }
-
-  // Fall back to flexible word matching
-  return flexibleEnglishMatch(processedText, words, {
-    caseInsensitive,
-    useSynonyms: true,
-    useStemming: false, // Less aggressive for longer queries
-  })
-}
-
 // (duplicate simple flexibleArabicWordMatch removed — keeping the improved implementation above)
 
 /**

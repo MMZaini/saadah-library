@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { books } from '@/lib/books'
 import { Hadith } from '@/lib/api'
 import BookCard from '@/components/BookCard'
@@ -20,6 +20,7 @@ export default function Page() {
   const [searchResults, setSearchResults] = useState<Hadith[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const bookScopeRef = useRef<string[]>([])
 
   useEffect(() => {
     const saved = restoreScrollPosition()
@@ -63,8 +64,10 @@ export default function Page() {
         setIsSearching(true)
         setSearchError(null)
         try {
+          const bookIds = bookScopeRef.current
+          const bookParam = bookIds.length > 0 ? `&book=${bookIds.join(',')}` : ''
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}`,
+            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}${bookParam}`,
           )
           if (!res.ok) throw new Error('Search request failed')
           const data = await res.json()
@@ -113,6 +116,16 @@ export default function Page() {
     if (searchQuery.trim()) addToHistory(searchQuery.trim())
     setShowHistory(false)
   }
+
+  const handleBookScopeChange = useCallback(
+    (ids: string[]) => {
+      bookScopeRef.current = ids
+      if (searchQuery.trim()) {
+        debouncedSearch(searchQuery)
+      }
+    },
+    [searchQuery, debouncedSearch],
+  )
 
   const handleHistorySelect = (query: string) => {
     setSearchQuery(query)
@@ -191,6 +204,7 @@ export default function Page() {
         onClearSearch={handleClearSearch}
         searchContext="all-books"
         searchError={searchError}
+        onBookScopeChange={handleBookScopeChange}
       />
 
       {/* Book grid */}
