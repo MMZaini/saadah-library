@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi } from '@/lib/api'
+import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import { useNavigation } from '@/lib/navigation-context'
 import { cn } from '@/lib/utils'
 
@@ -63,70 +64,75 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
       setExpandedCategories(new Set())
 
       try {
-        let hadiths
+        // Determine target book IDs
+        const targetBookIds =
+          selectedVolume === 'all'
+            ? alKafiVolumes.map((vol) => `Al-Kafi-Volume-${vol}-Kulayni`)
+            : [`Al-Kafi-Volume-${selectedVolume}-Kulayni`]
 
-        if (selectedVolume === 'all') {
-          // Load hadiths from all Al-Kafi volumes
-          const allVolumeHadiths = await Promise.all(
-            alKafiVolumes.map((vol) => alKafiApi.getVolumeHadiths(vol)),
-          )
-          hadiths = allVolumeHadiths.flat()
+        // Try the lightweight structure API first
+        let summary: VolumeSummary | null = null
+        if (targetBookIds.length === 1) {
+          summary = (await fetchBookStructure(targetBookIds[0])) as VolumeSummary | null
         } else {
-          // Load hadiths from specific volume
-          hadiths = await alKafiApi.getVolumeHadiths(Number(selectedVolume))
+          summary = (await fetchMultiVolumeStructure(targetBookIds)) as VolumeSummary | null
         }
 
-        if (!hadiths || hadiths.length === 0) {
-          setError('No hadiths found for this selection')
-          return
-        }
-
-        // Build summary structure
-        const summary: VolumeSummary = {}
-
-        hadiths.forEach((hadith) => {
-          const categoryKey = hadith.category || 'Uncategorized'
-          const chapterKey = hadith.chapter || 'No Chapter'
-
-          if (!summary[categoryKey]) {
-            summary[categoryKey] = {
-              category: categoryKey,
-              categoryId: hadith.categoryId || '',
-              chapters: {},
-              totalHadiths: 0,
-            }
+        // Fallback: download full hadiths and build summary client-side
+        if (!summary || Object.keys(summary).length === 0) {
+          let hadiths
+          if (selectedVolume === 'all') {
+            const allVolumeHadiths = await Promise.all(
+              alKafiVolumes.map((vol) => alKafiApi.getVolumeHadiths(vol)),
+            )
+            hadiths = allVolumeHadiths.flat()
+          } else {
+            hadiths = await alKafiApi.getVolumeHadiths(Number(selectedVolume))
           }
 
-          if (!summary[categoryKey].chapters[chapterKey]) {
-            summary[categoryKey].chapters[chapterKey] = {
-              chapter: chapterKey,
-              chapterInCategoryId: hadith.chapterInCategoryId || 0,
-              hadithCount: 0,
-            }
+          if (!hadiths || hadiths.length === 0) {
+            setError('No hadiths found for this selection')
+            return
           }
 
-          summary[categoryKey].chapters[chapterKey].hadithCount++
-          summary[categoryKey].totalHadiths++
-        })
-
-        // Sort chapters within each category
-        Object.values(summary).forEach((category) => {
-          const sortedChapters: Record<string, ChapterSummary> = {}
-          const sortedEntries = Object.entries(category.chapters).sort(
-            ([, a], [, b]) => a.chapterInCategoryId - b.chapterInCategoryId,
-          )
-
-          sortedEntries.forEach(([key, value]) => {
-            sortedChapters[key] = value
+          summary = {}
+          hadiths.forEach((hadith) => {
+            const categoryKey = hadith.category || 'Uncategorized'
+            const chapterKey = hadith.chapter || 'No Chapter'
+            if (!summary![categoryKey]) {
+              summary![categoryKey] = {
+                category: categoryKey,
+                categoryId: hadith.categoryId || '',
+                chapters: {},
+                totalHadiths: 0,
+              }
+            }
+            if (!summary![categoryKey].chapters[chapterKey]) {
+              summary![categoryKey].chapters[chapterKey] = {
+                chapter: chapterKey,
+                chapterInCategoryId: hadith.chapterInCategoryId || 0,
+                hadithCount: 0,
+              }
+            }
+            summary![categoryKey].chapters[chapterKey].hadithCount++
+            summary![categoryKey].totalHadiths++
           })
 
-          category.chapters = sortedChapters
-        })
+          // Sort chapters within each category
+          Object.values(summary).forEach((category) => {
+            const sortedChapters: Record<string, ChapterSummary> = {}
+            Object.entries(category.chapters)
+              .sort(([, a], [, b]) => a.chapterInCategoryId - b.chapterInCategoryId)
+              .forEach(([k, v]) => {
+                sortedChapters[k] = v
+              })
+            category.chapters = sortedChapters
+          })
+        }
 
         setVolumeSummary(summary)
       } catch {
         setError(`Failed to load structure for selected volume(s)`)
-        // Error logging removed
       } finally {
         setLoading(false)
       }

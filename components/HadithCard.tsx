@@ -200,7 +200,10 @@ const HadithCard = ({
       if (segments.length === 1 && !segments[0].highlight) return display
       return segments.map((seg, i) =>
         seg.highlight ? (
-          <mark key={i} className="bg-accent/25 rounded-sm text-inherit">
+          <mark
+            key={i}
+            className="bg-accent/15 rounded-sm text-inherit underline decoration-accent decoration-1 underline-offset-2"
+          >
             {seg.text}
           </mark>
         ) : (

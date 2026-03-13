@@ -7,14 +7,24 @@ import {
   isArabicQuery,
   normalizeArabic,
   flexibleEnglishMatch,
-  smartSearch,
   flexibleArabicWordMatch,
 } from '@/lib/search-utils'
 import { cn } from '@/lib/utils'
+import { SEARCHABLE_BOOKS } from '@/lib/books-config'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  Info,
+  Loader2,
+} from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface SearchInterfaceProps {
   searchQuery: string
@@ -25,6 +35,7 @@ interface SearchInterfaceProps {
   searchContext?: string
   searchError?: string | null
   highlightQuery?: string
+  onBookScopeChange?: (volumeIds: string[]) => void
 }
 
 const RESULTS_PER_PAGE = 10
@@ -48,29 +59,23 @@ const GRADING_OPTIONS = [
 
 const SEARCH_MODES = [
   {
-    key: 'smartSearch' as const,
-    label: 'Smart Search',
-    description: 'Automatically picks the best strategy. Includes Islamic term synonyms.',
-    recommended: true,
-  },
-  {
     key: 'flexibleMatching' as const,
-    label: 'Flexible Matching',
-    description: 'Word variations + Islamic terminology synonyms.',
+    label: 'Flexible',
+    description: 'Stems words and expands Islamic terms (e.g. "prayer" also finds "salah").',
   },
   {
     key: 'exactWords' as const,
     label: 'Exact Words',
-    description: 'Match whole words exactly.',
+    description: 'Every word must appear exactly as typed, but in any order.',
   },
   {
     key: 'exactPhrase' as const,
     label: 'Exact Phrase',
-    description: 'Search for the exact phrase as written.',
+    description: 'The entire phrase must appear exactly and in order.',
   },
 ]
 
-type SearchMode = 'exactPhrase' | 'exactWords' | 'flexibleMatching' | 'smartSearch'
+type SearchMode = 'exactPhrase' | 'exactWords' | 'flexibleMatching'
 
 export default function SearchInterface({
   searchQuery,
@@ -82,31 +87,133 @@ export default function SearchInterface({
   searchContext = 'all-books',
   searchError = null,
   highlightQuery,
+  onBookScopeChange,
 }: SearchInterfaceProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedGradings, setSelectedGradings] = useState<string[]>(['all'])
   const [selectedBooks, setSelectedBooks] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
-  const [activeMode, setActiveMode] = useState<SearchMode | null>(null)
+  const [activeModes, setActiveModes] = useState<Set<SearchMode>>(new Set())
+
+  // Book scope pre-filter (global search only)
+  const [scopeBooks, setScopeBooks] = useState<string[]>([])
+  const [scopeVolumes, setScopeVolumes] = useState<Record<string, number[]>>({})
+  const showBookScope = searchContext === 'all-books' || !searchContext
+
+  // Compute API book IDs from scope selection
+  const scopeBookIds = useMemo(() => {
+    if (scopeBooks.length === 0) return []
+    const ids: string[] = []
+    for (const bookKey of scopeBooks) {
+      const book = SEARCHABLE_BOOKS.find((b) => b.key === bookKey)
+      if (!book) continue
+      if (book.volumeCount <= 1) {
+        ids.push(...book.volumeIds)
+      } else {
+        const vols = scopeVolumes[bookKey]
+        if (vols && vols.length > 0) {
+          for (const v of vols) {
+            if (v >= 1 && v <= book.volumeCount) ids.push(book.volumeIds[v - 1])
+          }
+        } else {
+          ids.push(...book.volumeIds)
+        }
+      }
+    }
+    return ids
+  }, [scopeBooks, scopeVolumes])
+
+  // Notify parent when scope changes
+  const scopeKey = scopeBookIds.join(',')
+  useEffect(() => {
+    onBookScopeChange?.(scopeBookIds)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scopeKey])
+
+  const toggleScopeBook = (bookKey: string) => {
+    const book = SEARCHABLE_BOOKS.find((b) => b.key === bookKey)
+    if (!book) return
+    setScopeBooks((prev) => {
+      if (prev.includes(bookKey)) {
+        setScopeVolumes((v) => {
+          const next = { ...v }
+          delete next[bookKey]
+          return next
+        })
+        return prev.filter((k) => k !== bookKey)
+      } else {
+        if (book.volumeCount > 1) {
+          setScopeVolumes((v) => ({
+            ...v,
+            [bookKey]: Array.from({ length: book.volumeCount }, (_, i) => i + 1),
+          }))
+        }
+        return [...prev, bookKey]
+      }
+    })
+  }
+
+  const toggleScopeVolume = (bookKey: string, volNum: number) => {
+    setScopeVolumes((prev) => {
+      const current = prev[bookKey] || []
+      const next = current.includes(volNum)
+        ? current.filter((v) => v !== volNum)
+        : [...current, volNum].sort((a, b) => a - b)
+      if (next.length === 0) {
+        setScopeBooks((sb) => sb.filter((k) => k !== bookKey))
+        const { [bookKey]: _, ...rest } = prev
+        return rest
+      }
+      return { ...prev, [bookKey]: next }
+    })
+  }
 
   const shouldShowFilters = true
 
-  // Derive unique book names from results for filter chips
-  const availableBooks = useMemo(() => {
-    const bookMap = new Map<string, string>() // bookId -> displayName
+  // Derive unique books/volumes from results for filter chips.
+  // When all results share the same display name (e.g. all Al-Kāfi volumes),
+  // present them as selectable volumes instead of duplicate book names.
+  const { availableBooks, isVolumeMode } = useMemo(() => {
+    const bookMap = new Map<string, { name: string; volume?: number }>() // bookId -> info
     searchResults.forEach((h) => {
       if (h.bookId && h.book && !bookMap.has(h.bookId)) {
-        bookMap.set(h.bookId, h.book)
+        bookMap.set(h.bookId, { name: h.book, volume: h.volume })
       }
     })
-    return Array.from(bookMap.entries())
-      .map(([id, name]) => ({ id, name }))
+
+    const entries = Array.from(bookMap.entries()).map(([id, info]) => ({
+      id,
+      name: info.name,
+      volume: info.volume,
+    }))
+
+    // Detect if all entries share the same display name (multi-volume same book)
+    const uniqueNames = new Set(entries.map((e) => e.name))
+    const isVolumeMode = uniqueNames.size === 1 && entries.length > 1
+
+    if (isVolumeMode) {
+      // Sort by volume number and label as "Vol. N"
+      const sorted = entries
+        .sort((a, b) => (a.volume || 0) - (b.volume || 0))
+        .map((e) => ({
+          id: e.id,
+          name: e.volume ? `Vol. ${e.volume}` : e.name,
+        }))
+      return { availableBooks: sorted, isVolumeMode: true }
+    }
+
+    // Normal book mode — sort alphabetically
+    const sorted = entries
+      .map(({ id, name }) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name))
+    return { availableBooks: sorted, isVolumeMode: false }
   }, [searchResults])
 
   const hasActiveFilters = () => {
     const hasGrading = !selectedGradings.includes('all') && selectedGradings.length > 0
-    return hasGrading || activeMode !== null || selectedBooks.length > 0
+    const hasBookScope = showBookScope && scopeBooks.length > 0
+    const hasBookPost = !showBookScope && selectedBooks.length > 0
+    return hasGrading || activeModes.size > 0 || hasBookScope || hasBookPost
   }
 
   const handleGradingChange = (value: string, checked: boolean) => {
@@ -124,19 +231,23 @@ export default function SearchInterface({
   const clearAllFilters = () => {
     setSelectedGradings(['all'])
     setSelectedBooks([])
-    setActiveMode(null)
+    setActiveModes(new Set())
+    if (showBookScope) {
+      setScopeBooks([])
+      setScopeVolumes({})
+    }
   }
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, selectedGradings, selectedBooks, activeMode])
+  }, [searchQuery, selectedGradings, selectedBooks, activeModes, scopeBooks, scopeVolumes])
 
   // ── Filter + sort logic ──
   const filteredResults = useMemo(() => {
     let filtered = [...searchResults]
 
-    // Apply search mode filtering
-    if (activeMode && searchQuery.trim()) {
+    // Apply search mode filtering (OR across selected modes — hadith passes if ANY mode matches)
+    if (activeModes.size > 0 && searchQuery.trim()) {
       filtered = searchResults.filter((hadith) => {
         const text = searchQuery.trim()
         const arabic = isArabicQuery(text)
@@ -147,39 +258,48 @@ export default function SearchInterface({
         const all = `${eng} ${ar}`.trim()
         const q = arabic ? normalizeArabic(text) : text.toLowerCase()
 
-        if (activeMode === 'exactPhrase') {
-          return arabic ? ar.includes(q) : all.includes(q)
-        }
-        if (activeMode === 'exactWords') {
-          const words = q.split(/\s+/).filter(Boolean)
-          if (arabic) {
-            const set = new Set(ar.split(/\s+/).filter(Boolean))
-            return words.every((w) => set.has(w))
+        // Return true if the hadith matches at least one selected mode
+        for (const mode of activeModes) {
+          if (mode === 'exactPhrase') {
+            if (arabic ? ar.includes(q) : all.includes(q)) return true
           }
-          return words.every((w) => {
-            const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            return new RegExp('\\b' + esc + '\\b').test(all)
-          })
-        }
-        if (activeMode === 'flexibleMatching') {
-          const words = q.split(/\s+/).filter(Boolean)
-          if (arabic) return words.every((w) => flexibleArabicWordMatch(ar, w))
-          return flexibleEnglishMatch(all, words, {
-            caseInsensitive: true,
-            useSynonyms: true,
-            useStemming: true,
-          })
-        }
-        if (activeMode === 'smartSearch') {
-          if (arabic) return ar.includes(q)
-          return smartSearch(all, q, { caseInsensitive: true })
+          if (mode === 'exactWords') {
+            const words = q.split(/\s+/).filter(Boolean)
+            if (arabic) {
+              const set = new Set(ar.split(/\s+/).filter(Boolean))
+              if (words.every((w) => set.has(w))) return true
+            } else {
+              if (
+                words.every((w) => {
+                  const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                  return new RegExp('\\b' + esc + '\\b').test(all)
+                })
+              )
+                return true
+            }
+          }
+          if (mode === 'flexibleMatching') {
+            const words = q.split(/\s+/).filter(Boolean)
+            if (arabic) {
+              if (words.every((w) => flexibleArabicWordMatch(ar, w))) return true
+            } else {
+              if (
+                flexibleEnglishMatch(all, words, {
+                  caseInsensitive: true,
+                  useSynonyms: true,
+                  useStemming: true,
+                })
+              )
+                return true
+            }
+          }
         }
         return false
       })
     }
 
-    // Apply book filters
-    if (selectedBooks.length > 0) {
+    // Apply book post-filter (non-global search only; global uses API-level scoping)
+    if (!showBookScope && selectedBooks.length > 0) {
       const bookSet = new Set(selectedBooks)
       filtered = filtered.filter((h) => bookSet.has(h.bookId))
     }
@@ -221,7 +341,15 @@ export default function SearchInterface({
 
     filtered.sort((a, b) => (a.volume || 0) - (b.volume || 0) || (a.id || 0) - (b.id || 0))
     return filtered
-  }, [searchResults, selectedGradings, selectedBooks, activeMode, searchQuery, shouldShowFilters])
+  }, [
+    searchResults,
+    selectedGradings,
+    selectedBooks,
+    activeModes,
+    searchQuery,
+    shouldShowFilters,
+    showBookScope,
+  ])
 
   const isArabicSearch = useMemo(() => isArabicQuery(searchQuery), [searchQuery])
   const showArabicDefault = useMemo(
@@ -257,10 +385,22 @@ export default function SearchInterface({
             Results{contextLabel} for &ldquo;{searchQuery}&rdquo;
           </h2>
           <p className="mt-1 text-sm text-foreground-muted">
-            <span className="font-medium text-accent">{filteredResults.length}</span>{' '}
-            {filteredResults.length === 1 ? 'hadith' : 'hadiths'} found
-            {filteredResults.length !== searchResults.length && shouldShowFilters && (
-              <span className="text-foreground-faint"> (filtered from {searchResults.length})</span>
+            {isSearching ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin text-accent" />
+                Searching…
+              </span>
+            ) : (
+              <>
+                <span className="font-medium text-accent">{filteredResults.length}</span>{' '}
+                {filteredResults.length === 1 ? 'hadith' : 'hadiths'} found
+                {filteredResults.length !== searchResults.length && shouldShowFilters && (
+                  <span className="text-foreground-faint">
+                    {' '}
+                    (filtered from {searchResults.length})
+                  </span>
+                )}
+              </>
             )}
           </p>
         </div>
@@ -292,8 +432,8 @@ export default function SearchInterface({
             {hasActiveFilters() && (
               <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
                 {selectedGradings.filter((g) => g !== 'all').length +
-                  (activeMode ? 1 : 0) +
-                  selectedBooks.length}
+                  activeModes.size +
+                  (showBookScope ? scopeBooks.length : selectedBooks.length)}
               </Badge>
             )}
           </Button>
@@ -313,10 +453,80 @@ export default function SearchInterface({
       {/* ── Filter panel ── */}
       {showFilters && shouldShowFilters && (
         <div className="mb-5 rounded-lg border border-border bg-surface-1 p-4 sm:p-5">
-          {/* Book filter (shown when results from multiple books) */}
-          {availableBooks.length > 1 && (
+          {/* Book scope selector (global search) */}
+          {showBookScope && (
             <>
-              <h3 className="mb-3 text-sm font-medium text-foreground">Book</h3>
+              <div>
+                <h3 className="mb-2 text-sm font-medium text-foreground">Search In</h3>
+                <p className="mb-3 text-[11px] leading-snug text-foreground-faint">
+                  {scopeBooks.length === 0
+                    ? 'All books. Select to narrow your search.'
+                    : `${scopeBooks.length} book${scopeBooks.length === 1 ? '' : 's'} selected`}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SEARCHABLE_BOOKS.map((book) => {
+                    const isActive = scopeBooks.includes(book.key)
+                    return (
+                      <button
+                        key={book.key}
+                        onClick={() => toggleScopeBook(book.key)}
+                        className={cn(
+                          'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                          isActive
+                            ? 'bg-accent/10 border-accent text-accent'
+                            : 'border-border text-foreground-muted hover:bg-surface-2',
+                        )}
+                      >
+                        {book.displayName}
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Volume sub-filters for selected multi-volume books */}
+                {scopeBooks
+                  .filter((key) => {
+                    const book = SEARCHABLE_BOOKS.find((b) => b.key === key)
+                    return book && book.volumeCount > 1
+                  })
+                  .map((bookKey) => {
+                    const book = SEARCHABLE_BOOKS.find((b) => b.key === bookKey)!
+                    const selectedVols = scopeVolumes[bookKey] || []
+                    return (
+                      <div key={bookKey} className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                        <span className="mr-0.5 text-[11px] text-foreground-faint">
+                          {book.displayName}:
+                        </span>
+                        {Array.from({ length: book.volumeCount }, (_, i) => i + 1).map((volNum) => {
+                          const isVolumeActive = selectedVols.includes(volNum)
+                          return (
+                            <button
+                              key={volNum}
+                              onClick={() => toggleScopeVolume(bookKey, volNum)}
+                              className={cn(
+                                'rounded border px-1.5 py-0.5 text-[11px] font-medium transition-colors',
+                                isVolumeActive
+                                  ? 'bg-accent/10 border-accent text-accent'
+                                  : 'border-border text-foreground-muted hover:bg-surface-2',
+                              )}
+                            >
+                              Vol. {volNum}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )
+                  })}
+              </div>
+              <Separator className="my-4" />
+            </>
+          )}
+
+          {/* Book / Volume post-filter (non-global search, derived from results) */}
+          {!showBookScope && availableBooks.length > 1 && (
+            <>
+              <h3 className="mb-3 text-sm font-medium text-foreground">
+                {isVolumeMode ? 'Volume' : 'Book'}
+              </h3>
               <div className="flex flex-wrap gap-1.5">
                 {availableBooks.map((b) => {
                   const active = selectedBooks.includes(b.id)
@@ -344,9 +554,63 @@ export default function SearchInterface({
             </>
           )}
 
+          {/* Search mode */}
+          <div>
+            <h3 className="mb-3 text-sm font-medium text-foreground">Search Mode</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {SEARCH_MODES.map((mode) => {
+                const isActive = activeModes.has(mode.key)
+                return (
+                  <button
+                    key={mode.key}
+                    onClick={() =>
+                      setActiveModes((prev) => {
+                        const next = new Set(prev)
+                        if (next.has(mode.key)) next.delete(mode.key)
+                        else next.add(mode.key)
+                        return next
+                      })
+                    }
+                    className={cn(
+                      'group rounded-lg border px-3 py-2.5 text-left transition-all',
+                      isActive
+                        ? 'bg-accent/5 ring-accent/20 border-accent ring-1'
+                        : 'border-border hover:border-foreground-faint hover:bg-surface-2',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'block text-xs font-semibold',
+                        isActive ? 'text-accent' : 'text-foreground',
+                      )}
+                    >
+                      {mode.label}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-foreground-muted">
+                      {mode.description}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <Separator className="my-4" />
+
           {/* Gradings */}
           <div>
-            <h3 className="mb-3 text-sm font-medium text-foreground">Grading Classification</h3>
+            <h3 className="mb-3 flex items-center gap-1.5 text-sm font-medium text-foreground">
+              Grading Classification
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 cursor-help text-foreground-faint" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px] text-center">
+                  Gradings are mainly available for Al-Kāfi. Most other books do not include grading
+                  data.
+                </TooltipContent>
+              </Tooltip>
+            </h3>
             <div className="flex flex-wrap gap-1.5">
               {GRADING_OPTIONS.map((opt) => {
                 const active = selectedGradings.includes(opt.value)
@@ -368,40 +632,6 @@ export default function SearchInterface({
                   </button>
                 )
               })}
-            </div>
-          </div>
-
-          <Separator className="my-4" />
-
-          {/* Search mode */}
-          <div>
-            <h3 className="mb-3 text-sm font-medium text-foreground">
-              Search Mode{' '}
-              <span className="text-xs font-normal text-foreground-faint">(select one)</span>
-            </h3>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {SEARCH_MODES.map((mode) => (
-                <button
-                  key={mode.key}
-                  onClick={() => setActiveMode(activeMode === mode.key ? null : mode.key)}
-                  className={cn(
-                    'rounded-md border p-3 text-left transition-colors',
-                    activeMode === mode.key
-                      ? 'bg-accent/5 border-accent'
-                      : 'border-border hover:bg-surface-2',
-                  )}
-                >
-                  <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                    {mode.label}
-                    {mode.recommended && (
-                      <Badge variant="info" className="text-[10px]">
-                        Recommended
-                      </Badge>
-                    )}
-                  </span>
-                  <p className="mt-0.5 text-xs text-foreground-muted">{mode.description}</p>
-                </button>
-              ))}
             </div>
           </div>
 
@@ -427,13 +657,57 @@ export default function SearchInterface({
                       </Badge>
                     ) : null
                   })}
-                {selectedBooks.map((bid) => {
-                  const b = availableBooks.find((ab) => ab.id === bid)
-                  return b ? (
-                    <Badge key={bid} variant="outline" className="gap-1 pr-1">
-                      {b.name}
+                {showBookScope
+                  ? scopeBooks.map((bookKey) => {
+                      const book = SEARCHABLE_BOOKS.find((b) => b.key === bookKey)
+                      if (!book) return null
+                      const vols = scopeVolumes[bookKey]
+                      const volLabel =
+                        book.volumeCount > 1 && vols && vols.length < book.volumeCount
+                          ? ` (${vols.length}/${book.volumeCount} vols)`
+                          : ''
+                      return (
+                        <Badge key={bookKey} variant="outline" className="gap-1 pr-1">
+                          {book.displayName}
+                          {volLabel}
+                          <button
+                            onClick={() => toggleScopeBook(bookKey)}
+                            className="rounded-full p-0.5 hover:bg-surface-2"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </Badge>
+                      )
+                    })
+                  : selectedBooks.map((bid) => {
+                      const b = availableBooks.find((ab) => ab.id === bid)
+                      return b ? (
+                        <Badge key={bid} variant="outline" className="gap-1 pr-1">
+                          {b.name}
+                          <button
+                            onClick={() =>
+                              setSelectedBooks((prev) => prev.filter((id) => id !== bid))
+                            }
+                            className="rounded-full p-0.5 hover:bg-surface-2"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </Badge>
+                      ) : null
+                    })}
+                {Array.from(activeModes).map((modeKey) => {
+                  const mode = SEARCH_MODES.find((m) => m.key === modeKey)
+                  return mode ? (
+                    <Badge key={modeKey} variant="outline" className="gap-1 pr-1">
+                      {mode.label}
                       <button
-                        onClick={() => setSelectedBooks((prev) => prev.filter((id) => id !== bid))}
+                        onClick={() =>
+                          setActiveModes((prev) => {
+                            const next = new Set(prev)
+                            next.delete(modeKey)
+                            return next
+                          })
+                        }
                         className="rounded-full p-0.5 hover:bg-surface-2"
                       >
                         <X className="h-2.5 w-2.5" />
@@ -441,17 +715,6 @@ export default function SearchInterface({
                     </Badge>
                   ) : null
                 })}
-                {activeMode && (
-                  <Badge variant="outline" className="gap-1 pr-1">
-                    {SEARCH_MODES.find((m) => m.key === activeMode)?.label}
-                    <button
-                      onClick={() => setActiveMode(null)}
-                      className="rounded-full p-0.5 hover:bg-surface-2"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  </Badge>
-                )}
               </div>
             </>
           )}
@@ -460,7 +723,11 @@ export default function SearchInterface({
 
       {/* ── Results list ── */}
       <div className="space-y-4">
-        {pageResults.length > 0 ? (
+        {isSearching && pageResults.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-7 w-7 animate-spin text-foreground-faint" />
+          </div>
+        ) : pageResults.length > 0 ? (
           pageResults.map((hadith, idx) => (
             <HadithCard
               key={hadith._id ?? `${hadith.bookId ?? 'book'}-${hadith.id ?? idx}`}
@@ -470,7 +737,7 @@ export default function SearchInterface({
               highlightQuery={highlightQuery || searchQuery}
             />
           ))
-        ) : !isSearching ? (
+        ) : (
           <div className="py-16 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-1">
               <Search className="h-5 w-5 text-foreground-faint" />
@@ -480,7 +747,7 @@ export default function SearchInterface({
             </h3>
             <p className="mt-1 text-sm text-foreground-muted">
               {searchResults.length === 0
-                ? `No hadiths found for "${searchQuery}"${contextLabel}`
+                ? `No hadith found for "${searchQuery}"${contextLabel}`
                 : 'Try adjusting your filters'}
             </p>
             {hasActiveFilters() && searchResults.length > 0 && (
@@ -489,7 +756,7 @@ export default function SearchInterface({
               </Button>
             )}
           </div>
-        ) : null}
+        )}
       </div>
 
       {/* ── Pagination ── */}

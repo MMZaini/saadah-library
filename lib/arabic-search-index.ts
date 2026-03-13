@@ -1,5 +1,5 @@
 import { thaqalaynApi, Hadith, BookInfo, QueryResponse } from './api'
-import { normalizeArabic, isArabicQuery, smartSearch } from './search-utils'
+import { normalizeArabic, isArabicQuery, flexibleEnglishMatch } from './search-utils'
 
 // Simple in-memory search index, built once and reused.
 // Contains both normalised Arabic and English text for fast local searches.
@@ -210,8 +210,13 @@ export async function searchEnglishLocally(
     list = list.filter((h) => bookIdSet.has(h.bookId))
   }
 
+  const words = q.split(/\s+/).filter(Boolean)
   const results = list.filter((h) =>
-    smartSearch(h.normalizedEnglishText, q, { caseInsensitive: true }),
+    flexibleEnglishMatch(h.normalizedEnglishText, words, {
+      caseInsensitive: true,
+      useSynonyms: true,
+      useStemming: true,
+    }),
   )
 
   return {

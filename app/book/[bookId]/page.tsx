@@ -367,7 +367,6 @@ export default function BookPage() {
                   {bookConfig?.volumeCount ?? (bookConfig?.volumes?.length || 1)}{' '}
                   {(bookConfig?.volumeCount ?? 1) > 1 ? 'Volumes' : 'Volume'}
                 </Badge>
-                <Badge variant="secondary">{displayTitle}</Badge>
                 {((bookConfig && bookConfig.bookId === 'Man-La-Yahduruh-al-Faqih') ||
                   bookInfo?.bookId?.startsWith('Man-La-Yahduruh-al-Faqih')) && (
                   <Badge variant="secondary">One of the Four Major Books</Badge>
