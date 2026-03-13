@@ -456,7 +456,7 @@ const HadithCard = ({
           <div>
             {hadith.thaqalaynSanad && (
               <p
-                className="hadith-english-text mb-2 line-clamp-3 font-mono text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
+                className="hadith-english-size-only mb-2 line-clamp-3 font-lora text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
                 style={{ fontSize: `${settings.englishFontSize}%` }}
               >
                 {hadith.thaqalaynSanad.trim()}
