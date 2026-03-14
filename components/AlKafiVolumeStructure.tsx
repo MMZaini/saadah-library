@@ -196,6 +196,8 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
 
   const getTouchHandlers = (key: string, onNavigate: () => void) => ({
     onTouchStart: (e: React.TouchEvent) => {
+      // Reset scroll tracking flag at start of new touch
+      ignoreNextClickRef.current = false
       const t = e.touches && e.touches[0]
       if (t) touchStartPosRef.current = { x: t.clientX, y: t.clientY }
       touchStartTimeRef.current = Date.now()
@@ -217,6 +219,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
       if (dx > 20 || dy > 20) {
         // Ignore subsequent click if there's significant movement (scroll)
         ignoreNextClickRef.current = true
+        clearLongPressTimer()
       }
     },
     onTouchEnd: (e: React.TouchEvent) => {
@@ -227,7 +230,8 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
       touchStartTimeRef.current = null
 
       const withinTapThreshold = duration < 250
-      if (!longPressTriggeredRef.current && withinTapThreshold) {
+      // Only navigate if it wasn't marked as a scroll (ignoreNextClickRef is false)
+      if (!longPressTriggeredRef.current && withinTapThreshold && !ignoreNextClickRef.current) {
         e.preventDefault()
         e.stopPropagation()
         ignoreNextClickRef.current = true

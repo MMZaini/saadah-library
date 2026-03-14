@@ -142,6 +142,42 @@ function gradingVariant(grading: string): 'sahih' | 'hasan' | 'daif' | 'secondar
   return 'secondary'
 }
 
+// â”€â”€ Grading Interactive Component â”€â”€
+
+function GradingBadge({
+  author,
+  grading,
+  tooltipContent,
+}: {
+  author: string
+  grading: string
+  tooltipContent: ReactNode
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  // We use close on blur to handle taps outside the tooltip effortlessly on mobile.
+  return (
+    <Tooltip open={isOpen} onOpenChange={setIsOpen}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            setIsOpen((prev) => !prev)
+          }}
+          onBlur={() => setIsOpen(false)}
+          className="transition-transform hover:scale-[1.02] focus:outline-none active:scale-[0.98]"
+        >
+          <Badge variant={gradingVariant(grading)} className="cursor-pointer text-[11px] shadow-sm">
+            {author}: {grading}
+          </Badge>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{tooltipContent}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 // â”€â”€ Main component â”€â”€
 
 const HadithCard = ({
@@ -204,7 +240,7 @@ const HadithCard = ({
         seg.highlight ? (
           <mark
             key={i}
-            className="bg-yellow-300/80 dark:bg-yellow-500/50 text-inherit rounded-sm px-0.5"
+            className="rounded-sm bg-yellow-300/80 px-0.5 text-inherit dark:bg-yellow-500/50"
           >
             {seg.text}
           </mark>
@@ -490,58 +526,34 @@ const HadithCard = ({
           <Separator className="my-3" />
           <div className="flex flex-wrap items-center gap-1.5">
             {hadith.majlisiGrading && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Badge
-                      variant={gradingVariant(hadith.majlisiGrading)}
-                      className="cursor-default text-[11px]"
-                    >
-                      Majlisi: {hadith.majlisiGrading}
-                    </Badge>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {gradingTooltipContent(gradingData.majlisi, hadith.majlisiGrading) ||
-                    'Majlisi grading'}
-                </TooltipContent>
-              </Tooltip>
+              <GradingBadge
+                author="Majlisi"
+                grading={hadith.majlisiGrading}
+                tooltipContent={
+                  gradingTooltipContent(gradingData.majlisi, hadith.majlisiGrading) ||
+                  'Majlisi grading'
+                }
+              />
             )}
             {hadith.mohseniGrading && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Badge
-                      variant={gradingVariant(hadith.mohseniGrading)}
-                      className="cursor-default text-[11px]"
-                    >
-                      Mohseni: {hadith.mohseniGrading}
-                    </Badge>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {gradingTooltipContent(gradingData.mohseni, hadith.mohseniGrading) ||
-                    'Mohseni grading'}
-                </TooltipContent>
-              </Tooltip>
+              <GradingBadge
+                author="Mohseni"
+                grading={hadith.mohseniGrading}
+                tooltipContent={
+                  gradingTooltipContent(gradingData.mohseni, hadith.mohseniGrading) ||
+                  'Mohseni grading'
+                }
+              />
             )}
             {hadith.behbudiGrading && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Badge
-                      variant={gradingVariant(hadith.behbudiGrading)}
-                      className="cursor-default text-[11px]"
-                    >
-                      Behbudi: {hadith.behbudiGrading}
-                    </Badge>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {gradingTooltipContent(gradingData.behbudi, hadith.behbudiGrading) ||
-                    'Behbudi grading'}
-                </TooltipContent>
-              </Tooltip>
+              <GradingBadge
+                author="Behbudi"
+                grading={hadith.behbudiGrading}
+                tooltipContent={
+                  gradingTooltipContent(gradingData.behbudi, hadith.behbudiGrading) ||
+                  'Behbudi grading'
+                }
+              />
             )}
           </div>
         </>
