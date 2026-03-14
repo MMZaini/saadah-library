@@ -279,6 +279,8 @@ export default function VolumeStructure({
 
   const getTouchHandlers = (key: string, onNavigate: () => void) => ({
     onTouchStart: (e: React.TouchEvent) => {
+      // Reset scroll tracking flag at start of new touch
+      ignoreNextClickRef.current = false
       const t = e.touches && e.touches[0]
       if (t) touchStartPosRef.current = { x: t.clientX, y: t.clientY }
       touchStartTimeRef.current = Date.now()
@@ -299,9 +301,8 @@ export default function VolumeStructure({
       const dy = Math.abs(t.clientY - start.y)
       // If significant move, cancel tap recognition but keep potential preview if long-press fires
       if (dx > 20 || dy > 20) {
-        // Do not immediately clear long-press; user may still want preview
-        // Just mark that synthetic click should be ignored if it happens
         ignoreNextClickRef.current = true
+        clearLongPressTimer()
       }
     },
     onTouchEnd: (e: React.TouchEvent) => {
@@ -312,8 +313,8 @@ export default function VolumeStructure({
       touchStartTimeRef.current = null
 
       const withinTapThreshold = duration < 250
-      // If long-press hasn't triggered and it's a quick tap, navigate now
-      if (!longPressTriggeredRef.current && withinTapThreshold) {
+      // If long-press hasn't triggered, it's a quick tap, and we haven't scrolled, navigate now
+      if (!longPressTriggeredRef.current && withinTapThreshold && !ignoreNextClickRef.current) {
         e.preventDefault()
         e.stopPropagation()
         ignoreNextClickRef.current = true // swallow the subsequent synthetic click
