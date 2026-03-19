@@ -44,16 +44,32 @@ const GRADING_OPTIONS = [
   { value: 'all', label: 'All Gradings' },
   { value: 'sahih', label: 'Sahih (ØµØ­ÙŠØ­)', keywords: ['ØµØ­ÙŠØ­', 'sahih', 'authentic'] },
   { value: 'hasan', label: 'Hasan (Ø­Ø³Ù†)', keywords: ['Ø­Ø³Ù†', 'hasan', 'good'] },
-  { value: 'muwathaq', label: 'Muwathaq (Ù…ÙˆØ«Ù‚)', keywords: ['Ù…ÙˆØ«Ù‚', 'muwathaq', 'reliable'] },
+  {
+    value: 'muwathaq',
+    label: 'Muwathaq (Ù…ÙˆØ«Ù‚)',
+    keywords: ['Ù…ÙˆØ«Ù‚', 'muwathaq', 'reliable'],
+  },
   { value: 'qawi', label: 'Qawi (Ù‚ÙˆÙŠ)', keywords: ['Ù‚ÙˆÙŠ', 'qawi', 'strong'] },
   { value: 'daif', label: 'Daif (Ø¶Ø¹ÙŠÙ)', keywords: ['Ø¶Ø¹ÙŠÙ', 'daif', 'weak'] },
   { value: 'majhul', label: 'Majhul (Ù…Ø¬Ù‡ÙˆÙ„)', keywords: ['Ù…Ø¬Ù‡ÙˆÙ„', 'majhul', 'unknown'] },
   { value: 'mursal', label: 'Mursal (Ù…Ø±Ø³Ù„)', keywords: ['Ù…Ø±Ø³Ù„', 'mursal'] },
-  { value: 'lam-yukhrijhu', label: 'Not Included (Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡)', keywords: ['Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡'] },
+  {
+    value: 'lam-yukhrijhu',
+    label: 'Not Included (Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡)',
+    keywords: ['Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡'],
+  },
   {
     value: 'other',
     label: 'Other Gradings',
-    keywords: ['Ù…Ù‚Ø·ÙˆØ¹', 'Ù…Ø¯Ù„Ø³', 'ØºØ±ÙŠØ¨', 'Ø¹Ø²ÙŠØ²', 'Ù…Ø´Ù‡ÙˆØ±', 'Ù…ØªÙˆØ§ØªØ±', 'Ø¢Ø­Ø§Ø¯'],
+    keywords: [
+      'Ù…Ù‚Ø·ÙˆØ¹',
+      'Ù…Ø¯Ù„Ø³',
+      'ØºØ±ÙŠØ¨',
+      'Ø¹Ø²ÙŠØ²',
+      'Ù…Ø´Ù‡ÙˆØ±',
+      'Ù…ØªÙˆØ§ØªØ±',
+      'Ø¢Ø­Ø§Ø¯',
+    ],
   },
 ]
 
@@ -265,7 +281,13 @@ export default function SearchInterface({
               if (ar.includes(q)) return true
             } else {
               const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-              if (new RegExp('(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])', 'iu').test(all)) return true
+              if (
+                new RegExp(
+                  '(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])',
+                  'iu',
+                ).test(all)
+              )
+                return true
             }
           }
           if (mode === 'exactWords') {
@@ -277,7 +299,10 @@ export default function SearchInterface({
               if (
                 words.every((w) => {
                   const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                  return new RegExp('(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])', 'iu').test(all)
+                  return new RegExp(
+                    '(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])',
+                    'iu',
+                  ).test(all)
                 })
               )
                 return true
@@ -333,7 +358,16 @@ export default function SearchInterface({
             return none || gradingText.includes('Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡')
           }
           if (sel === 'other') {
-            const common = ['ØµØ­ÙŠØ­', 'Ø­Ø³Ù†', 'Ù…ÙˆØ«Ù‚', 'Ù‚ÙˆÙŠ', 'Ø¶Ø¹ÙŠÙ', 'Ù…Ø¬Ù‡ÙˆÙ„', 'Ù…Ø±Ø³Ù„', 'Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡']
+            const common = [
+              'ØµØ­ÙŠØ­',
+              'Ø­Ø³Ù†',
+              'Ù…ÙˆØ«Ù‚',
+              'Ù‚ÙˆÙŠ',
+              'Ø¶Ø¹ÙŠÙ',
+              'Ù…Ø¬Ù‡ÙˆÙ„',
+              'Ù…Ø±Ø³Ù„',
+              'Ù„Ù… ÙŠØ®Ø±Ø¬Ù‡',
+            ]
             return (
               gradingText.trim().length > 0 &&
               !common.some((c) => gradingText.includes(c.toLowerCase()))
@@ -740,7 +774,7 @@ export default function SearchInterface({
               showViewChapter
               showArabicByDefault={showArabicDefault(hadith)}
               highlightQuery={highlightQuery || searchQuery}
-                exactMatch={activeModes.has('exactWords') || activeModes.has('exactPhrase')}
+              exactMatch={activeModes.has('exactWords') || activeModes.has('exactPhrase')}
             />
           ))
         ) : (

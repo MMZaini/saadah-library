@@ -421,7 +421,11 @@ export interface HighlightSegment {
   highlight: boolean
 }
 
-export function getHighlightSegments(text: string, query: string, options: { exactMatch?: boolean } = {}): HighlightSegment[] {
+export function getHighlightSegments(
+  text: string,
+  query: string,
+  options: { exactMatch?: boolean } = {},
+): HighlightSegment[] {
   if (!text || !query?.trim()) return [{ text, highlight: false }]
 
   const trimmed = query.trim()
@@ -433,7 +437,11 @@ export function getHighlightSegments(text: string, query: string, options: { exa
   return highlightEnglishSegments(text, trimmed, options)
 }
 
-function highlightEnglishSegments(text: string, query: string, options: { exactMatch?: boolean } = {}): HighlightSegment[] {
+function highlightEnglishSegments(
+  text: string,
+  query: string,
+  options: { exactMatch?: boolean } = {},
+): HighlightSegment[] {
   // Escape regex special chars and split query into words
   const words = query
     .split(/\s+/)
