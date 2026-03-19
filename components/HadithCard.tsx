@@ -413,9 +413,6 @@ const HadithCard = ({
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary" className="text-[11px]">
-              {hadith.book} {hadith.volume ? `Â· Vol. ${hadith.volume}` : ''}
-            </Badge>
             <span className="text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
           </div>
         </div>
@@ -446,10 +443,10 @@ const HadithCard = ({
                 <Button
                   variant={showArabic ? 'default' : 'ghost'}
                   size="icon"
-                  className="h-7 w-7 font-arabic text-xs"
+                  className="h-7 w-7"
                   onClick={() => setShowArabic(!showArabic)}
                 >
-                  Ø¹
+                  <Languages className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{showArabic ? 'Hide Arabic' : 'Show Arabic'}</TooltipContent>

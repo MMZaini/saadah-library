@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Bookmark, ChevronRight, StickyNote } from 'lucide-react'
+import { Bookmark, ChevronRight, Languages, StickyNote } from 'lucide-react'
 
 interface BookmarkCardProps {
   bookmark: BookmarkData
@@ -83,9 +83,8 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
               variant={showArabic ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowArabic(!showArabic)}
-              className="font-arabic text-xs"
             >
-              ع
+              <Languages className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
