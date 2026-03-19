@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, Hadith } from '@/lib/api'
+import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
+import ChapterSearch from '@/components/ChapterSearch'
+import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
 import { useChapter } from '@/lib/chapter-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +24,10 @@ export default function ChapterDetailPage() {
   const [hadiths, setHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [gradingFilter, setGradingFilter] = useState<Set<'sahih' | 'hasan' | 'daif' | 'other'>>(
+    new Set(),
+  )
   const [chapterInfo, setLocalChapterInfo] = useState<{
     category: string
     chapter: string
@@ -61,6 +68,8 @@ export default function ChapterDetailPage() {
 
         const sortedHadiths = chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(sortedHadiths)
+        setSearchQuery('')
+        setGradingFilter(new Set())
       } catch {
         setError('Failed to load chapter hadiths')
       } finally {
@@ -79,6 +88,29 @@ export default function ChapterDetailPage() {
 
     return () => setChapterInfo(null)
   }, [volumeId, categoryId, chapterInCategoryId, setChapterInfo])
+
+  const filteredHadiths = useMemo(() => {
+    let result = hadiths
+    if (gradingFilter.size > 0) {
+      result = result.filter((h) => {
+        const cat = classifyHadith(h)
+        return cat === 'all' || gradingFilter.has(cat as 'sahih' | 'hasan' | 'daif' | 'other')
+      })
+    }
+    const q = searchQuery.trim().toLowerCase()
+    if (q) {
+      const qNoHarakat = removeHarakat(q)
+      result = result.filter((h) => {
+        const english = (h.englishText || h.thaqalaynMatn || '').toLowerCase()
+        const arabic = h.arabicText || ''
+        const arabicNorm = removeHarakat(arabic).toLowerCase()
+        return (
+          english.includes(q) || arabic.toLowerCase().includes(q) || arabicNorm.includes(qNoHarakat)
+        )
+      })
+    }
+    return result
+  }, [hadiths, gradingFilter, searchQuery])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -122,15 +154,28 @@ export default function ChapterDetailPage() {
           </div>
         )}
 
+        {/* Search & grading filter */}
+        {hadiths.length > 0 && (
+          <div className="mb-5 space-y-3">
+            <ChapterSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              resultCount={filteredHadiths.length}
+              totalCount={hadiths.length}
+            />
+            <GradingFilter hadiths={hadiths} selected={gradingFilter} onChange={setGradingFilter} />
+          </div>
+        )}
+
         {/* Hadiths */}
         <div className="space-y-5">
-          {hadiths.map((hadith, index) => (
+          {filteredHadiths.map((hadith, index) => (
             <div key={hadith._id || hadith.id || index} className="relative">
               <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {index + 1}
               </div>
               <div className="ml-6">
-                <HadithCard hadith={hadith} />
+                <HadithCard hadith={hadith} highlightQuery={searchQuery} />
               </div>
             </div>
           ))}

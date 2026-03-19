@@ -410,16 +410,9 @@ const HadithCard = ({
   return (
     <article className={cn('rounded-lg border border-border bg-surface-1 p-4 sm:p-5', className)}>
       {/* â”€â”€ Header â”€â”€ */}
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex shrink-0 items-center gap-1">
-          <Tooltip>
+      <div className="mb-3 flex items-center justify-end gap-1">
+        <span className="mr-auto text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
+        <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
@@ -461,7 +454,7 @@ const HadithCard = ({
             </TooltipTrigger>
             <TooltipContent>Open in new tab</TooltipContent>
           </Tooltip>
-        </div>
+
       </div>
 
       {/* â”€â”€ Content â”€â”€ */}

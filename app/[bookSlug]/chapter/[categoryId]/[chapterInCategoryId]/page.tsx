@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
 import { getBookIdFromUrlSlug } from '@/lib/books-config'
+import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
+import ChapterSearch from '@/components/ChapterSearch'
 import { useChapter } from '@/lib/chapter-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +25,7 @@ export default function GenericChapterDetailPage() {
   const [hadiths, setHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [chapterInfo, setLocalChapterInfo] = useState<{
     category: string
     chapter: string
@@ -61,6 +64,7 @@ export default function GenericChapterDetailPage() {
 
         chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(chapterHadiths)
+        setSearchQuery('')
       } catch {
         setError('Failed to load chapter content')
       } finally {
@@ -72,6 +76,20 @@ export default function GenericChapterDetailPage() {
 
     return () => setChapterInfo(null)
   }, [bookId, categoryId, chapterInCategoryId, setChapterInfo])
+
+  const filteredHadiths = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return hadiths
+    const qNoHarakat = removeHarakat(q)
+    return hadiths.filter((h) => {
+      const english = (h.englishText || h.thaqalaynMatn || '').toLowerCase()
+      const arabic = h.arabicText || ''
+      const arabicNorm = removeHarakat(arabic).toLowerCase()
+      return (
+        english.includes(q) || arabic.toLowerCase().includes(q) || arabicNorm.includes(qNoHarakat)
+      )
+    })
+  }, [hadiths, searchQuery])
 
   if (loading) {
     return (
@@ -110,15 +128,27 @@ export default function GenericChapterDetailPage() {
           </div>
         )}
 
+        {/* Search */}
+        {hadiths.length > 0 && (
+          <div className="mb-5">
+            <ChapterSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              resultCount={filteredHadiths.length}
+              totalCount={hadiths.length}
+            />
+          </div>
+        )}
+
         {/* Hadiths */}
         <div className="space-y-5">
-          {hadiths.map((h, idx) => (
+          {filteredHadiths.map((h, idx) => (
             <div key={h._id || h.id || idx} className="relative">
               <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {idx + 1}
               </div>
               <div className="ml-6">
-                <HadithCard hadith={h} />
+                <HadithCard hadith={h} highlightQuery={searchQuery} />
               </div>
             </div>
           ))}
