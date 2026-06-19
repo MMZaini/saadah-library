@@ -64,6 +64,18 @@ export default function SettingsSidebar() {
                 onCheckedChange={(checked) => updateSettings({ alwaysShowFullHadith: checked })}
               />
             </label>
+            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border px-3 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">Reduce motion</p>
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  Minimize animations and transitions across the app
+                </p>
+              </div>
+              <Switch
+                checked={settings.reduceMotion}
+                onCheckedChange={(checked) => updateSettings({ reduceMotion: checked })}
+              />
+            </label>
           </section>
 
           <Separator className="-mx-6 w-auto" />
@@ -137,7 +149,11 @@ export default function SettingsSidebar() {
                 <select
                   className="w-full appearance-none rounded-md border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                   value={settings.englishFontFamily}
-                  onChange={(e) => updateSettings({ englishFontFamily: e.target.value as any })}
+                  onChange={(e) =>
+                    updateSettings({
+                      englishFontFamily: e.target.value as 'inter' | 'merriweather',
+                    })
+                  }
                 >
                   <option value="inter">Inter (Default)</option>
                   <option value="merriweather">Merriweather (Serif)</option>

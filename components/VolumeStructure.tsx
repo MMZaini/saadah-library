@@ -31,7 +31,7 @@ interface VolumeStructureProps {
   bookId: string
   bookName: string
   volumes: (string | number)[]
-  baseRoute?: string // e.g., '/al-kafi' or '/book/bookId'
+  baseRoute?: string // e.g., '/al-kafi' or '/uyun-akhbar-al-rida'
   className?: string
 }
 

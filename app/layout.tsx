@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${inter.variable} ${lora.variable} ${merriweather.variable}`}
+      data-motion="full"
       suppressHydrationWarning
     >
       <head>

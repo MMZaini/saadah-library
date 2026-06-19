@@ -20,12 +20,11 @@ export default function TopBar() {
   const params = useParams()
   const router = useRouter()
 
-  const currentBookSlug = pathname.startsWith('/book/')
-    ? (params.bookId as string | null)
-    : pathname !== '/' &&
-        pathname !== '/al-kafi' &&
-        !pathname.startsWith('/al-kafi/') &&
-        !pathname.includes('/Uyun-akhbar-al-Rida')
+  const currentBookSlug =
+    pathname !== '/' &&
+    pathname !== '/al-kafi' &&
+    !pathname.startsWith('/al-kafi/') &&
+    !pathname.includes('/Uyun-akhbar-al-Rida')
       ? (params.bookSlug as string | null)
       : null
   const currentBookId = currentBookSlug ? getBookIdFromUrlSlug(currentBookSlug) : null
@@ -60,8 +59,9 @@ export default function TopBar() {
   const isAlKafiChapterPage =
     pathname.includes('/al-kafi/volume/') && pathname.includes('/chapter/')
   const isGenericChapterPage =
-    (pathname.startsWith('/book/') ||
-      (pathname !== '/' && pathname !== '/al-kafi' && !pathname.startsWith('/al-kafi/'))) &&
+    pathname !== '/' &&
+    pathname !== '/al-kafi' &&
+    !pathname.startsWith('/al-kafi/') &&
     pathname.includes('/chapter/')
   const isChapterPage = isAlKafiChapterPage || isGenericChapterPage
 

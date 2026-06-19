@@ -22,6 +22,7 @@ type Settings = {
   englishFontFamily: 'inter' | 'merriweather'
   alwaysShowFullHadith: boolean // whether to show full hadith text by default
   defaultLanguage: 'english' | 'arabic' // which language to show on hadith open
+  reduceMotion: boolean // whether to minimize non-essential UI motion
 }
 
 type SettingsContextType = {
@@ -42,6 +43,7 @@ const defaultSettings: Settings = {
   englishFontFamily: 'inter', // Default to inter
   alwaysShowFullHadith: false, // false = collapsed by default (current behavior)
   defaultLanguage: 'english', // english = show English by default (new users)
+  reduceMotion: false,
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null)
@@ -101,6 +103,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (isHydrated) {
       const root = document.documentElement
       root.setAttribute('data-theme', settings.theme)
+      root.setAttribute('data-motion', settings.reduceMotion ? 'reduced' : 'full')
 
       // Set font size/family CSS custom properties
       root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize * 1.485}%`)
@@ -122,6 +125,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Set initial theme immediately on load to prevent flash
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', 'dark')
+        document.documentElement.setAttribute('data-motion', 'full')
       }
     }
   }, [
@@ -130,6 +134,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     settings.englishFontSize,
     settings.englishFontFamily,
     settings.alwaysShowFullHadith,
+    settings.reduceMotion,
     isHydrated,
   ])
 
@@ -169,6 +174,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                 '--hadith-english-font-family',
                 getFontFamily(updated.englishFontFamily),
               )
+            }
+            if (updated.reduceMotion !== undefined) {
+              root.setAttribute('data-motion', updated.reduceMotion ? 'reduced' : 'full')
             }
           }
         } catch {

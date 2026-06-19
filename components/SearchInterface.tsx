@@ -61,15 +61,7 @@ const GRADING_OPTIONS = [
   {
     value: 'other',
     label: 'Other Gradings',
-    keywords: [
-      'مقطوع',
-      'مدلس',
-      'غريب',
-      'عزيز',
-      'مشهور',
-      'متواتر',
-      'آحاد',
-    ],
+    keywords: ['مقطوع', 'مدلس', 'غريب', 'عزيز', 'مشهور', 'متواتر', 'آحاد'],
   },
 ]
 
@@ -177,7 +169,8 @@ export default function SearchInterface({
         : [...current, volNum].sort((a, b) => a - b)
       if (next.length === 0) {
         setScopeBooks((sb) => sb.filter((k) => k !== bookKey))
-        const { [bookKey]: _, ...rest } = prev
+        const rest = { ...prev }
+        delete rest[bookKey]
         return rest
       }
       return { ...prev, [bookKey]: next }
@@ -358,16 +351,7 @@ export default function SearchInterface({
             return none || gradingText.includes('لم يخرجه')
           }
           if (sel === 'other') {
-            const common = [
-              'صحيح',
-              'حسن',
-              'موثق',
-              'قوي',
-              'ضعيف',
-              'مجهول',
-              'مرسل',
-              'لم يخرجه',
-            ]
+            const common = ['صحيح', 'حسن', 'موثق', 'قوي', 'ضعيف', 'مجهول', 'مرسل', 'لم يخرجه']
             return (
               gradingText.trim().length > 0 &&
               !common.some((c) => gradingText.includes(c.toLowerCase()))

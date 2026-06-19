@@ -59,9 +59,10 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-  // Allow builds to succeed even if ESLint reports problems (repo contains many lint issues)
+  // Run ESLint during `next build`, scoped to the same dirs as `yarn lint`.
+  // Builds fail on lint errors (warnings are still allowed through).
   eslint: {
-    ignoreDuringBuilds: true,
+    dirs: ['app', 'components', 'lib'],
   },
 }
 

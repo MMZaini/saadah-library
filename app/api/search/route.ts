@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isArabicQuery } from '@/lib/search-utils'
-import { searchArabicLocally, searchEnglishLocally } from '@/lib/arabic-search-index'
+import { searchLocalHadiths } from '@/lib/data/server-repository'
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,14 +18,9 @@ export async function GET(request: NextRequest) {
           .filter(Boolean)
       : undefined
 
-    // Arabic queries always use the local normalized index (diacritic-insensitive)
-    if (isArabicQuery(query)) {
-      const response = await searchArabicLocally(query, bookIds)
-      return NextResponse.json(response)
-    }
-
-    // English queries also use generated local search shards.
-    const response = await searchEnglishLocally(query, bookIds)
+    // searchLocalHadiths detects Arabic vs English queries internally and
+    // searches the generated local shards (diacritic-insensitive for Arabic).
+    const response = await searchLocalHadiths(query, bookIds)
     return NextResponse.json(response)
   } catch {
     return NextResponse.json({ error: 'Search failed', results: [], total: 0 }, { status: 500 })
