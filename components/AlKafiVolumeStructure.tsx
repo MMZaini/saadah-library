@@ -45,10 +45,13 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
   const touchStartTimeRef = useRef<number | null>(null)
   const longPressTriggeredRef = useRef(false)
-  // Desktop hover gradient animation control
+  // Desktop hover-intent expansion control: a short enter delay ignores cards
+  // the cursor merely sweeps across, and a leave grace period keeps a card open
+  // while the cursor crosses the gap to a neighbour — preventing the rapid
+  // expand/collapse flicker when moving between chapter cards.
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
-  const [, setLeavingKey] = useState<string | null>(null)
-  const leaveTimeoutRef = useRef<number | null>(null)
+  const hoverEnterTimerRef = useRef<number | null>(null)
+  const hoverLeaveTimerRef = useRef<number | null>(null)
 
   const alKafiVolumes = Array.from({ length: 8 }, (_, i) => i + 1)
   const volumeOptions = [
@@ -147,7 +150,8 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     return () => {
       if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current)
       if (mobileCollapseTimeoutRef.current) window.clearTimeout(mobileCollapseTimeoutRef.current)
-      if (leaveTimeoutRef.current) window.clearTimeout(leaveTimeoutRef.current)
+      if (hoverEnterTimerRef.current) window.clearTimeout(hoverEnterTimerRef.current)
+      if (hoverLeaveTimerRef.current) window.clearTimeout(hoverLeaveTimerRef.current)
     }
   }, [])
 
@@ -439,6 +443,8 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                     {Object.entries(category.chapters).map(([chapterKey, chapter]) => {
                       const key = getChapterKey(category.categoryId, chapter.chapterInCategoryId)
                       const isExpanded = mobileExpandedKey === key
+                      // "Active" = mobile long-press expansion OR a settled desktop hover.
+                      const isActive = isExpanded || hoveredKey === key
                       return (
                         <button
                           key={chapterKey}
@@ -456,17 +462,41 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                           )}
                           aria-expanded={isExpanded}
                           onMouseEnter={() => {
-                            setLeavingKey(null)
-                            setHoveredKey(key)
+                            // Desktop only — touch uses the long-press handlers above.
+                            if (
+                              typeof window !== 'undefined' &&
+                              window.matchMedia &&
+                              !window.matchMedia('(hover: hover)').matches
+                            )
+                              return
+                            // Cancel a pending collapse (cursor crossing the gap from a neighbour).
+                            if (hoverLeaveTimerRef.current) {
+                              window.clearTimeout(hoverLeaveTimerRef.current)
+                              hoverLeaveTimerRef.current = null
+                            }
+                            if (hoveredKey === key) return
+                            // Expand only after a brief dwell so quick fly-overs don't trigger it.
+                            if (hoverEnterTimerRef.current)
+                              window.clearTimeout(hoverEnterTimerRef.current)
+                            hoverEnterTimerRef.current = window.setTimeout(() => {
+                              setHoveredKey(key)
+                              hoverEnterTimerRef.current = null
+                            }, 120)
                           }}
                           onMouseLeave={() => {
-                            setHoveredKey(null)
-                            setLeavingKey(key)
-                            if (leaveTimeoutRef.current)
-                              window.clearTimeout(leaveTimeoutRef.current)
-                            leaveTimeoutRef.current = window.setTimeout(() => {
-                              setLeavingKey(null)
-                            }, 900)
+                            // Cancel a not-yet-fired expansion.
+                            if (hoverEnterTimerRef.current) {
+                              window.clearTimeout(hoverEnterTimerRef.current)
+                              hoverEnterTimerRef.current = null
+                            }
+                            // Collapse after a short grace period so crossing the gap to an
+                            // adjacent card hands off smoothly instead of flickering closed.
+                            if (hoverLeaveTimerRef.current)
+                              window.clearTimeout(hoverLeaveTimerRef.current)
+                            hoverLeaveTimerRef.current = window.setTimeout(() => {
+                              setHoveredKey((prev) => (prev === key ? null : prev))
+                              hoverLeaveTimerRef.current = null
+                            }, 160)
                           }}
                           onMouseMove={(e) => {
                             const el = e.currentTarget as HTMLElement
@@ -481,13 +511,12 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                             'p-4 transition-all duration-500 ease-out sm:p-5',
                             'touch-manipulation select-none',
                             'shadow-soft hover:shadow-md',
-                            'hover:border-zinc-600 md:hover:ring-1 md:hover:ring-zinc-700/30',
-                            'md:hover:translate-y-[-2px]',
-                            isExpanded &&
+                            'hover:border-zinc-600',
+                            isActive &&
                               'z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30',
                           )}
                           style={{
-                            transform: isExpanded ? 'translateY(-2px)' : undefined,
+                            transform: isActive ? 'translateY(-2px)' : undefined,
                           }}
                         >
                           {/* Subtle sliding gradient background (visible on mobile when expanded) */}
@@ -496,16 +525,14 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                               className={cn(
                                 'absolute inset-0 bg-zinc-900/40',
                                 'transition-opacity duration-500 ease-in-out',
-                                hoveredKey === key && 'opacity-100',
-                                hoveredKey !== key && 'opacity-0',
-                                isExpanded && 'opacity-100',
+                                isActive ? 'opacity-100' : 'opacity-0',
                               )}
                             />
                             {/* Cursor-following subtle glow — desktop only */}
                             <div
                               className={cn(
-                                'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-40',
-                                isExpanded && 'md:opacity-40',
+                                'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out',
+                                isActive && 'md:opacity-40',
                               )}
                               style={{
                                 background:
@@ -524,21 +551,19 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                               'overflow-hidden pr-4',
                               'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
                               'max-h-24',
-                              'md:group-hover:max-h-[500px]',
                             )}
                             style={{
                               willChange: 'max-height',
-                              maxHeight: isExpanded ? ('500px' as const) : undefined,
+                              maxHeight: isActive ? ('500px' as const) : undefined,
                             }}
                           >
                             <h4
                               className={cn(
                                 'text-primary mb-3 font-semibold leading-snug transition-colors',
                                 'group-hover:text-foreground',
-                                isExpanded && 'text-foreground',
+                                isActive && 'text-foreground',
                                 'line-clamp-2',
-                                'md:group-hover:line-clamp-none',
-                                isExpanded && 'line-clamp-none',
+                                isActive && 'line-clamp-none',
                               )}
                             >
                               {chapter.chapter}

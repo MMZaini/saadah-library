@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
@@ -35,6 +35,19 @@ interface VolumeStructureProps {
   className?: string
 }
 
+const GENERIC_CATEGORY_NAMES = new Set(['content', 'uncategorized', 'no category'])
+
+function normalizeCategoryName(value: string) {
+  return value.toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+function isGenericCategory(categoryKey: string, category: CategorySummary) {
+  return (
+    GENERIC_CATEGORY_NAMES.has(normalizeCategoryName(categoryKey)) ||
+    GENERIC_CATEGORY_NAMES.has(normalizeCategoryName(category.category))
+  )
+}
+
 export default function VolumeStructure({
   bookId,
   bookName,
@@ -61,12 +74,34 @@ export default function VolumeStructure({
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null)
   const touchStartTimeRef = useRef<number | null>(null)
   const longPressTriggeredRef = useRef(false)
-  // Desktop hover gradient animation control
+  // Desktop hover-intent expansion control: a short enter delay ignores cards
+  // the cursor merely sweeps across, and a leave grace period keeps a card open
+  // while the cursor crosses the gap to a neighbour — preventing the rapid
+  // expand/collapse flicker when moving between chapter cards.
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
-  const [, setLeavingKey] = useState<string | null>(null)
-  const leaveTimeoutRef = useRef<number | null>(null)
+  const hoverEnterTimerRef = useRef<number | null>(null)
+  const hoverLeaveTimerRef = useRef<number | null>(null)
 
   const volumeOptions = makeVolumeOptions(volumes)
+  const categoryEntries = useMemo(() => Object.entries(volumeSummary), [volumeSummary])
+  const singleGenericCategoryEntry =
+    categoryEntries.length === 1 && isGenericCategory(categoryEntries[0][0], categoryEntries[0][1])
+      ? categoryEntries[0]
+      : null
+  const showDirectChapterGrid = Boolean(singleGenericCategoryEntry)
+  const totalHadithsCount = useMemo(
+    () => categoryEntries.reduce((total, [, category]) => total + category.totalHadiths, 0),
+    [categoryEntries],
+  )
+  const totalChapterCount = useMemo(
+    () =>
+      categoryEntries.reduce(
+        (total, [, category]) => total + Object.keys(category.chapters).length,
+        0,
+      ),
+    [categoryEntries],
+  )
+  const useCompactVolumeControls = volumes.length > 1 && volumeOptions.length <= 6
 
   // Load volume summary (categories and chapter counts)
   useEffect(() => {
@@ -214,7 +249,8 @@ export default function VolumeStructure({
     return () => {
       if (longPressTimeoutRef.current) window.clearTimeout(longPressTimeoutRef.current)
       if (mobileCollapseTimeoutRef.current) window.clearTimeout(mobileCollapseTimeoutRef.current)
-      if (leaveTimeoutRef.current) window.clearTimeout(leaveTimeoutRef.current)
+      if (hoverEnterTimerRef.current) window.clearTimeout(hoverEnterTimerRef.current)
+      if (hoverLeaveTimerRef.current) window.clearTimeout(hoverLeaveTimerRef.current)
     }
   }, [])
 
@@ -348,11 +384,182 @@ export default function VolumeStructure({
     },
   })
 
-  const getTotalHadithsCount = () => {
-    return Object.values(volumeSummary).reduce((total, category) => {
-      return total + category.totalHadiths
-    }, 0)
+  const handleVolumeSelect = (rawValue: string | number) => {
+    const raw = String(rawValue)
+    const value = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : Number(raw)
+    setSelectedVolume(value)
   }
+
+  const renderChapterCard = (
+    category: CategorySummary,
+    chapterKey: string,
+    chapter: ChapterSummary,
+  ) => {
+    const key = getChapterKey(category.categoryId, chapter.chapterInCategoryId)
+    const isExpanded = mobileExpandedKey === key
+    // "Active" = mobile long-press expansion OR a settled desktop hover.
+    const isActive = isExpanded || hoveredKey === key
+
+    return (
+      <button
+        key={chapterKey}
+        onClick={(e) => {
+          if (ignoreNextClickRef.current) {
+            e.preventDefault()
+            e.stopPropagation()
+            ignoreNextClickRef.current = false
+            return
+          }
+          handleChapterClick(
+            category.categoryId,
+            chapter.chapterInCategoryId,
+            chapter.bookId,
+            chapter.volume,
+          )
+        }}
+        {...getTouchHandlers(key, () =>
+          handleChapterClick(
+            category.categoryId,
+            chapter.chapterInCategoryId,
+            chapter.bookId,
+            chapter.volume,
+          ),
+        )}
+        aria-expanded={isExpanded}
+        onMouseEnter={() => {
+          // Desktop only; touch uses the long-press handlers above.
+          if (
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            !window.matchMedia('(hover: hover)').matches
+          )
+            return
+          // Cancel a pending collapse (cursor crossing the gap from a neighbour).
+          if (hoverLeaveTimerRef.current) {
+            window.clearTimeout(hoverLeaveTimerRef.current)
+            hoverLeaveTimerRef.current = null
+          }
+          if (hoveredKey === key) return
+          // Expand only after a brief dwell so quick fly-overs don't trigger it.
+          if (hoverEnterTimerRef.current) window.clearTimeout(hoverEnterTimerRef.current)
+          hoverEnterTimerRef.current = window.setTimeout(() => {
+            setHoveredKey(key)
+            hoverEnterTimerRef.current = null
+          }, 120)
+        }}
+        onMouseLeave={() => {
+          // Cancel a not-yet-fired expansion.
+          if (hoverEnterTimerRef.current) {
+            window.clearTimeout(hoverEnterTimerRef.current)
+            hoverEnterTimerRef.current = null
+          }
+          // Collapse after a short grace period so crossing the gap to an
+          // adjacent card hands off smoothly instead of flickering closed.
+          if (hoverLeaveTimerRef.current) window.clearTimeout(hoverLeaveTimerRef.current)
+          hoverLeaveTimerRef.current = window.setTimeout(() => {
+            setHoveredKey((prev) => (prev === key ? null : prev))
+            hoverLeaveTimerRef.current = null
+          }, 160)
+        }}
+        onMouseMove={(e) => {
+          const el = e.currentTarget as HTMLElement
+          const rect = el.getBoundingClientRect()
+          const x = e.clientX - rect.left
+          const y = e.clientY - rect.top
+          el.style.setProperty('--mx', `${x}px`)
+          el.style.setProperty('--my', `${y}px`)
+        }}
+        className={cn(
+          'border-theme bg-card group relative rounded-xl border text-left',
+          'p-4 transition-all duration-500 ease-out sm:p-5',
+          'touch-manipulation select-none',
+          'shadow-soft hover:shadow-md',
+          'hover:border-zinc-600',
+          isActive &&
+            'z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30',
+        )}
+        style={{
+          transform: isActive ? 'translateY(-2px)' : undefined,
+        }}
+      >
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-xl">
+          <div
+            className={cn(
+              'absolute inset-0 bg-zinc-900/40',
+              'transition-opacity duration-500 ease-in-out',
+              isActive ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+          <div
+            className={cn(
+              'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out',
+              isActive && 'md:opacity-40',
+            )}
+            style={{
+              background:
+                'radial-gradient(180px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.035), rgba(0,0,0,0) 60%)',
+            }}
+          />
+        </div>
+
+        <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs font-bold text-zinc-200">
+          {chapter.chapterInCategoryId}
+        </div>
+
+        <div
+          className={cn(
+            'overflow-hidden pr-4',
+            'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
+            'max-h-24',
+          )}
+          style={{
+            willChange: 'max-height',
+            maxHeight: isActive ? ('500px' as const) : undefined,
+          }}
+        >
+          <h4
+            className={cn(
+              'text-primary mb-3 font-semibold leading-snug transition-colors',
+              'group-hover:text-foreground',
+              isActive && 'text-foreground',
+              'line-clamp-2',
+              isActive && 'line-clamp-none',
+            )}
+          >
+            {chapter.chapter}
+          </h4>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-accent"></div>
+              <span className="text-secondary text-sm font-medium">
+                {chapter.hadithCount} {chapter.hadithCount === 1 ? 'hadith' : 'hadiths'}
+              </span>
+            </div>
+
+            <div className="text-secondary flex items-center gap-1 transition-colors group-hover:text-foreground-muted">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </button>
+    )
+  }
+
+  const renderChapterGrid = (category: CategorySummary) => (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      {Object.entries(category.chapters).map(([chapterKey, chapter]) =>
+        renderChapterCard(category, chapterKey, chapter),
+      )}
+    </div>
+  )
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -376,25 +583,46 @@ export default function VolumeStructure({
               </svg>
             </div>
             <div>
-              <h3 className="text-primary mb-1 text-lg font-bold">{bookName} Volume Explorer</h3>
+              <h3 className="text-primary mb-1 text-lg font-bold">
+                {showDirectChapterGrid ? `${bookName} Chapters` : `${bookName} Volume Explorer`}
+              </h3>
               <p className="text-secondary text-sm">
-                {bookName} consists of {volumes.length} volume{volumes.length === 1 ? '' : 's'}.
-                Browse volumes individually or view the complete collection structure
+                {showDirectChapterGrid
+                  ? 'This section has no separate book headings, so chapters are shown directly.'
+                  : `${bookName} consists of ${volumes.length} volume${volumes.length === 1 ? '' : 's'}. Browse volumes individually or view the complete collection structure`}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Show a selector only for multi-volume books; otherwise show a static label */}
-            {volumes.length > 1 ? (
+            {useCompactVolumeControls ? (
+              <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
+                {volumeOptions.map((option) => {
+                  const active = String(selectedVolume) === String(option.value)
+                  return (
+                    <button
+                      key={String(option.value)}
+                      type="button"
+                      onClick={() => handleVolumeSelect(option.value)}
+                      disabled={loading}
+                      className={cn(
+                        'rounded-lg border px-3 py-2 text-sm font-semibold transition-colors',
+                        active
+                          ? 'border-accent bg-accent text-accent-foreground'
+                          : 'border-border bg-surface-2 text-foreground-muted hover:text-foreground',
+                        loading && 'cursor-not-allowed opacity-50',
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : volumes.length > 1 ? (
               <div className="relative">
                 <select
                   value={selectedVolume}
-                  onChange={(e) => {
-                    const raw = e.target.value
-                    const val = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : Number(raw)
-                    setSelectedVolume(val)
-                  }}
+                  onChange={(e) => handleVolumeSelect(e.target.value)}
                   disabled={loading}
                   className={cn(
                     'border-theme bg-card appearance-none border',
@@ -437,20 +665,22 @@ export default function VolumeStructure({
           </div>
         </div>
 
-        {!loading && getTotalHadithsCount() > 0 && (
+        {!loading && totalHadithsCount > 0 && (
           <div>
             <div className="border-theme flex flex-wrap items-center gap-4 border-t pt-4">
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-accent"></div>
                 <span className="text-primary text-sm font-semibold">
-                  {getTotalHadithsCount().toLocaleString()} hadiths
+                  {totalHadithsCount.toLocaleString()} hadiths
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
                 <span className="text-primary text-sm font-semibold">
-                  {Object.keys(volumeSummary).length} categories
+                  {showDirectChapterGrid
+                    ? `${totalChapterCount.toLocaleString()} chapters`
+                    : `${categoryEntries.length} categories`}
                 </span>
               </div>
 
@@ -467,8 +697,9 @@ export default function VolumeStructure({
             </div>
 
             <p className="text-secondary mt-4 text-sm">
-              Browse the complete structure of the selected book. Click on categories to expand them
-              and view chapters. Click on any chapter to read all hadiths in that chapter.
+              {showDirectChapterGrid
+                ? 'Browse chapters directly. Click any chapter to read all hadiths in that chapter.'
+                : 'Browse the complete structure of the selected book. Click on categories to expand them and view chapters. Click on any chapter to read all hadiths in that chapter.'}
             </p>
           </div>
         )}
@@ -491,8 +722,35 @@ export default function VolumeStructure({
         </div>
       )}
 
+      {/* Direct chapters for structures whose only top-level category is a generic wrapper. */}
+      {!loading && !error && showDirectChapterGrid && singleGenericCategoryEntry && (
+        <div className="border-theme bg-card shadow-soft overflow-y-hidden overflow-x-visible rounded-2xl border">
+          <div className="flex flex-col gap-3 border-b border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-primary text-lg font-bold">Chapters</h3>
+              <p className="text-secondary mt-1 text-sm">
+                The source uses a generic content wrapper here, so the chapter list is shown
+                directly.
+              </p>
+            </div>
+            <div className="text-left sm:text-right">
+              <div className="text-primary text-sm font-semibold">
+                {singleGenericCategoryEntry[1].totalHadiths.toLocaleString()} hadiths
+              </div>
+              <div className="text-secondary text-xs">
+                {Object.keys(singleGenericCategoryEntry[1].chapters).length.toLocaleString()}{' '}
+                chapters
+              </div>
+            </div>
+          </div>
+          <div className="from-card/50 to-card/30 bg-gradient-to-r p-4 sm:p-6">
+            {renderChapterGrid(singleGenericCategoryEntry[1])}
+          </div>
+        </div>
+      )}
+
       {/* Categories and Chapters */}
-      {!loading && !error && Object.keys(volumeSummary).length > 0 && (
+      {!loading && !error && !showDirectChapterGrid && categoryEntries.length > 0 && (
         <div className="space-y-6">
           {Object.entries(volumeSummary).map(([categoryKey, category]) => (
             <div
@@ -548,6 +806,8 @@ export default function VolumeStructure({
                     {Object.entries(category.chapters).map(([chapterKey, chapter]) => {
                       const key = getChapterKey(category.categoryId, chapter.chapterInCategoryId)
                       const isExpanded = mobileExpandedKey === key
+                      // "Active" = mobile long-press expansion OR a settled desktop hover.
+                      const isActive = isExpanded || hoveredKey === key
                       return (
                         <button
                           key={chapterKey}
@@ -575,17 +835,41 @@ export default function VolumeStructure({
                           )}
                           aria-expanded={isExpanded}
                           onMouseEnter={() => {
-                            setLeavingKey(null)
-                            setHoveredKey(key)
+                            // Desktop only — touch uses the long-press handlers above.
+                            if (
+                              typeof window !== 'undefined' &&
+                              window.matchMedia &&
+                              !window.matchMedia('(hover: hover)').matches
+                            )
+                              return
+                            // Cancel a pending collapse (cursor crossing the gap from a neighbour).
+                            if (hoverLeaveTimerRef.current) {
+                              window.clearTimeout(hoverLeaveTimerRef.current)
+                              hoverLeaveTimerRef.current = null
+                            }
+                            if (hoveredKey === key) return
+                            // Expand only after a brief dwell so quick fly-overs don't trigger it.
+                            if (hoverEnterTimerRef.current)
+                              window.clearTimeout(hoverEnterTimerRef.current)
+                            hoverEnterTimerRef.current = window.setTimeout(() => {
+                              setHoveredKey(key)
+                              hoverEnterTimerRef.current = null
+                            }, 120)
                           }}
                           onMouseLeave={() => {
-                            setHoveredKey(null)
-                            setLeavingKey(key)
-                            if (leaveTimeoutRef.current)
-                              window.clearTimeout(leaveTimeoutRef.current)
-                            leaveTimeoutRef.current = window.setTimeout(() => {
-                              setLeavingKey(null)
-                            }, 900)
+                            // Cancel a not-yet-fired expansion.
+                            if (hoverEnterTimerRef.current) {
+                              window.clearTimeout(hoverEnterTimerRef.current)
+                              hoverEnterTimerRef.current = null
+                            }
+                            // Collapse after a short grace period so crossing the gap to an
+                            // adjacent card hands off smoothly instead of flickering closed.
+                            if (hoverLeaveTimerRef.current)
+                              window.clearTimeout(hoverLeaveTimerRef.current)
+                            hoverLeaveTimerRef.current = window.setTimeout(() => {
+                              setHoveredKey((prev) => (prev === key ? null : prev))
+                              hoverLeaveTimerRef.current = null
+                            }, 160)
                           }}
                           onMouseMove={(e) => {
                             const el = e.currentTarget as HTMLElement
@@ -600,13 +884,12 @@ export default function VolumeStructure({
                             'p-4 transition-all duration-500 ease-out sm:p-5',
                             'touch-manipulation select-none',
                             'shadow-soft hover:shadow-md',
-                            'hover:border-zinc-600 md:hover:ring-1 md:hover:ring-zinc-700/30',
-                            'md:hover:translate-y-[-2px]',
-                            isExpanded &&
+                            'hover:border-zinc-600',
+                            isActive &&
                               'z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30',
                           )}
                           style={{
-                            transform: isExpanded ? 'translateY(-2px)' : undefined,
+                            transform: isActive ? 'translateY(-2px)' : undefined,
                           }}
                         >
                           {/* Subtle sliding gradient background (visible on mobile when expanded) */}
@@ -615,16 +898,14 @@ export default function VolumeStructure({
                               className={cn(
                                 'absolute inset-0 bg-zinc-900/40',
                                 'transition-opacity duration-500 ease-in-out',
-                                hoveredKey === key && 'opacity-100',
-                                hoveredKey !== key && 'opacity-0',
-                                isExpanded && 'opacity-100',
+                                isActive ? 'opacity-100' : 'opacity-0',
                               )}
                             />
                             {/* Cursor-following subtle glow — desktop only */}
                             <div
                               className={cn(
-                                'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-40',
-                                isExpanded && 'md:opacity-40',
+                                'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out',
+                                isActive && 'md:opacity-40',
                               )}
                               style={{
                                 background:
@@ -643,21 +924,19 @@ export default function VolumeStructure({
                               'overflow-hidden pr-4',
                               'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
                               'max-h-24',
-                              'md:group-hover:max-h-[500px]',
                             )}
                             style={{
                               willChange: 'max-height',
-                              maxHeight: isExpanded ? ('500px' as const) : undefined,
+                              maxHeight: isActive ? ('500px' as const) : undefined,
                             }}
                           >
                             <h4
                               className={cn(
                                 'text-primary mb-3 font-semibold leading-snug transition-colors',
                                 'group-hover:text-foreground',
-                                isExpanded && 'text-foreground',
+                                isActive && 'text-foreground',
                                 'line-clamp-2',
-                                'md:group-hover:line-clamp-none',
-                                isExpanded && 'line-clamp-none',
+                                isActive && 'line-clamp-none',
                               )}
                             >
                               {chapter.chapter}

@@ -283,7 +283,7 @@ export default function BookmarksPage() {
       {/* Search */}
       {bookmarkCount > 0 && (
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
-          <div className="flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5">
+          <div className="flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
             <Search className="h-4 w-4 shrink-0 text-foreground-faint" />
             <input
               type="text"

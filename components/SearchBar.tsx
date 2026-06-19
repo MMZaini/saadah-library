@@ -39,7 +39,7 @@ export default function SearchBar({
   return (
     <div className={cn('mx-auto max-w-2xl px-4 pt-6 sm:px-6', className)}>
       <div className="relative">
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
           <Search className="h-4 w-4 shrink-0 text-foreground-faint" />
           <input
             ref={inputRef}

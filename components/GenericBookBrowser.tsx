@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { bookApi, Hadith } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import HadithCard from '@/components/HadithCard'
@@ -26,6 +26,19 @@ interface GenericBookBrowserProps {
   bookId: string
   bookConfig?: BookConfig | null
   className?: string
+}
+
+const GENERIC_CATEGORY_NAMES = new Set(['content', 'uncategorized', 'no category'])
+
+function normalizeCategoryName(value: string) {
+  return value.toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+function isGenericCategory(categoryKey: string, category: CategorySummaryData) {
+  return (
+    GENERIC_CATEGORY_NAMES.has(normalizeCategoryName(categoryKey)) ||
+    GENERIC_CATEGORY_NAMES.has(normalizeCategoryName(category.category))
+  )
 }
 
 export default function GenericBookBrowser({
@@ -54,6 +67,25 @@ export default function GenericBookBrowser({
   const volumesList = bookConfig?.hasMultipleVolumes ? bookConfig.volumes : [bookId]
   const volumeOptions = makeVolumeOptions(volumesList)
   const displayTitle = bookConfig?.englishName || bookId
+  const categoryEntries = useMemo(() => Object.entries(volumeSummary), [volumeSummary])
+  const singleGenericCategoryEntry =
+    categoryEntries.length === 1 && isGenericCategory(categoryEntries[0][0], categoryEntries[0][1])
+      ? categoryEntries[0]
+      : null
+  const showDirectChapterList = Boolean(singleGenericCategoryEntry)
+  const totalHadithsCount = useMemo(
+    () => categoryEntries.reduce((total, [, category]) => total + (category.totalHadiths || 0), 0),
+    [categoryEntries],
+  )
+  const totalChapterCount = useMemo(
+    () =>
+      categoryEntries.reduce(
+        (total, [, category]) => total + Object.keys(category.chapters).length,
+        0,
+      ),
+    [categoryEntries],
+  )
+  const useCompactVolumeControls = volumeOptions.length > 1 && volumeOptions.length <= 6
 
   useEffect(() => {
     const loadVolumeSummary = async () => {
@@ -218,11 +250,10 @@ export default function GenericBookBrowser({
     loadChapterHadiths(categoryId, chapterId, category, chapter)
   }
 
-  const getTotalHadithsCount = (): number => {
-    return Object.values(volumeSummary).reduce(
-      (total, category) => total + (category.totalHadiths || 0),
-      0,
-    )
+  const handleVolumeSelect = (rawValue: string | number) => {
+    const raw = String(rawValue)
+    const value = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : String(raw)
+    setSelectedVolume(value)
   }
 
   return (
@@ -245,70 +276,101 @@ export default function GenericBookBrowser({
             </svg>
           </div>
           <div>
-            <h3 className="text-primary mb-1 text-lg font-bold">{displayTitle} Volume Explorer</h3>
+            <h3 className="text-primary mb-1 text-lg font-bold">
+              {showDirectChapterList ? `${displayTitle} Chapters` : `${displayTitle} Chapter Tree`}
+            </h3>
             <p className="text-secondary text-sm">
-              Browse {displayTitle} volumes individually or view the complete collection structure
+              {showDirectChapterList
+                ? 'This section has no separate book headings, so chapters are listed directly.'
+                : `Browse ${displayTitle} volumes individually or view the complete collection structure`}
             </p>
           </div>
         </div>
 
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <select
-                value={String(selectedVolume)}
-                onChange={(e) => {
-                  const raw = e.target.value
-                  const val = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : String(raw)
-                  setSelectedVolume(val)
-                }}
-                disabled={loading}
-                className={cn(
-                  'border-theme bg-card appearance-none border',
-                  'text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold',
-                  'hover:shadow-medium shadow-soft transition-all duration-200',
-                  'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
-                  'min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50',
-                  loading && 'cursor-not-allowed opacity-50',
-                )}
-              >
-                {volumeOptions.map((option) => (
-                  <option key={String(option.value)} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                <svg
-                  className="text-secondary h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+            {useCompactVolumeControls ? (
+              <div className="flex flex-wrap gap-1.5">
+                {volumeOptions.map((option) => {
+                  const active = String(selectedVolume) === String(option.value)
+                  return (
+                    <button
+                      key={String(option.value)}
+                      type="button"
+                      onClick={() => handleVolumeSelect(option.value)}
+                      disabled={loading}
+                      className={cn(
+                        'rounded-lg border px-3 py-2 text-sm font-semibold transition-colors',
+                        active
+                          ? 'border-accent bg-accent text-accent-foreground'
+                          : 'border-border bg-surface-2 text-foreground-muted hover:text-foreground',
+                        loading && 'cursor-not-allowed opacity-50',
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
               </div>
-            </div>
+            ) : volumeOptions.length > 1 ? (
+              <div className="relative">
+                <select
+                  value={String(selectedVolume)}
+                  onChange={(e) => handleVolumeSelect(e.target.value)}
+                  disabled={loading}
+                  className={cn(
+                    'border-theme bg-card appearance-none border',
+                    'text-primary rounded-xl px-4 py-3 pr-12 text-lg font-semibold',
+                    'hover:shadow-medium shadow-soft transition-all duration-200',
+                    'focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/20',
+                    'min-w-[200px] max-w-[300px] cursor-pointer hover:border-zinc-600/50',
+                    loading && 'cursor-not-allowed opacity-50',
+                  )}
+                >
+                  {volumeOptions.map((option) => (
+                    <option key={String(option.value)} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <svg
+                    className="text-secondary h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm font-semibold">
+                {getVolumeLabelForValue(volumesList, volumeOptions[0]?.value)}
+              </div>
+            )}
           </div>
 
-          {!loading && getTotalHadithsCount() > 0 && (
+          {!loading && totalHadithsCount > 0 && (
             <div className="border-theme flex flex-wrap items-center gap-4 border-t pt-4">
               <div className="flex items-center gap-2">
                 <div className="shadow-soft h-3 w-3 rounded-full bg-green-500"></div>
                 <span className="text-primary text-sm font-semibold">
-                  {getTotalHadithsCount().toLocaleString()} hadiths
+                  {totalHadithsCount.toLocaleString()} hadiths
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="shadow-soft h-3 w-3 rounded-full bg-blue-500"></div>
                 <span className="text-primary text-sm font-semibold">
-                  {Object.keys(volumeSummary).length} categories
+                  {showDirectChapterList
+                    ? `${totalChapterCount.toLocaleString()} chapters`
+                    : `${categoryEntries.length} categories`}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -324,8 +386,9 @@ export default function GenericBookBrowser({
         </div>
 
         <p className="text-secondary mt-4 text-sm">
-          Browse the complete structure of the selected book. Click on categories to expand them and
-          view chapters. Click on any chapter to read all hadiths in that chapter.
+          {showDirectChapterList
+            ? 'Select any chapter to view its hadiths.'
+            : 'Browse the complete structure of the selected book. Click on categories to expand them and view chapters. Click on any chapter to read all hadiths in that chapter.'}
         </p>
       </div>
 
@@ -351,74 +414,108 @@ export default function GenericBookBrowser({
             <div className="border-theme bg-card shadow-soft max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border sm:max-h-[70vh] lg:max-h-[80vh]">
               <div className="border-theme bg-card sticky top-0 z-10 border-b p-3 sm:p-4">
                 <h4 className="text-primary text-sm font-semibold sm:text-base">
-                  <span className="sm:hidden">Categories</span>
-                  <span className="hidden sm:inline">Categories & Chapters</span>
+                  <span className="sm:hidden">
+                    {showDirectChapterList ? 'Chapters' : 'Categories'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {showDirectChapterList ? 'Chapters' : 'Categories & Chapters'}
+                  </span>
                 </h4>
                 <p className="text-muted mt-1 hidden text-xs sm:block">
-                  Click to expand categories
+                  {showDirectChapterList
+                    ? 'Select a chapter to read'
+                    : 'Click to expand categories'}
                 </p>
               </div>
 
               <div className="p-1 sm:p-2">
-                {Object.entries(volumeSummary).map(
-                  ([categoryKey, categoryInfo]: [string, CategorySummaryData]) => (
-                    <div key={categoryKey} className="mb-1 sm:mb-2">
-                      {/* Category Header */}
-                      <button
-                        onClick={() => toggleCategory(categoryKey)}
-                        className="hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3"
-                      >
-                        {expandedCategories.has(categoryKey) ? (
-                          <ChevronDown className="text-muted h-4 w-4 flex-shrink-0" />
-                        ) : (
-                          <ChevronRight className="text-muted h-4 w-4 flex-shrink-0" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="text-primary text-sm font-medium leading-tight">
-                            {categoryInfo.category}
-                          </div>
+                {showDirectChapterList && singleGenericCategoryEntry
+                  ? Object.entries(singleGenericCategoryEntry[1].chapters).map(
+                      ([chapterKey, chapterInfo]: [string, ChapterSummaryData]) => (
+                        <button
+                          key={`${singleGenericCategoryEntry[0]}-${chapterKey}`}
+                          onClick={() =>
+                            selectChapter(
+                              displayTitle,
+                              chapterInfo.chapter,
+                              singleGenericCategoryEntry[1].categoryId,
+                              chapterInfo.chapterInCategoryId,
+                            )
+                          }
+                          className={cn(
+                            'mb-1 w-full rounded p-2 text-left text-sm transition-colors sm:mb-2',
+                            selectedChapter?.category === displayTitle &&
+                              selectedChapter?.chapter === chapterInfo.chapter
+                              ? 'bg-primary/10 text-primary border-primary/20 border'
+                              : 'hover:bg-card-hover text-secondary',
+                          )}
+                        >
+                          <div className="leading-tight">{chapterInfo.chapter}</div>
                           <div className="text-muted mt-1 text-xs">
-                            {categoryInfo.totalHadiths} hadiths •{' '}
-                            {Object.keys(categoryInfo.chapters).length} chapters
+                            {chapterInfo.hadithCount} hadiths
                           </div>
-                        </div>
-                      </button>
+                        </button>
+                      ),
+                    )
+                  : categoryEntries.map(
+                      ([categoryKey, categoryInfo]: [string, CategorySummaryData]) => (
+                        <div key={categoryKey} className="mb-1 sm:mb-2">
+                          {/* Category Header */}
+                          <button
+                            onClick={() => toggleCategory(categoryKey)}
+                            className="hover:bg-card-hover active:bg-card-hover flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors sm:p-3"
+                          >
+                            {expandedCategories.has(categoryKey) ? (
+                              <ChevronDown className="text-muted h-4 w-4 flex-shrink-0" />
+                            ) : (
+                              <ChevronRight className="text-muted h-4 w-4 flex-shrink-0" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-primary text-sm font-medium leading-tight">
+                                {categoryInfo.category}
+                              </div>
+                              <div className="text-muted mt-1 text-xs">
+                                {categoryInfo.totalHadiths} hadiths •{' '}
+                                {Object.keys(categoryInfo.chapters).length} chapters
+                              </div>
+                            </div>
+                          </button>
 
-                      {/* Chapters */}
-                      {expandedCategories.has(categoryKey) && (
-                        <div className="ml-6 mt-1 space-y-1">
-                          {Object.entries(categoryInfo.chapters).map(
-                            ([chapterKey, chapterInfo]: [string, ChapterSummaryData]) => (
-                              <button
-                                key={`${categoryKey}-${chapterKey}`}
-                                onClick={() =>
-                                  selectChapter(
-                                    categoryKey,
-                                    chapterKey,
-                                    categoryInfo.categoryId,
-                                    chapterInfo.chapterInCategoryId,
-                                  )
-                                }
-                                className={cn(
-                                  'w-full rounded p-2 text-left text-sm transition-colors',
-                                  selectedChapter?.category === categoryKey &&
-                                    selectedChapter?.chapter === chapterKey
-                                    ? 'bg-primary/10 text-primary border-primary/20 border'
-                                    : 'hover:bg-card-hover text-secondary',
-                                )}
-                              >
-                                <div className="leading-tight">{chapterInfo.chapter}</div>
-                                <div className="text-muted mt-1 text-xs">
-                                  {chapterInfo.hadithCount} hadiths
-                                </div>
-                              </button>
-                            ),
+                          {/* Chapters */}
+                          {expandedCategories.has(categoryKey) && (
+                            <div className="ml-6 mt-1 space-y-1">
+                              {Object.entries(categoryInfo.chapters).map(
+                                ([chapterKey, chapterInfo]: [string, ChapterSummaryData]) => (
+                                  <button
+                                    key={`${categoryKey}-${chapterKey}`}
+                                    onClick={() =>
+                                      selectChapter(
+                                        categoryInfo.category,
+                                        chapterInfo.chapter,
+                                        categoryInfo.categoryId,
+                                        chapterInfo.chapterInCategoryId,
+                                      )
+                                    }
+                                    className={cn(
+                                      'w-full rounded p-2 text-left text-sm transition-colors',
+                                      selectedChapter?.category === categoryInfo.category &&
+                                        selectedChapter?.chapter === chapterInfo.chapter
+                                        ? 'bg-primary/10 text-primary border-primary/20 border'
+                                        : 'hover:bg-card-hover text-secondary',
+                                    )}
+                                  >
+                                    <div className="leading-tight">{chapterInfo.chapter}</div>
+                                    <div className="text-muted mt-1 text-xs">
+                                      {chapterInfo.hadithCount} hadiths
+                                    </div>
+                                  </button>
+                                ),
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  ),
-                )}
+                      ),
+                    )}
               </div>
             </div>
           </div>

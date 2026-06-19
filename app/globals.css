@@ -81,6 +81,7 @@
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -89,6 +90,18 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
   }
+}
+
+/* Radix Dialog/Sheet locks body scroll through react-remove-scroll, which
+   compensates for classic scrollbar width with a body margin. That runtime
+   style is injected outside Tailwind layers, so this override must also stay
+   unlayered. Keep the gutter stable and neutralize only the layout
+   compensation; the library still blocks background wheel/touch interaction
+   while the modal is open. */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  overflow-y: scroll !important;
 }
 
 /* ── Backward-compat utility classes (used across existing components) ── */
@@ -218,6 +231,15 @@
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* Text fields show focus via their container's focus-within ring (or their own
+   ring), so suppress the default focus-outline rectangle on the field itself.
+   Buttons, links and other controls keep the accessibility outline above. */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  outline-offset: 0;
 }
 
 /* ── User-controlled reduced motion ── */

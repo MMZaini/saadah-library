@@ -47,7 +47,7 @@ export default function ChapterSearch({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search within chapter…"
-        className="h-8 w-full rounded-md border border-border bg-surface-1 pl-8 pr-16 text-xs text-foreground placeholder:text-foreground-faint focus:border-border focus:outline-none"
+        className="h-8 w-full rounded-md border border-border bg-surface-1 pl-8 pr-16 text-xs text-foreground transition-colors placeholder:text-foreground-faint focus:border-ring focus:outline-none"
       />
       <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
         {isFiltered && (

@@ -12,7 +12,13 @@ function classifyGrading(grading: string): 'sahih' | 'hasan' | 'daif' | 'other' 
   const g = grading.toLowerCase()
   if (g.includes('sahih') || g.includes('\u0635\u062d\u064a\u062d')) return 'sahih'
   if (g.includes('hasan') || g.includes('\u062d\u0633\u0646') || g.includes('good')) return 'hasan'
-  if (g.includes('daif') || g.includes('\u0636\u0639\u064a\u0641') || g.includes('weak'))
+  // Match both the Arabic-yeh (\u0636\u0639\u064a\u0641) and Persian-yeh (\u0636\u0639\u06cc\u0641) spellings of "da\u02bdif".
+  if (
+    g.includes('daif') ||
+    g.includes('\u0636\u0639\u064a\u0641') ||
+    g.includes('\u0636\u0639\u06cc\u0641') ||
+    g.includes('weak')
+  )
     return 'daif'
   return 'other'
 }
@@ -94,6 +100,13 @@ export default function GradingFilter({ hadiths, selected, onChange }: GradingFi
     }
     onChange(next)
   }
+
+  // Books other than Al-Kāfi rarely carry Sahih/Hasan/Weak gradings — every
+  // hadith collapses to "Other", leaving a single useless filter chip. Only
+  // render the filter when there is at least one substantive grading bucket
+  // to distinguish between.
+  const hasSubstantiveGradings = counts.sahih > 0 || counts.hasan > 0 || counts.daif > 0
+  if (!hasSubstantiveGradings) return null
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
