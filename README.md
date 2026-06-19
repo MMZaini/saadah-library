@@ -27,6 +27,7 @@ Saadah Library ("The Library of Happiness") is a free, non-profit online platfor
 
 - **Framework:** Next.js 15 (App Router, Turbopack) with React 19
 - **Language:** TypeScript
+- **Data:** Local, versioned JSON dataset served from `public/data` — no runtime API dependency
 - **Styling:** Tailwind CSS 3, tailwindcss-animate
 - **UI primitives:** Radix UI (dialog, dropdown-menu, accordion, select, tooltip, etc.)
 - **Icons:** Lucide React
@@ -55,10 +56,22 @@ Open http://localhost:3000 in your browser.
 
 ## Thaqalayn data
 
-The app reads from a local generated dataset under `public/data/thaqalayn`, not from the
-Thaqalayn API at runtime. The current blessed snapshot is recorded in
-`data/thaqalayn/current.json`, with immutable generated artifacts under
-`data/thaqalayn/releases/<version>` and `public/data/thaqalayn/<version>`.
+The app is fully self-contained: at runtime it reads a local, versioned dataset from
+`public/data/thaqalayn` and makes **no external API calls**. A CI guard
+(`scripts/data/check-runtime.mjs`, run via `yarn test:data`) fails the build if any
+Thaqalayn API host reference is reintroduced into the app code.
+
+Data is organized as immutable releases:
+
+- `data/thaqalayn/current.json` — pointer to the active ("blessed") release.
+- `data/thaqalayn/releases/<version>/canonical` — source-oriented canonical records.
+- `data/thaqalayn/releases/<version>/runtime` — app-ready artifacts (books, per-volume
+  hadiths, chapter structures, search shards, lookup, and random indexes).
+- `public/data/thaqalayn/<version>/runtime` — the artifacts actually served to clients,
+  with `public/data/thaqalayn/current/manifest.json` as the active-version pointer.
+
+The crawl/import pipeline (below) is only for maintainers refreshing the dataset; it never
+runs as part of serving the site.
 
 Useful commands:
 
