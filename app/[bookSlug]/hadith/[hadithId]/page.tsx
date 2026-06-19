@@ -87,7 +87,14 @@ export default function HadithPage() {
       hadith?.chapterInCategoryId !== null &&
       hadith?.chapterInCategoryId !== undefined
     ) {
-      router.push(`/${urlSlug}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+      const config = getBookConfig(bookId)
+      if (config?.hasMultipleVolumes) {
+        router.push(
+          `/${urlSlug}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        )
+      } else {
+        router.push(`/${urlSlug}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`)
+      }
     } else {
       router.push(`/${urlSlug}`)
     }

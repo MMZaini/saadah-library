@@ -183,7 +183,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             // Try to clear localStorage if it's full
             if (error instanceof Error && error.message.includes('QuotaExceededError')) {
               try {
-                localStorage.clear()
+                localStorage.removeItem('siteSettings')
                 localStorage.setItem('siteSettings', JSON.stringify(updated))
               } catch {
                 // Silent fail

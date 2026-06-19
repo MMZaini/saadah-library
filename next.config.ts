@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'thaqalayn.net' },
     ],
     // Allow larger image sizes for better quality
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -43,6 +42,20 @@ const nextConfig: NextConfig = {
         destination: '/read',
         permanent: true,
         basePath: false as const,
+      },
+    ]
+  },
+  async headers() {
+    return [
+      {
+        source: '/data/thaqalayn/current/manifest.json',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' },
+        ],
+      },
+      {
+        source: '/data/thaqalayn/:version/runtime/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ]
   },

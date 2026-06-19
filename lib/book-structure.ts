@@ -47,8 +47,28 @@ interface AllStructuresResponse {
 
 const STRUCTURE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
-function structureCacheKey(bookIds: string[]): string {
-  return `book-structure:${bookIds.slice().sort().join('|')}`
+let datasetVersionPromise: Promise<string> | null = null
+
+async function getDatasetVersion(): Promise<string> {
+  if (datasetVersionPromise) return datasetVersionPromise
+
+  datasetVersionPromise = (async () => {
+    try {
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+      const res = await fetch(`${basePath}/data/thaqalayn/current/manifest.json`)
+      if (!res.ok) return 'unknown'
+      const manifest = (await res.json()) as { version?: string }
+      return manifest.version || 'unknown'
+    } catch {
+      return 'unknown'
+    }
+  })()
+
+  return datasetVersionPromise
+}
+
+function structureCacheKey(bookIds: string[], version: string): string {
+  return `book-structure:${version}:${bookIds.slice().sort().join('|')}`
 }
 
 // ── Prefetch state ───────────────────────────────────────────────────────
@@ -77,6 +97,7 @@ async function _doPrefetch(): Promise<void> {
 
     const data: AllStructuresResponse = await res.json()
     if (!data.structures) return
+    const version = await getDatasetVersion()
 
     // Store every entry in IndexedDB with the correct cache key
     const storeOps: Promise<void>[] = []
@@ -89,10 +110,10 @@ async function _doPrefetch(): Promise<void> {
       if (entryKey.startsWith('__merged__:')) {
         // Multi-volume aggregate — key encodes the sorted volume IDs
         const sortedIds = entryKey.replace('__merged__:', '').split('|')
-        cacheKeyStr = structureCacheKey(sortedIds)
+        cacheKeyStr = structureCacheKey(sortedIds, version)
       } else {
         // Single volume
-        cacheKeyStr = structureCacheKey([entryKey])
+        cacheKeyStr = structureCacheKey([entryKey], version)
       }
 
       storeOps.push(cacheSet(cacheKeyStr, entry.structure, STRUCTURE_TTL))
@@ -114,7 +135,8 @@ async function _doPrefetch(): Promise<void> {
  * Falls back to null on error so callers can degrade gracefully.
  */
 export async function fetchBookStructure(bookId: string): Promise<BookStructureMap | null> {
-  const key = structureCacheKey([bookId])
+  const version = await getDatasetVersion()
+  const key = structureCacheKey([bookId], version)
 
   // Check client cache first (IndexedDB + memory)
   const cached = await cacheGet(key)
@@ -148,7 +170,8 @@ export async function fetchMultiVolumeStructure(
 ): Promise<BookStructureMap | null> {
   if (!volumeIds.length) return null
 
-  const key = structureCacheKey(volumeIds)
+  const version = await getDatasetVersion()
+  const key = structureCacheKey(volumeIds, version)
 
   const cached = await cacheGet(key)
   if (cached && typeof cached === 'object' && !Array.isArray(cached)) {

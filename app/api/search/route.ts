@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { thaqalaynApi } from '@/lib/api'
 import { isArabicQuery } from '@/lib/search-utils'
 import { searchArabicLocally, searchEnglishLocally } from '@/lib/arabic-search-index'
 
@@ -26,14 +25,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response)
     }
 
-    // English, book-scoped: use local English index (faster than parallel API calls)
-    if (bookIds && bookIds.length > 0) {
-      const response = await searchEnglishLocally(query, bookIds)
-      return NextResponse.json(response)
-    }
-
-    // English, global: call external API
-    const response = await thaqalaynApi.searchAllBooks(query)
+    // English queries also use generated local search shards.
+    const response = await searchEnglishLocally(query, bookIds)
     return NextResponse.json(response)
   } catch {
     return NextResponse.json({ error: 'Search failed', results: [], total: 0 }, { status: 500 })

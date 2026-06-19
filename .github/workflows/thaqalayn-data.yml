@@ -1,0 +1,57 @@
+name: Thaqalayn Data Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Optional chapter crawl limit for test runs
+        required: false
+        default: ''
+  schedule:
+    - cron: '17 3 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    env:
+      DATA_AUTO_PUBLISH: 'false'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Generate candidate dataset
+        run: |
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            yarn data:update --limit "${{ github.event.inputs.limit }}"
+          else
+            yarn data:update
+          fi
+
+      - run: yarn test:data
+      - run: yarn lint
+      - run: yarn tsc --noEmit
+      - run: yarn build
+
+      - name: Open data update PR
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          branch: data/thaqalayn-update
+          delete-branch: true
+          title: 'Update Thaqalayn data snapshot'
+          commit-message: 'Update Thaqalayn data snapshot'
+          body: |
+            Automated Thaqalayn data update.
+
+            This PR was generated only after crawler, data validation, tests, lint, typecheck, build, and runtime dependency checks completed successfully.
+
+            Auto-publish is intentionally disabled by default. Review the manifest and diff before merging.

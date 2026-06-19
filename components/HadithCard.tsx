@@ -111,8 +111,10 @@ function getChapterUrl(hadith: Hadith): string {
   const cfg = getBookConfig(bookId)
   let basePath = '/al-kafi'
   let isAlKafi = true
+  let isMultiVolume = false
 
   if (cfg) {
+    isMultiVolume = Boolean(cfg.hasMultipleVolumes)
     if (cfg.bookId === 'Al-Kafi') {
       basePath = '/al-kafi'
     } else {
@@ -127,7 +129,7 @@ function getChapterUrl(hadith: Hadith): string {
     isAlKafi = false
   }
 
-  return isAlKafi
+  return isAlKafi || isMultiVolume
     ? `${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
     : `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
 }
@@ -413,48 +415,47 @@ const HadithCard = ({
       <div className="mb-3 flex items-center justify-end gap-1">
         <span className="mr-auto text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
         <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn('h-7 w-7', bookmarked && 'text-bookmark')}
-                onClick={handleBookmarkToggle}
-              >
-                {bookmarked ? (
-                  <BookmarkCheck className="h-3.5 w-3.5" />
-                ) : (
-                  <Bookmark className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{bookmarked ? 'Remove bookmark' : 'Bookmark'}</TooltipContent>
-          </Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-7 w-7', bookmarked && 'text-bookmark')}
+              onClick={handleBookmarkToggle}
+            >
+              {bookmarked ? (
+                <BookmarkCheck className="h-3.5 w-3.5" />
+              ) : (
+                <Bookmark className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{bookmarked ? 'Remove bookmark' : 'Bookmark'}</TooltipContent>
+        </Tooltip>
 
-          {arabicText && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={showArabic ? 'default' : 'ghost'}
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setShowArabic(!showArabic)}
-                >
-                  <Languages className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{showArabic ? 'Hide Arabic' : 'Show Arabic'}</TooltipContent>
-            </Tooltip>
-          )}
-
+        {arabicText && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleOpenNewTab}>
-                <ExternalLink className="h-3.5 w-3.5" />
+              <Button
+                variant={showArabic ? 'default' : 'ghost'}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setShowArabic(!showArabic)}
+              >
+                <Languages className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Open in new tab</TooltipContent>
+            <TooltipContent>{showArabic ? 'Hide Arabic' : 'Show Arabic'}</TooltipContent>
           </Tooltip>
+        )}
 
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleOpenNewTab}>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Open in new tab</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* â”€â”€ Content â”€â”€ */}

@@ -47,10 +47,31 @@ Install dependencies and run the dev server:
 
 ```bash
 yarn install
+yarn data:validate
 yarn dev
 ```
 
 Open http://localhost:3000 in your browser.
+
+## Thaqalayn data
+
+The app reads from a local generated dataset under `public/data/thaqalayn`, not from the
+Thaqalayn API at runtime. The current blessed snapshot is recorded in
+`data/thaqalayn/current.json`, with immutable generated artifacts under
+`data/thaqalayn/releases/<version>` and `public/data/thaqalayn/<version>`.
+
+Useful commands:
+
+```bash
+yarn data:import:github   # bootstrap from the open-source ThaqalaynAPI snapshot
+yarn data:crawl           # dry-run sitemap discovery against thaqalayn.net
+yarn data:update          # crawl thaqalayn.net and generate a candidate release
+yarn test:data            # parser tests, data validation, runtime dependency scan
+```
+
+Scheduled data updates are configured in `.github/workflows/thaqalayn-data.yml`. The workflow
+opens a PR after crawling, validation, tests, lint, typecheck, and build pass; it does not
+auto-publish by default.
 
 ## License & Ethics
 
@@ -58,7 +79,10 @@ The project is intended as a charitable, educational resource. If parts of the r
 
 ## Data sources
 
-Hadith data is sourced from [thaqalayn.net](http://thaqalayn.net/) via the [ThaqalaynAPI](https://github.com/MohammedArab1/ThaqalaynAPI) by Mohammed Arab. We are grateful for their work in making this content programmatically accessible.
+Hadith data is maintained as a local, versioned Saadah dataset derived from
+[thaqalayn.net](http://thaqalayn.net/) and bootstrapped from the
+[ThaqalaynAPI](https://github.com/MohammedArab1/ThaqalaynAPI) open-source data by Mohammed Arab.
+We are grateful for their work in making this content accessible.
 
 ## Acknowledgements
 

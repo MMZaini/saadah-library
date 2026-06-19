@@ -10,6 +10,7 @@ import { useNavigation } from '@/lib/navigation-context'
 import { useSearchShortcuts } from '@/lib/use-search-shortcuts'
 import { debounce } from '@/lib/performance'
 import { cn } from '@/lib/utils'
+import { withBasePath } from '@/lib/assets'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Search, Loader2, Clock } from 'lucide-react'
@@ -349,7 +350,7 @@ export default function BookPage() {
             {coverSrc && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={coverSrc}
+                src={withBasePath(coverSrc)}
                 alt={bookInfo?.englishName || displayTitle}
                 className="hidden w-32 shrink-0 rounded object-cover md:block"
               />

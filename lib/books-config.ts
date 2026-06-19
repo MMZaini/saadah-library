@@ -1,5 +1,3 @@
-import { alKafiApi, uyunApi } from './api'
-
 // Book configuration for multi-volume and single-volume books
 export interface BookConfig {
   bookId: string
@@ -10,6 +8,22 @@ export interface BookConfig {
   volumeCount?: number
 }
 
+export const AL_KAFI_VOLUMES = [
+  'Al-Kafi-Volume-1-Kulayni',
+  'Al-Kafi-Volume-2-Kulayni',
+  'Al-Kafi-Volume-3-Kulayni',
+  'Al-Kafi-Volume-4-Kulayni',
+  'Al-Kafi-Volume-5-Kulayni',
+  'Al-Kafi-Volume-6-Kulayni',
+  'Al-Kafi-Volume-7-Kulayni',
+  'Al-Kafi-Volume-8-Kulayni',
+]
+
+export const UYUN_VOLUMES = [
+  'Uyun-akhbar-al-Rida-Volume-1-Saduq',
+  'Uyun-akhbar-al-Rida-Volume-2-Saduq',
+]
+
 // Multi-volume book configurations
 export const MULTI_VOLUME_BOOKS: Record<string, BookConfig> = {
   'Al-Kafi': {
@@ -17,7 +31,7 @@ export const MULTI_VOLUME_BOOKS: Record<string, BookConfig> = {
     baseName: 'Al-Kafi-Kulayni',
     englishName: 'Al-Kāfi',
     hasMultipleVolumes: true,
-    volumes: alKafiApi.getAlKafiVolumes(),
+    volumes: AL_KAFI_VOLUMES,
     volumeCount: 8,
   },
 
@@ -26,7 +40,7 @@ export const MULTI_VOLUME_BOOKS: Record<string, BookConfig> = {
     baseName: 'Uyun-akhbar-al-Rida-Saduq',
     englishName: 'ʿUyūn akhbār al-Riḍā',
     hasMultipleVolumes: true,
-    volumes: uyunApi.getUyunVolumes(),
+    volumes: UYUN_VOLUMES,
     volumeCount: 2,
   },
   'Man-La-Yahduruh-al-Faqih': {
@@ -58,6 +72,7 @@ export const SINGLE_VOLUME_BOOKS: string[] = [
   'Risalat-al-Huquq-Abidin',
   'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
   'Al-Khisal-Saduq',
+  'Kamal-al-Din-wa-Tamam-al-Nima-Saduq',
   'Kamil-al-Ziyarat-Qummi',
   'Kitab-al-Duafa-Ghadairi',
   'Maani-al-Akhbar-Saduq',
@@ -84,6 +99,7 @@ export const URL_TO_BOOK_ID_MAP: Record<string, string> = {
   'Risalat-al-Huquq': 'Risalat-al-Huquq-Abidin',
   'Thawab-al-Amal-wa-iqab-al-Amal': 'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
   'Al-Khisal': 'Al-Khisal-Saduq',
+  'Kamal-al-Din-wa-Tamam-al-Nima': 'Kamal-al-Din-wa-Tamam-al-Nima-Saduq',
   'Kamil-al-Ziyarat': 'Kamil-al-Ziyarat-Qummi',
   'Kitab-al-Duafa': 'Kitab-al-Duafa-Ghadairi',
   'Maani-al-Akhbar': 'Maani-al-Akhbar-Saduq',
@@ -248,6 +264,12 @@ export const SEARCHABLE_BOOKS: SearchableBook[] = [
     key: 'Al-Khisal-Saduq',
     displayName: 'Al-Khiṣāl',
     volumeIds: ['Al-Khisal-Saduq'],
+    volumeCount: 1,
+  },
+  {
+    key: 'Kamal-al-Din-wa-Tamam-al-Nima-Saduq',
+    displayName: 'Kamāl al-Dīn',
+    volumeIds: ['Kamal-al-Din-wa-Tamam-al-Nima-Saduq'],
     volumeCount: 1,
   },
   {
