@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback, memo, ReactNode } from 'react'
 import { Hadith } from '@/lib/api'
@@ -46,7 +46,7 @@ interface HadithCardProps {
   exactMatch?: boolean
 }
 
-// â”€â”€ Helpers â”€â”€
+// ── Helpers ──
 
 function removeChainFromMatn(matn: string, chain: string): string {
   if (!matn || !chain) return matn
@@ -134,17 +134,17 @@ function getChapterUrl(hadith: Hadith): string {
     : `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
 }
 
-// â”€â”€ Grading badge color mapping â”€â”€
+// ── Grading badge color mapping ──
 
 function gradingVariant(grading: string): 'sahih' | 'hasan' | 'daif' | 'secondary' {
   const g = grading.toLowerCase()
-  if (g.includes('sahih') || g.includes('ØµØ­ÙŠØ­')) return 'sahih'
-  if (g.includes('hasan') || g.includes('Ø­Ø³Ù†') || g.includes('good')) return 'hasan'
-  if (g.includes('daif') || g.includes('Ø¶Ø¹ÙŠÙ') || g.includes('weak')) return 'daif'
+  if (g.includes('sahih') || g.includes('صحيح')) return 'sahih'
+  if (g.includes('hasan') || g.includes('حسن') || g.includes('good')) return 'hasan'
+  if (g.includes('daif') || g.includes('ضعيف') || g.includes('weak')) return 'daif'
   return 'secondary'
 }
 
-// â”€â”€ Grading Interactive Component â”€â”€
+// ── Grading Interactive Component ──
 
 function GradingBadge({
   author,
@@ -180,7 +180,7 @@ function GradingBadge({
   )
 }
 
-// â”€â”€ Main component â”€â”€
+// ── Main component ──
 
 const HadithCard = ({
   hadith,
@@ -411,7 +411,7 @@ const HadithCard = ({
 
   return (
     <article className={cn('rounded-lg border border-border bg-surface-1 p-4 sm:p-5', className)}>
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* ── Header ── */}
       <div className="mb-3 flex items-center justify-end gap-1">
         <span className="mr-auto text-xs tabular-nums text-foreground-faint">#{hadith.id}</span>
         <Tooltip>
@@ -458,7 +458,7 @@ const HadithCard = ({
         </Tooltip>
       </div>
 
-      {/* â”€â”€ Content â”€â”€ */}
+      {/* ── Content ── */}
       <div className="space-y-3">
         {showArabic && arabicText ? (
           <div className="hadith-block bg-surface-2/50 rounded-md border border-border">
@@ -477,7 +477,7 @@ const HadithCard = ({
                 onClick={() => setArabicExpanded(!arabicExpanded)}
                 className="mt-1 text-xs font-medium text-accent transition-colors hover:underline"
               >
-                {arabicExpanded ? 'Ø§Ø¹Ø±Ø¶ Ø£Ù‚Ù„' : 'Ø§Ù‚Ø±Ø£ Ø§Ù„Ù…Ø²ÙŠØ¯'}
+                {arabicExpanded ? 'اعرض أقل' : 'اقرأ المزيد'}
               </button>
             )}
           </div>
@@ -511,7 +511,7 @@ const HadithCard = ({
         )}
       </div>
 
-      {/* â”€â”€ Gradings â”€â”€ */}
+      {/* ── Gradings ── */}
       {(hadith.majlisiGrading || hadith.mohseniGrading || hadith.behbudiGrading) && (
         <>
           <Separator className="my-3" />
@@ -550,7 +550,7 @@ const HadithCard = ({
         </>
       )}
 
-      {/* â”€â”€ Footer actions â”€â”€ */}
+      {/* ── Footer actions ── */}
       <Separator className="my-3" />
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
