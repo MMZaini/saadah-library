@@ -198,31 +198,3 @@ export async function cacheSet(key: string, data: unknown, ttl?: number): Promis
     void idbSet(entry)
   }
 }
-
-/**
- * Search within a cached full-volume response for a specific hadith.
- * Also checks the individual-hadith cache entry.
- * Returns the hadith object if found, or null.
- */
-export async function findHadithInCache(
-  apiBaseUrl: string,
-  bookId: string,
-  hadithId: number,
-): Promise<unknown | null> {
-  // Check the full-volume cache (might have been loaded by a structure/chapter view)
-  const volumeKey = `${apiBaseUrl}/${bookId}`
-  const volumeData = await cacheGet(volumeKey)
-  if (Array.isArray(volumeData)) {
-    const found = volumeData.find((h: Record<string, unknown>) => h && h.id === hadithId)
-    if (found) return found
-  }
-
-  // Check the individual-hadith cache entry
-  const singleKey = `${apiBaseUrl}/${bookId}/${hadithId}`
-  const singleData = await cacheGet(singleKey)
-  if (singleData && typeof singleData === 'object' && !('error' in singleData)) {
-    return singleData
-  }
-
-  return null
-}

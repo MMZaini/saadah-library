@@ -2,88 +2,92 @@
 
 import { createContext, useContext, useState, useCallback, useMemo, useRef, ReactNode } from 'react'
 
-interface NavigationState {
+interface SearchState {
+  query: string
+  results: unknown[]
+  page: number
+  filters: {
+    grading: string
+    sort: string
+  }
+}
+
+interface PerPathState {
   scrollPosition: number
-  lastPath: string
-  searchState: {
-    query: string
-    results: unknown[]
-    page: number
-    filters: {
-      grading: string
-      sort: string
-    }
-  } | null
+  searchState: SearchState | null
 }
 
 interface NavigationContextType {
-  navigationState: NavigationState
-  saveScrollPosition: (position: number) => void
-  saveSearchState: (searchState: NavigationState['searchState']) => void
-  savePath: (path: string) => void
-  restoreScrollPosition: () => number
-  getSearchState: () => NavigationState['searchState']
+  saveScrollPosition: (position: number, path?: string) => void
+  saveSearchState: (searchState: SearchState | null, path?: string) => void
+  restoreScrollPosition: (path?: string) => number
+  getSearchState: (path?: string) => SearchState | null
   clearNavigationState: () => void
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
 
+// Scroll position and search results are scoped per route path so state from
+// one page (e.g. a search on the home page) never leaks into an unrelated page
+// (e.g. a book page). The path defaults to the current pathname, which is
+// correct for the common case: saves happen while on the page (or via a
+// mount-captured path passed explicitly), and restores happen on the entering
+// page's mount, where the pathname is already the page's own.
+function currentPath(): string {
+  return typeof window !== 'undefined' ? window.location.pathname : '/'
+}
+
+const EMPTY: PerPathState = { scrollPosition: 0, searchState: null }
+
 export function NavigationProvider({ children }: { children: ReactNode }) {
-  const [navigationState, setNavigationState] = useState<NavigationState>({
-    scrollPosition: 0,
-    lastPath: '/',
-    searchState: null,
-  })
+  const [stateByPath, setStateByPath] = useState<Record<string, PerPathState>>({})
 
-  // Keep a ref so getSearchState / restoreScrollPosition always read the
-  // latest value without adding navigationState to callback deps (which would
-  // recreate the callbacks on every state change and break memoisation).
-  const stateRef = useRef(navigationState)
-  stateRef.current = navigationState
+  // Keep a ref so getSearchState / restoreScrollPosition always read the latest
+  // value without adding stateByPath to callback deps (which would recreate the
+  // callbacks on every change and break memoisation in consumers).
+  const stateRef = useRef(stateByPath)
+  stateRef.current = stateByPath
 
-  const saveScrollPosition = useCallback((position: number) => {
-    setNavigationState((prev) => ({ ...prev, scrollPosition: position }))
+  const saveScrollPosition = useCallback((position: number, path: string = currentPath()) => {
+    setStateByPath((prev) => ({
+      ...prev,
+      [path]: { ...(prev[path] ?? EMPTY), scrollPosition: position },
+    }))
   }, [])
 
-  const saveSearchState = useCallback((searchState: NavigationState['searchState']) => {
-    setNavigationState((prev) => ({ ...prev, searchState }))
+  const saveSearchState = useCallback(
+    (searchState: SearchState | null, path: string = currentPath()) => {
+      setStateByPath((prev) => ({
+        ...prev,
+        [path]: { ...(prev[path] ?? EMPTY), searchState },
+      }))
+    },
+    [],
+  )
+
+  const restoreScrollPosition = useCallback((path: string = currentPath()) => {
+    return stateRef.current[path]?.scrollPosition ?? 0
   }, [])
 
-  const savePath = useCallback((path: string) => {
-    setNavigationState((prev) => ({ ...prev, lastPath: path }))
-  }, [])
-
-  const restoreScrollPosition = useCallback(() => {
-    return stateRef.current.scrollPosition
-  }, [])
-
-  const getSearchState = useCallback(() => {
-    return stateRef.current.searchState
+  const getSearchState = useCallback((path: string = currentPath()) => {
+    return stateRef.current[path]?.searchState ?? null
   }, [])
 
   const clearNavigationState = useCallback(() => {
-    setNavigationState({
-      scrollPosition: 0,
-      lastPath: '/',
-      searchState: null,
-    })
+    setStateByPath({})
   }, [])
 
   const value = useMemo<NavigationContextType>(
     () => ({
-      navigationState,
       saveScrollPosition,
       saveSearchState,
-      savePath,
       restoreScrollPosition,
       getSearchState,
       clearNavigationState,
     }),
     [
-      navigationState,
       saveScrollPosition,
       saveSearchState,
-      savePath,
       restoreScrollPosition,
       getSearchState,
       clearNavigationState,

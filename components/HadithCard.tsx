@@ -6,6 +6,7 @@ import { getHighlightSegments } from '@/lib/search-utils'
 import { useSettings } from '@/lib/settings-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
+import { withBasePath } from '@/lib/assets'
 import { cn, hasHarakat, removeHarakat } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -636,7 +637,7 @@ const HadithCard = ({
           hadith.categoryId &&
           hadith.chapterInCategoryId != null && (
             <a
-              href={chapterUrl}
+              href={withBasePath(chapterUrl)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-0.5 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"

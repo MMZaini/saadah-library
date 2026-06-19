@@ -12,7 +12,7 @@ The defining architectural constraint: the app is **fully self-contained at runt
 
 ```bash
 yarn dev                 # dev server (Turbopack) on :3000
-yarn build               # production build → outputs to .next-build (NOT .next)
+yarn build               # production build (plain `next build` → outputs to .next)
 yarn start               # serve production build on :3001
 yarn lint                # eslint app components lib
 yarn lint:fix            # eslint --fix
@@ -42,8 +42,8 @@ yarn data:validate       # validate the active release
 
 - **`basePath` is `/read`.** Every client-side `fetch`, share link, and asset URL must be prefixed with `process.env.NEXT_PUBLIC_BASE_PATH || ''` (see `lib/assets.ts` `withBasePath`). Forgetting this breaks links in production but works in some local cases.
 - **Import alias `@/*` maps to repo root** (e.g. `@/lib/api`, `@/components/...`).
-- **`eslint.ignoreDuringBuilds: true`** in `next.config.ts` — `yarn build` will NOT fail on lint errors; run `yarn lint` explicitly.
-- **Build output goes to `.next-build`, not `.next`.** Note: `.next-build/` is currently tracked in git despite being gitignored — do not add to it; it should ideally be untracked.
+- **ESLint runs during `yarn build`.** `next.config.ts` sets `eslint.dirs: ['app', 'components', 'lib']` (no `ignoreDuringBuilds`), so the build fails on lint errors (warnings pass). `yarn lint` covers the same dirs.
+- **Build output goes to `.next`** (no `distDir` override; `build` is plain `next build`). `.next` is gitignored and not tracked.
 
 ## Architecture
 
@@ -82,7 +82,6 @@ Routes live under `app/` with the `/read` basePath. Book browsing has multiple t
 - `app/[bookSlug]/...` — the **canonical generic** route for any book (page, `/chapter/...`, `/hadith/...`, `/volume/.../chapter/...`).
 - `app/al-kafi/...` — Al-Kāfi-specific route (Al-Kāfi is linked here, not via `[bookSlug]`).
 - `app/uyun-akhbar-al-rida/hadith/...` — Uyun-specific hadith route.
-- `app/book/[bookId]/...` — **legacy duplicate** of `[bookSlug]`, not linked from anywhere.
 
 `lib/books-config.ts` is the source of truth for book identity: multi- vs single-volume config, URL-slug ↔ bookId mapping (`getBookUrlSlug` / `getBookIdFromUrlSlug`), and `SEARCHABLE_BOOKS` (the global search scope selector). `middleware.ts` 301-redirects known book slugs to lowercase. `lib/books.ts` holds display metadata (titles, authors, cover images) for the homepage grid, matched to bookIds by normalized-name fuzzy matching.
 
@@ -97,8 +96,4 @@ Composed in `components/ClientProviders.tsx`:
 
 ### Display nuances
 
-`components/HadithCard.tsx` is the core rendering unit (used in search, chapters, bookmarks). It strips the sanad (chain) from the matn, detects Arabic overflow for read-more, builds per-hadith share/source URLs (`getHadithUrl` / `getChapterUrl` use `books-config` to pick the right route tree), and renders grading badges with scholarly tooltips.
-
-### Known dead/legacy code
-
-`lib/arabic-search-index.ts` and the `app/api/admin/{rebuild-arabic-index,arabic-index-status}` routes are no-op stubs kept for compatibility; nothing references the admin endpoints. The `app/book/[bookId]/` route tree is an unlinked duplicate of `app/[bookSlug]/`. Treat these as removable rather than as patterns to extend.
+`components/HadithCard.tsx` is the core rendering unit (used in search, chapters, bookmarks). It strips the sanad (chain) from the matn, detects Arabic overflow for read-more, builds per-hadith share/source URLs (`getHadithUrl` / `getChapterUrl` use `books-config` to pick the right route tree), and renders grading badges with scholarly tooltips. Note `getChapterUrl` returns an unprefixed path, so raw `<a href>` uses must wrap it in `withBasePath` (Next only auto-applies basePath to `next/link` / navigation, not raw anchors).

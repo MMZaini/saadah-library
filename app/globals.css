@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+/* Noto Sans Arabic and Space Mono are self-hosted at build time via
+   next/font/google (see app/layout.tsx) and exposed as CSS variables, so there
+   are no runtime Google Fonts requests. */
 
 /* Uthman Taha – self-hosted from /public/fonts */
 @font-face {
@@ -153,7 +154,7 @@ html body[data-scroll-locked] {
   }
 
   .font-arabic {
-    font-family: 'Uthman Taha', 'Noto Sans Arabic', serif;
+    font-family: 'Uthman Taha', var(--font-noto-arabic), 'Noto Sans Arabic', serif;
   }
 
   /* Hadith text sizing */

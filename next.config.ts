@@ -6,11 +6,8 @@ const nextConfig: NextConfig = {
   // Expose basePath to client code for manual uses (fetch, share links, etc.)
   env: { NEXT_PUBLIC_BASE_PATH: '/read' },
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: 'picsum.photos' },
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'placehold.co' },
-    ],
+    // Covers are bundled locally and served unoptimized, so no remote image
+    // hosts are needed.
     // Allow larger image sizes for better quality
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 512, 640, 750, 828, 1080, 1200],

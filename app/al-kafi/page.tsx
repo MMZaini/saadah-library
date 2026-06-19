@@ -16,7 +16,7 @@ const BookStructureExplorer = lazy(() => import('@/components/AlKafiVolumeStruct
 const AlKafiBookBrowser = lazy(() => import('@/components/AlKafiBookBrowser'))
 
 export default function AlKafiPage() {
-  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } =
+  const { restoreScrollPosition, getSearchState, saveSearchState, saveScrollPosition } =
     useNavigation()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -39,20 +39,22 @@ export default function AlKafiPage() {
   useEffect(() => {
     const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    savePath('/al-kafi')
     const s = getSearchState()
     if (s) {
       setSearchQuery(s.query)
       setSearchResults(s.results as Hadith[])
     }
-  }, [restoreScrollPosition, savePath, getSearchState])
+  }, [restoreScrollPosition, getSearchState])
 
   useEffect(() => {
-    const save = () => saveScrollPosition(window.scrollY)
+    // Capture the path at mount: on unmount the URL may already point at the
+    // next route, so we must save this page's scroll under its own path.
+    const path = window.location.pathname
+    const save = () => saveScrollPosition(window.scrollY, path)
     window.addEventListener('beforeunload', save)
     return () => {
       window.removeEventListener('beforeunload', save)
-      saveScrollPosition(window.scrollY)
+      saveScrollPosition(window.scrollY, path)
     }
   }, [saveScrollPosition])
 

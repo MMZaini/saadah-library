@@ -1,5 +1,5 @@
 import './globals.css'
-import { Inter, Lora, Merriweather } from 'next/font/google'
+import { Inter, Lora, Merriweather, Noto_Sans_Arabic, Space_Mono } from 'next/font/google'
 import ClientProviders from '@/components/ClientProviders'
 import TopBar from '@/components/TopBar'
 import SettingsSidebar from '@/components/SettingsSidebar'
@@ -27,6 +27,23 @@ const merriweather = Merriweather({
   display: 'swap',
 })
 
+// Self-hosted (build-time) instead of a runtime Google Fonts request, keeping
+// the app free of external calls. Noto Sans Arabic is the fallback for glyphs
+// the primary Uthman Taha face excludes; Space Mono is used in a few UI spots.
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-noto-arabic',
+  display: 'swap',
+})
+
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-space-mono',
+  display: 'swap',
+})
+
 export const metadata = {
   title: 'Saadah Library',
   description: 'Comprehensive Shia Library – UI recreation',
@@ -43,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${lora.variable} ${merriweather.variable}`}
+      className={`${inter.variable} ${lora.variable} ${merriweather.variable} ${notoSansArabic.variable} ${spaceMono.variable}`}
       data-motion="full"
       suppressHydrationWarning
     >
@@ -56,8 +73,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="font/woff2"
           crossOrigin="anonymous"
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <ClientProviders>

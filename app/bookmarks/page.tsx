@@ -165,7 +165,8 @@ export default function BookmarksPage() {
   const filteredBookmarks = bookmarks.filter((bookmark) => {
     if (!searchQuery.trim()) return true
     const query = searchQuery.toLowerCase()
-    const fullHadith = fullHadiths.find((h) => h.id === bookmark.id)
+    // Match on bookId + id: hadith IDs repeat across books, so id alone collides.
+    const fullHadith = fullHadiths.find((h) => h.id === bookmark.id && h.bookId === bookmark.bookId)
 
     switch (searchFilter) {
       case 'hadith':
@@ -216,7 +217,9 @@ export default function BookmarksPage() {
   })
 
   const filteredFullHadiths = fullHadiths.filter((hadith) =>
-    filteredBookmarks.some((bookmark) => bookmark.id === hadith.id),
+    filteredBookmarks.some(
+      (bookmark) => bookmark.id === hadith.id && bookmark.bookId === hadith.bookId,
+    ),
   )
 
   if (loading) {

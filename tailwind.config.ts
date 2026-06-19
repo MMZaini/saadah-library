@@ -31,8 +31,14 @@ export default {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        arabic: ['Uthman Taha', 'Noto Sans Arabic', 'serif'],
-        mono: ['"Space Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        arabic: ['Uthman Taha', 'var(--font-noto-arabic)', 'Noto Sans Arabic', 'serif'],
+        mono: [
+          'var(--font-space-mono)',
+          '"Space Mono"',
+          'ui-monospace',
+          'SFMono-Regular',
+          'monospace',
+        ],
         'hadith-english': [
           'var(--hadith-english-font-family)',
           'var(--font-inter)',

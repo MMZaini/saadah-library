@@ -200,10 +200,6 @@ export const thaqalaynApi = {
 
     return null
   },
-
-  async getIngredients(): Promise<unknown> {
-    throw new Error('Ingredients are not part of the local Thaqalayn hadith dataset')
-  },
 }
 
 export const alKafiApi = {

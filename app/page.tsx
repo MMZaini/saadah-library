@@ -10,7 +10,7 @@ import { useNavigation } from '@/lib/navigation-context'
 import { debounce } from '@/lib/performance'
 
 export default function Page() {
-  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } =
+  const { restoreScrollPosition, getSearchState, saveSearchState, saveScrollPosition } =
     useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Hadith[]>([])
@@ -21,13 +21,12 @@ export default function Page() {
   useEffect(() => {
     const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    savePath('/')
     const s = getSearchState()
     if (s) {
       setSearchQuery(s.query)
       setSearchResults(s.results as Hadith[])
     }
-  }, [restoreScrollPosition, savePath, getSearchState])
+  }, [restoreScrollPosition, getSearchState])
 
   useEffect(() => {
     const handle = () => {
@@ -40,11 +39,14 @@ export default function Page() {
   }, [saveSearchState])
 
   useEffect(() => {
-    const save = () => saveScrollPosition(window.scrollY)
+    // Capture the path at mount: on unmount the URL may already point at the
+    // next route, so we must save this page's scroll under its own path.
+    const path = window.location.pathname
+    const save = () => saveScrollPosition(window.scrollY, path)
     window.addEventListener('beforeunload', save)
     return () => {
       window.removeEventListener('beforeunload', save)
-      saveScrollPosition(window.scrollY)
+      saveScrollPosition(window.scrollY, path)
     }
   }, [saveScrollPosition])
 

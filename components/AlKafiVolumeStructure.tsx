@@ -11,6 +11,10 @@ interface ChapterSummary {
   chapter: string
   chapterInCategoryId: number
   hadithCount: number
+  // Source volume the chapter belongs to. Present in the generated structure
+  // metadata and essential for "All Volumes": category IDs are per-volume, so a
+  // volume-2 chapter must route to volume 2, not the selected/first volume.
+  volume?: number
 }
 
 interface CategorySummary {
@@ -115,6 +119,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                 chapter: chapterKey,
                 chapterInCategoryId: hadith.chapterInCategoryId || 0,
                 hadithCount: 0,
+                volume: hadith.volume,
               }
             }
             summary![categoryKey].chapters[chapterKey].hadithCount++
@@ -165,12 +170,18 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     setExpandedCategories(newExpanded)
   }
 
-  const handleChapterClick = (categoryId: string, chapterInCategoryId: number) => {
+  const handleChapterClick = (
+    categoryId: string,
+    chapterInCategoryId: number,
+    sourceVolume?: number,
+  ) => {
     // Save current scroll position before navigation
     navigation.saveScrollPosition(window.scrollY)
 
-    // For Al-Kafi navigation, we'll use the first available volume or selectedVolume if it's a number
-    const volumeForUrl = selectedVolume === 'all' ? 1 : selectedVolume
+    // Route to the chapter's own source volume. In "All Volumes" mode the chapter
+    // carries its source volume; otherwise fall back to the selected volume (and
+    // only to volume 1 as a last resort when neither is available).
+    const volumeForUrl = sourceVolume ?? (selectedVolume === 'all' ? 1 : selectedVolume)
     router.push(`/al-kafi/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`)
   }
 
@@ -455,10 +466,18 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                               ignoreNextClickRef.current = false
                               return
                             }
-                            handleChapterClick(category.categoryId, chapter.chapterInCategoryId)
+                            handleChapterClick(
+                              category.categoryId,
+                              chapter.chapterInCategoryId,
+                              chapter.volume,
+                            )
                           }}
                           {...getTouchHandlers(key, () =>
-                            handleChapterClick(category.categoryId, chapter.chapterInCategoryId),
+                            handleChapterClick(
+                              category.categoryId,
+                              chapter.chapterInCategoryId,
+                              chapter.volume,
+                            ),
                           )}
                           aria-expanded={isExpanded}
                           onMouseEnter={() => {

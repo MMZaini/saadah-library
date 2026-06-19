@@ -29,7 +29,7 @@ interface BookPageState {
 export default function BookPage() {
   const params = useParams()
   const router = useRouter()
-  const { restoreScrollPosition, savePath, getSearchState, saveSearchState, saveScrollPosition } =
+  const { restoreScrollPosition, getSearchState, saveSearchState, saveScrollPosition } =
     useNavigation()
   const urlSlug = params?.bookSlug as string
   const bookId = getBookIdFromUrlSlug(urlSlug)
@@ -56,27 +56,33 @@ export default function BookPage() {
     return [bookId]
   }, [bookId])
 
-  // Restore search state on mount
+  // Restore (or reset) per-book search state. Re-runs on slug change because the
+  // [bookSlug] route reuses this component instance across books; without the
+  // reset the previous book's search would linger in state.
   useEffect(() => {
     const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    savePath(`/${urlSlug}`)
     const s = getSearchState()
     if (s) {
       setSearchQuery(s.query)
       setSearchResults(s.results as Hadith[])
+    } else {
+      setSearchQuery('')
+      setSearchResults([])
     }
-  }, [restoreScrollPosition, savePath, getSearchState, urlSlug])
+  }, [restoreScrollPosition, getSearchState, urlSlug])
 
-  // Save scroll position on unmount / page leave
+  // Save scroll position on unmount / page leave, keyed to the active book's
+  // path (re-captured on slug change since the component instance is reused).
   useEffect(() => {
-    const save = () => saveScrollPosition(window.scrollY)
+    const path = window.location.pathname
+    const save = () => saveScrollPosition(window.scrollY, path)
     window.addEventListener('beforeunload', save)
     return () => {
       window.removeEventListener('beforeunload', save)
-      saveScrollPosition(window.scrollY)
+      saveScrollPosition(window.scrollY, path)
     }
-  }, [saveScrollPosition])
+  }, [saveScrollPosition, urlSlug])
 
   const debouncedSearch = useMemo(
     () =>
