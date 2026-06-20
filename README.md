@@ -7,15 +7,19 @@ Saadah Library ("The Library of Happiness") is a free, non-profit online platfor
 - Democratize access to important Islamic works by providing a clean, searchable, and mobile-friendly interface.
 - Preserve scholarly material and citations, and make verified references and grading classifications easy to find.
 - Provide an environment where translations, annotations, and scholarly contributions can be linked and shared.
-- Offer the site as a charitable resource — free to use and open-source.
+- Offer the site as a charitable resource - free to use and open-source.
 
 ## What the app provides
 
-- A browsable collection of key works including Al-Kāfi.
-- English translations and arabic text.
+- A browsable collection of key works including Al-Kafi and the current local Thaqalayn-derived corpus.
+- Volume, category, and chapter explorers for multi-volume and single-volume books.
+- English translations and Arabic text, with optional side-by-side reading.
+- Persistent top-bar search across the whole library or within a book, with book/volume scoping, exact phrase, exact words, flexible matching, Arabic-aware matching/highlighting, and filter-only discovery.
 - Bookmarks and personal saved items for study and review.
-- Hadith sharing and grading classifications with verifiable source references.
-- Responsive, accessible UI with adjustable text size, and keyboard-friendly navigation.
+- Hadith sharing, copy actions, direct links, and grading classifications with verifiable source references.
+- Volume-aware hadith routes for books whose hadith numbers repeat by volume, plus previous/next chapter navigation.
+- Responsive, accessible UI with adjustable Arabic and English text size, reading preferences, reduced-motion support, and keyboard-friendly navigation.
+- Local runtime data with client-side caching for large volume payloads and lightweight structure metadata.
 
 ## Who it's for
 
@@ -27,11 +31,13 @@ Saadah Library ("The Library of Happiness") is a free, non-profit online platfor
 
 - **Framework:** Next.js 15 (App Router, Turbopack) with React 19
 - **Language:** TypeScript
-- **Data:** Local, versioned JSON dataset served from `public/data` — no runtime API dependency
+- **Data:** Local, versioned JSON dataset served from `public/data`; the app has no external runtime API dependency
+- **Search:** Server-backed local search over generated per-book search shards
 - **Styling:** Tailwind CSS 3, tailwindcss-animate
 - **UI primitives:** Radix UI (dialog, dropdown-menu, accordion, select, tooltip, etc.)
 - **Icons:** Lucide React
 - **Utilities:** class-variance-authority, clsx, tailwind-merge
+- **Testing:** Vitest
 - **Linting / Formatting:** ESLint 9, Prettier (with prettier-plugin-tailwindcss)
 - **Package manager:** Yarn
 - **Deployment:** Vercel
@@ -44,15 +50,26 @@ For developers:
 
 ## Local development
 
-Install dependencies and run the dev server:
+Install dependencies, validate the active dataset, run tests, and start the dev server:
 
 ```bash
 yarn install
 yarn data:validate
+yarn test
 yarn dev
 ```
 
 Open http://localhost:3000 in your browser.
+
+Useful development checks:
+
+```bash
+yarn test:data       # parser tests, grading coverage checks, data validation, runtime dependency scan
+yarn test            # unit and regression tests
+yarn lint            # eslint over app, components, and lib
+yarn build           # production build
+yarn format:check    # prettier check for app, scripts, tests, docs, and workflows
+```
 
 ## Thaqalayn data
 
@@ -63,12 +80,12 @@ Thaqalayn API host reference is reintroduced into the app code.
 
 Data is organized as immutable releases:
 
-- `data/thaqalayn/current.json` — pointer to the active ("blessed") release.
-- `data/thaqalayn/releases/<version>/canonical` — source-oriented canonical records.
-- `data/thaqalayn/releases/<version>/runtime` — app-ready artifacts (books, per-volume
-  hadiths, chapter structures, search shards, lookup, and random indexes).
-- `public/data/thaqalayn/<version>/runtime` — the artifacts actually served to clients,
-  with `public/data/thaqalayn/current/manifest.json` as the active-version pointer.
+- `data/thaqalayn/current.json` - pointer to the active ("blessed") release.
+- `data/thaqalayn/releases/<version>/canonical` - source-oriented canonical records.
+- `data/thaqalayn/releases/<version>/runtime` - app-ready artifacts (books, per-volume hadiths, chapter structures, merged structure metadata, search shards, lookup, and random indexes).
+- `public/data/thaqalayn/<version>/runtime` - the artifacts actually served to clients, with `public/data/thaqalayn/current/manifest.json` as the active-version pointer.
+
+The app reads those artifacts directly and uses a local `/api/search` route for server-side search/filtering. In the browser, large runtime payloads are cached in IndexedDB behind a versioned URL so repeated reading stays fast without making the dataset mutable.
 
 The crawl/import pipeline (below) is only for maintainers refreshing the dataset; it never
 runs as part of serving the site.
@@ -85,6 +102,13 @@ yarn test:data            # parser tests, data validation, runtime dependency sc
 Scheduled data updates are configured in `.github/workflows/thaqalayn-data.yml`. The workflow
 opens a PR after crawling, validation, tests, lint, typecheck, and build pass; it does not
 auto-publish by default.
+
+Data quality notes:
+
+- Parser regression tests cover page parsing, grading extraction, and search behavior.
+- `tests/data/gradings.test.mjs` keeps the list of books with grading data in sync with the active dataset.
+- `data/thaqalayn/RECONSTRUCTIONS.md` records known reconstruction decisions and source cleanup notes.
+- `scripts/data/check-runtime.mjs` guards against reintroducing runtime calls to Thaqalayn API hosts.
 
 ## License & Ethics
 
