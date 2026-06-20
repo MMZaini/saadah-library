@@ -6,8 +6,8 @@ import { bookApi, Hadith } from '@/lib/api'
 import { getBookIdFromUrlSlug } from '@/lib/books-config'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
-import ChapterSearch from '@/components/ChapterSearch'
 import { useChapter } from '@/lib/chapter-context'
+import { usePageSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -25,7 +25,10 @@ export default function GenericChapterDetailPage() {
   const [hadiths, setHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const { query: searchQuery } = usePageSearch({
+    placeholder: 'Filter this chapter…',
+    resetKey: `${bookSlug}/${categoryId}/${chapterInCategoryId}`,
+  })
   const [chapterInfo, setLocalChapterInfo] = useState<{
     category: string
     chapter: string
@@ -64,7 +67,6 @@ export default function GenericChapterDetailPage() {
 
         chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(chapterHadiths)
-        setSearchQuery('')
       } catch {
         setError('Failed to load chapter content')
       } finally {
@@ -128,15 +130,13 @@ export default function GenericChapterDetailPage() {
           </div>
         )}
 
-        {/* Search */}
-        {hadiths.length > 0 && (
+        {/* Active search summary (the query comes from the TopBar) */}
+        {hadiths.length > 0 && searchQuery.trim() && (
           <div className="mb-5">
-            <ChapterSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              resultCount={filteredHadiths.length}
-              totalCount={hadiths.length}
-            />
+            <p className="text-xs text-foreground-muted">
+              <span className="font-medium text-accent">{filteredHadiths.length}</span> of{' '}
+              {hadiths.length} match &ldquo;{searchQuery}&rdquo;
+            </p>
           </div>
         )}
 

@@ -7,15 +7,17 @@ import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
-import { useNavigation } from '@/lib/navigation-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
+import { useSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
+import SearchBar from '@/components/SearchBar'
+import TruncatedTooltip from '@/components/TruncatedTooltip'
 
 export default function TopBar() {
   const { toggleSettings } = useSettings()
   const { chapterInfo } = useChapter()
   const { bookmarkCount } = useBookmarks()
-  const navigation = useNavigation()
+  const { query, setQuery, isSearching, placeholder } = useSearch()
   const pathname = usePathname()
   const params = useParams()
   const router = useRouter()
@@ -82,7 +84,7 @@ export default function TopBar() {
   const handleTitleClick = (e: React.MouseEvent) => {
     if (pathname === '/') {
       e.preventDefault()
-      navigation.saveSearchState(null)
+      // Home listens for this and clears its query + saved search state.
       window.dispatchEvent(new CustomEvent('clearSearch'))
     }
   }
@@ -117,7 +119,10 @@ export default function TopBar() {
             </>
           )}
           <ChevronRight className="h-3 w-3" />
-          <span className="max-w-[200px] truncate text-foreground">{chapterInfo.chapter}</span>
+          <TruncatedTooltip
+            text={chapterInfo.chapter}
+            className="max-w-[200px] text-foreground"
+          />
         </div>
       )
     }
@@ -146,7 +151,7 @@ export default function TopBar() {
         findTitleFromBooksList(currentBookId) ||
         getBookConfig(currentBookId)?.englishName ||
         humanizeBookId(currentBookId)
-      return <span className="truncate text-sm text-foreground-muted">{title}</span>
+      return <TruncatedTooltip text={title} className="max-w-[260px] text-sm text-foreground-muted" />
     }
 
     return null
@@ -192,7 +197,17 @@ export default function TopBar() {
           </div>
         )}
 
-        <div className="flex-1" />
+        {/* Persistent search field — behavior is set by the active page */}
+        <div className="flex min-w-0 flex-1 justify-end">
+          <SearchBar
+            variant="topbar"
+            value={query}
+            onChange={setQuery}
+            placeholder={placeholder}
+            isSearching={isSearching}
+            className="w-full max-w-xs sm:max-w-sm md:max-w-md"
+          />
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-1">

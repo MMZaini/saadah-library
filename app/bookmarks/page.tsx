@@ -7,6 +7,7 @@ import { thaqalaynApi, Hadith } from '@/lib/api'
 import BookmarkCard from '@/components/BookmarkCard'
 import BookmarkedHadithCard from '@/components/BookmarkedHadithCard'
 import { cn } from '@/lib/utils'
+import { usePageSearch } from '@/lib/search-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -33,7 +34,10 @@ export default function BookmarksPage() {
   const [fullHadiths, setFullHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const { query: searchQuery, setQuery: setSearchQuery } = usePageSearch({
+    placeholder: 'Search bookmarks…',
+    resetKey: 'bookmarks',
+  })
   const [searchFilter, setSearchFilter] = useState<'both' | 'hadith' | 'notes'>('both')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [globalNotesVisible, setGlobalNotesVisible] = useState(false)
@@ -283,19 +287,10 @@ export default function BookmarksPage() {
         />
       </div>
 
-      {/* Search */}
+      {/* Filter — the search query itself comes from the persistent TopBar field */}
       {bookmarkCount > 0 && (
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
-          <div className="flex flex-1 items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
-            <Search className="h-4 w-4 shrink-0 text-foreground-faint" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint"
-              placeholder="Search through your bookmarks…"
-            />
-          </div>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <span className="text-xs font-medium text-foreground-muted">Search in:</span>
 
           {/* Filter dropdown */}
           <div className="relative min-w-[130px]" ref={dropdownRef}>

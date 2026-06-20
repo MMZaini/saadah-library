@@ -6,9 +6,8 @@ import { thaqalaynApi, Hadith, BookInfo } from '@/lib/api'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import SearchInterface from '@/components/SearchInterface'
-import SearchBar from '@/components/SearchBar'
 import { useNavigation } from '@/lib/navigation-context'
-import { debounce } from '@/lib/performance'
+import { useServerSearch } from '@/lib/use-server-search'
 import { cn } from '@/lib/utils'
 import { withBasePath } from '@/lib/assets'
 import { Badge } from '@/components/ui/badge'
@@ -29,8 +28,7 @@ interface BookPageState {
 export default function BookPage() {
   const params = useParams()
   const router = useRouter()
-  const { restoreScrollPosition, getSearchState, saveSearchState, saveScrollPosition } =
-    useNavigation()
+  const { restoreScrollPosition, saveScrollPosition } = useNavigation()
   const urlSlug = params?.bookSlug as string
   const bookId = getBookIdFromUrlSlug(urlSlug)
 
@@ -41,10 +39,6 @@ export default function BookPage() {
     error: null,
   })
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Hadith[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [searchError, setSearchError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'structure' | 'chapters' | 'explorer'>('structure')
 
   // Detect multi-volume books and get all their volume IDs
@@ -56,21 +50,27 @@ export default function BookPage() {
     return [bookId]
   }, [bookId])
 
-  // Restore (or reset) per-book search state. Re-runs on slug change because the
-  // [bookSlug] route reuses this component instance across books; without the
-  // reset the previous book's search would linger in state.
+  const bookParam = useMemo(() => volumeIds.join(','), [volumeIds])
+  const searchTitle = getBookConfig(bookId)?.englishName || urlSlug?.replace(/-/g, ' ') || 'book'
+
+  const {
+    query,
+    results,
+    error: searchError,
+    isSearching,
+    clear,
+  } = useServerSearch({
+    placeholder: `Search ${searchTitle}…`,
+    bookParam,
+    resetKey: urlSlug,
+  })
+
+  // Restore scroll position on mount / slug change ([bookSlug] reuses this
+  // component instance across books, so this re-runs per book).
   useEffect(() => {
     const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    const s = getSearchState()
-    if (s) {
-      setSearchQuery(s.query)
-      setSearchResults(s.results as Hadith[])
-    } else {
-      setSearchQuery('')
-      setSearchResults([])
-    }
-  }, [restoreScrollPosition, getSearchState, urlSlug])
+  }, [restoreScrollPosition, urlSlug])
 
   // Save scroll position on unmount / page leave, keyed to the active book's
   // path (re-captured on slug change since the component instance is reused).
@@ -83,66 +83,6 @@ export default function BookPage() {
       saveScrollPosition(window.scrollY, path)
     }
   }, [saveScrollPosition, urlSlug])
-
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(async (query: string) => {
-        if (!query.trim()) {
-          setSearchResults([])
-          setSearchError(null)
-          saveSearchState(null)
-          return
-        }
-        setIsSearching(true)
-        setSearchError(null)
-        try {
-          // Route all queries through server API for consistent local index search
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}&book=${volumeIds.join(',')}`,
-          )
-          const data = await res.json()
-          if (!res.ok || data.error) throw new Error(data.error || 'Search failed')
-          const combined = data.results
-          setSearchResults(combined)
-          saveSearchState({
-            query,
-            results: combined,
-            page: 1,
-            filters: { grading: 'all', sort: 'relevance' },
-          })
-        } catch {
-          setSearchResults([])
-          setSearchError('Search failed. Please try again.')
-          saveSearchState(null)
-        } finally {
-          setIsSearching(false)
-        }
-      }, 300),
-    [volumeIds, saveSearchState],
-  )
-
-  const handleSearchInput = (value: string) => {
-    setSearchQuery(value)
-    if (!value.trim()) {
-      debouncedSearch.cancel()
-      setSearchResults([])
-      setIsSearching(false)
-      setSearchError(null)
-      saveSearchState(null)
-      return
-    }
-    setIsSearching(true)
-    debouncedSearch(value)
-  }
-
-  const handleClearSearch = () => {
-    debouncedSearch.cancel()
-    setSearchQuery('')
-    setSearchResults([])
-    setIsSearching(false)
-    setSearchError(null)
-    saveSearchState(null)
-  }
 
   useEffect(() => {
     const loadBookData = async () => {
@@ -272,14 +212,6 @@ export default function BookPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Search bar */}
-      <SearchBar
-        value={searchQuery}
-        onChange={handleSearchInput}
-        placeholder={`Search across all ${displayTitle} volumes… (Ctrl+K)`}
-        isSearching={isSearching}
-      />
-
       {/* Book header */}
       <section className="mx-auto mt-6 max-w-5xl px-4 sm:px-6">
         <div className="rounded-lg border border-border bg-surface-1 p-5 sm:p-6">
@@ -322,17 +254,17 @@ export default function BookPage() {
 
       {/* Search results */}
       <SearchInterface
-        searchQuery={searchQuery}
-        searchResults={searchResults}
+        searchQuery={query}
+        searchResults={results}
         isSearching={isSearching}
-        onSearch={handleSearchInput}
-        onClearSearch={handleClearSearch}
+        onSearch={() => {}}
+        onClearSearch={clear}
         searchContext={bookId}
         searchError={searchError}
       />
 
       {/* Volume Explorer / Chapter Tree */}
-      {!searchQuery && (
+      {!query && (
         <section className="mx-auto mt-6 max-w-5xl px-4 pb-12 sm:px-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Explore</h2>

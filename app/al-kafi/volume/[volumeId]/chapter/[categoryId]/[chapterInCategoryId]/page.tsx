@@ -5,9 +5,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, Hadith } from '@/lib/api'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
-import ChapterSearch from '@/components/ChapterSearch'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
 import { useChapter } from '@/lib/chapter-context'
+import { usePageSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -24,10 +24,14 @@ export default function ChapterDetailPage() {
   const [hadiths, setHadiths] = useState<Hadith[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [gradingFilter, setGradingFilter] = useState<Set<'sahih' | 'hasan' | 'daif' | 'other'>>(
     new Set(),
   )
+
+  const { query: searchQuery } = usePageSearch({
+    placeholder: 'Filter this chapter…',
+    resetKey: `${volumeId}/${categoryId}/${chapterInCategoryId}`,
+  })
   const [chapterInfo, setLocalChapterInfo] = useState<{
     category: string
     chapter: string
@@ -68,7 +72,6 @@ export default function ChapterDetailPage() {
 
         const sortedHadiths = chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(sortedHadiths)
-        setSearchQuery('')
         setGradingFilter(new Set())
       } catch {
         setError('Failed to load chapter hadiths')
@@ -154,16 +157,16 @@ export default function ChapterDetailPage() {
           </div>
         )}
 
-        {/* Search & grading filter */}
+        {/* Grading filter + active search summary (the query comes from the TopBar) */}
         {hadiths.length > 0 && (
           <div className="mb-5 space-y-3">
-            <ChapterSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              resultCount={filteredHadiths.length}
-              totalCount={hadiths.length}
-            />
             <GradingFilter hadiths={hadiths} selected={gradingFilter} onChange={setGradingFilter} />
+            {searchQuery.trim() && (
+              <p className="text-xs text-foreground-muted">
+                <span className="font-medium text-accent">{filteredHadiths.length}</span> of{' '}
+                {hadiths.length} match &ldquo;{searchQuery}&rdquo;
+              </p>
+            )}
           </div>
         )}
 

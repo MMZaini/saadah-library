@@ -13,6 +13,11 @@ interface SearchBarProps {
   isSearching?: boolean
   /** Tailwind classes for the outer container (e.g. a max-width override). */
   className?: string
+  /**
+   * `page` is the large, centered field used in page bodies; `topbar` is the
+   * compact field that lives in the persistent top navigation bar.
+   */
+  variant?: 'page' | 'topbar'
 }
 
 /**
@@ -26,10 +31,13 @@ export default function SearchBar({
   placeholder = 'Search hadith… (Ctrl+K)',
   isSearching = false,
   className,
+  variant = 'page',
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const { history, addToHistory, clearHistory } = useSearchShortcuts(inputRef)
   const [showHistory, setShowHistory] = useState(false)
+
+  const isTopbar = variant === 'topbar'
 
   const handleChange = (next: string) => {
     setShowHistory(false)
@@ -37,9 +45,14 @@ export default function SearchBar({
   }
 
   return (
-    <div className={cn('mx-auto max-w-2xl px-4 pt-6 sm:px-6', className)}>
+    <div className={cn(isTopbar ? '' : 'mx-auto max-w-2xl px-4 pt-6 sm:px-6', className)}>
       <div className="relative">
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+        <div
+          className={cn(
+            'flex items-center rounded-lg border border-border bg-surface-1 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+            isTopbar ? 'gap-2 px-2.5 py-1.5' : 'gap-3 px-3.5 py-2.5',
+          )}
+        >
           <Search className="h-4 w-4 shrink-0 text-foreground-faint" />
           <input
             ref={inputRef}
@@ -60,7 +73,7 @@ export default function SearchBar({
                 inputRef.current?.blur()
               }
             }}
-            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint"
+            className="w-full min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-faint"
           />
           {isSearching && (
             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />

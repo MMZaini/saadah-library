@@ -94,15 +94,22 @@
 }
 
 /* Radix Dialog/Sheet locks body scroll through react-remove-scroll, which
-   compensates for classic scrollbar width with a body margin. That runtime
-   style is injected outside Tailwind layers, so this override must also stay
-   unlayered. Keep the gutter stable and neutralize only the layout
-   compensation; the library still blocks background wheel/touch interaction
-   while the modal is open. */
+   compensates for the "removed" classic scrollbar by adding a body margin/
+   padding equal to its width. But `html` above already reserves that space
+   permanently via `scrollbar-gutter: stable`, so the scrollbar never actually
+   collapses and that compensation only pushes centered content sideways. The
+   runtime style is injected outside Tailwind layers, so this override must also
+   stay unlayered. Neutralize the horizontal compensation only.
+
+   Do NOT force `overflow-y: scroll` on the body here: `html` is the real scroll
+   container (its `overflow-x: hidden` stops body overflow from propagating to
+   the viewport), so a scroll value on the body spawns a second, redundant
+   scrollbar that shrinks the content width and shifts it left. Leaving the
+   library's own `overflow: hidden` in place is fine — the stable gutter holds
+   the width and the library still blocks background wheel/touch interaction. */
 html body[data-scroll-locked] {
   margin-right: 0 !important;
   padding-right: 0 !important;
-  overflow-y: scroll !important;
 }
 
 /* ── Backward-compat utility classes (used across existing components) ── */

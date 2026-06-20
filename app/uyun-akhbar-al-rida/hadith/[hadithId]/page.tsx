@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from '@/components/HadithCard'
 import { useChapter } from '@/lib/chapter-context'
+import { usePageSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
@@ -18,6 +19,11 @@ export default function HadithPage() {
   const [hadith, setHadith] = useState<Hadith | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const { query } = usePageSearch({
+    placeholder: 'Search within this hadith…',
+    resetKey: hadithId,
+  })
 
   useEffect(() => {
     const loadHadith = async () => {
@@ -140,7 +146,7 @@ export default function HadithPage() {
             1
           </div>
           <div className="ml-6">
-            <HadithCard hadith={hadith} showViewChapter={false} />
+            <HadithCard hadith={hadith} showViewChapter={false} highlightQuery={query} />
           </div>
         </div>
       </div>

@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
-import { alKafiApi, thaqalaynApi, Hadith, BookInfo } from '@/lib/api'
+import { alKafiApi, thaqalaynApi, BookInfo } from '@/lib/api'
 import SearchInterface from '@/components/SearchInterface'
-import SearchBar from '@/components/SearchBar'
 import { useNavigation } from '@/lib/navigation-context'
-import { debounce } from '@/lib/performance'
+import { useServerSearch } from '@/lib/use-server-search'
 import { cn } from '@/lib/utils'
 import { withBasePath } from '@/lib/assets'
 import { Badge } from '@/components/ui/badge'
@@ -16,15 +15,18 @@ const BookStructureExplorer = lazy(() => import('@/components/AlKafiVolumeStruct
 const AlKafiBookBrowser = lazy(() => import('@/components/AlKafiBookBrowser'))
 
 export default function AlKafiPage() {
-  const { restoreScrollPosition, getSearchState, saveSearchState, saveScrollPosition } =
-    useNavigation()
+  const { restoreScrollPosition, saveScrollPosition } = useNavigation()
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Hadith[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [searchError, setSearchError] = useState<string | null>(null)
   const [bookInfo, setBookInfo] = useState<BookInfo | null>(null)
   const [viewMode, setViewMode] = useState<'structure' | 'chapters' | 'explorer'>('structure')
+
+  const alKafiBookParam = useMemo(() => alKafiApi.getAlKafiVolumes().join(','), [])
+
+  const { query, results, error, isSearching, clear } = useServerSearch({
+    placeholder: 'Search Al-Kāfi…',
+    bookParam: alKafiBookParam,
+    resetKey: '/al-kafi',
+  })
 
   useEffect(() => {
     thaqalaynApi
@@ -39,16 +41,9 @@ export default function AlKafiPage() {
   useEffect(() => {
     const saved = restoreScrollPosition()
     if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    const s = getSearchState()
-    if (s) {
-      setSearchQuery(s.query)
-      setSearchResults(s.results as Hadith[])
-    }
-  }, [restoreScrollPosition, getSearchState])
+  }, [restoreScrollPosition])
 
   useEffect(() => {
-    // Capture the path at mount: on unmount the URL may already point at the
-    // next route, so we must save this page's scroll under its own path.
     const path = window.location.pathname
     const save = () => saveScrollPosition(window.scrollY, path)
     window.addEventListener('beforeunload', save)
@@ -58,67 +53,6 @@ export default function AlKafiPage() {
     }
   }, [saveScrollPosition])
 
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(async (query: string) => {
-        if (!query.trim()) {
-          setSearchResults([])
-          setSearchError(null)
-          saveSearchState(null)
-          return
-        }
-        setIsSearching(true)
-        setSearchError(null)
-        try {
-          // Route all queries through server API for consistent local index search
-          const alKafiVolumes = alKafiApi.getAlKafiVolumes().join(',')
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}&book=${alKafiVolumes}`,
-          )
-          const data = await res.json()
-          if (!res.ok || data.error) throw new Error(data.error || 'Search failed')
-          const results: Hadith[] = data.results
-          setSearchResults(results)
-          saveSearchState({
-            query,
-            results,
-            page: 1,
-            filters: { grading: 'all', sort: 'relevance' },
-          })
-        } catch {
-          setSearchResults([])
-          setSearchError('Search failed. Please try again.')
-          saveSearchState(null)
-        } finally {
-          setIsSearching(false)
-        }
-      }, 300),
-
-    [saveSearchState],
-  )
-
-  const handleSearchInput = (value: string) => {
-    setSearchQuery(value)
-    if (!value.trim()) {
-      debouncedSearch.cancel()
-      setSearchResults([])
-      setIsSearching(false)
-      setSearchError(null)
-      saveSearchState(null)
-      return
-    }
-    setIsSearching(true)
-    debouncedSearch(value)
-  }
-
-  const handleClearSearch = () => {
-    debouncedSearch.cancel()
-    setSearchQuery('')
-    setSearchResults([])
-    setIsSearching(false)
-    setSearchError(null)
-  }
-
   const VIEW_MODES = [
     { key: 'structure' as const, label: 'Volume Explorer', short: 'Explorer' },
     { key: 'chapters' as const, label: 'Chapter Tree', short: 'Tree' },
@@ -127,14 +61,6 @@ export default function AlKafiPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Search bar */}
-      <SearchBar
-        value={searchQuery}
-        onChange={handleSearchInput}
-        placeholder="Search across all Al-Kāfi volumes… (Ctrl+K)"
-        isSearching={isSearching}
-      />
-
       {/* Book header */}
       <section className="mx-auto mt-6 max-w-5xl px-4 sm:px-6">
         <div className="rounded-lg border border-border bg-surface-1 p-5 sm:p-6">
@@ -170,17 +96,17 @@ export default function AlKafiPage() {
 
       {/* Search results */}
       <SearchInterface
-        searchQuery={searchQuery}
-        searchResults={searchResults}
+        searchQuery={query}
+        searchResults={results}
         isSearching={isSearching}
-        onSearch={debouncedSearch}
-        onClearSearch={handleClearSearch}
+        onSearch={() => {}}
+        onClearSearch={clear}
         searchContext="al-kafi"
-        searchError={searchError}
+        searchError={error}
       />
 
       {/* Volume Explorer / Chapter Tree */}
-      {!searchQuery && (
+      {!query && (
         <section className="mx-auto mt-6 max-w-5xl px-4 pb-12 sm:px-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Explore</h2>

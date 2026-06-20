@@ -1,152 +1,48 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { books } from '@/lib/books'
-import { Hadith } from '@/lib/api'
 import BookCard from '@/components/BookCard'
 import SearchInterface from '@/components/SearchInterface'
-import SearchBar from '@/components/SearchBar'
-import { useNavigation } from '@/lib/navigation-context'
-import { debounce } from '@/lib/performance'
+import { useServerSearch } from '@/lib/use-server-search'
 
 export default function Page() {
-  const { restoreScrollPosition, getSearchState, saveSearchState, saveScrollPosition } =
-    useNavigation()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Hadith[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [searchError, setSearchError] = useState<string | null>(null)
-  const bookScopeRef = useRef<string[]>([])
+  // Book-scope pre-filter selected from the search filters (global search only).
+  const [scopeBookParam, setScopeBookParam] = useState('')
 
-  useEffect(() => {
-    const saved = restoreScrollPosition()
-    if (saved > 0) requestAnimationFrame(() => window.scrollTo(0, saved))
-    const s = getSearchState()
-    if (s) {
-      setSearchQuery(s.query)
-      setSearchResults(s.results as Hadith[])
-    }
-  }, [restoreScrollPosition, getSearchState])
+  const { query, results, error, isSearching, clear } = useServerSearch({
+    placeholder: 'Search all books…',
+    bookParam: scopeBookParam,
+    resetKey: '/',
+  })
 
+  // The TopBar brand title clears the home search when already on home.
   useEffect(() => {
-    const handle = () => {
-      setSearchQuery('')
-      setSearchResults([])
-      saveSearchState(null)
-    }
+    const handle = () => clear()
     window.addEventListener('clearSearch', handle)
     return () => window.removeEventListener('clearSearch', handle)
-  }, [saveSearchState])
+  }, [clear])
 
-  useEffect(() => {
-    // Capture the path at mount: on unmount the URL may already point at the
-    // next route, so we must save this page's scroll under its own path.
-    const path = window.location.pathname
-    const save = () => saveScrollPosition(window.scrollY, path)
-    window.addEventListener('beforeunload', save)
-    return () => {
-      window.removeEventListener('beforeunload', save)
-      saveScrollPosition(window.scrollY, path)
-    }
-  }, [saveScrollPosition])
-
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(async (query: string) => {
-        if (!query.trim()) {
-          setSearchResults([])
-          setSearchError(null)
-          saveSearchState(null)
-          return
-        }
-        setIsSearching(true)
-        setSearchError(null)
-        try {
-          const bookIds = bookScopeRef.current
-          const bookParam = bookIds.length > 0 ? `&book=${bookIds.join(',')}` : ''
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?q=${encodeURIComponent(query)}${bookParam}`,
-          )
-          if (!res.ok) throw new Error('Search request failed')
-          const data = await res.json()
-          if (data.error) throw new Error(data.error)
-          setSearchResults(data.results)
-          saveSearchState({
-            query,
-            results: data.results,
-            page: 1,
-            filters: { grading: 'all', sort: 'relevance' },
-          })
-        } catch {
-          setSearchResults([])
-          setSearchError('Search failed. Please try again.')
-          saveSearchState(null)
-        } finally {
-          setIsSearching(false)
-        }
-      }, 300),
-    [saveSearchState],
-  )
-
-  const handleSearchInput = (value: string) => {
-    setSearchQuery(value)
-    if (!value.trim()) {
-      debouncedSearch.cancel()
-      setSearchResults([])
-      setIsSearching(false)
-      setSearchError(null)
-      saveSearchState(null)
-      return
-    }
-    setIsSearching(true)
-    debouncedSearch(value)
-  }
-
-  const handleClearSearch = () => {
-    debouncedSearch.cancel()
-    setSearchQuery('')
-    setSearchResults([])
-    setIsSearching(false)
-    setSearchError(null)
-    saveSearchState(null)
-  }
-
-  const handleBookScopeChange = useCallback(
-    (ids: string[]) => {
-      bookScopeRef.current = ids
-      if (searchQuery.trim()) {
-        setIsSearching(true)
-        debouncedSearch(searchQuery)
-      }
-    },
-    [searchQuery, debouncedSearch],
-  )
+  const handleBookScopeChange = useCallback((ids: string[]) => {
+    setScopeBookParam(ids.join(','))
+  }, [])
 
   return (
     <div className="min-h-screen">
-      {/* Search bar */}
-      <SearchBar
-        value={searchQuery}
-        onChange={handleSearchInput}
-        placeholder="Search hadith across all books… (Ctrl+K)"
-        isSearching={isSearching}
-        className="max-w-3xl"
-      />
-
-      {/* Search results */}
+      {/* Search results (renders nothing when the query is empty) */}
       <SearchInterface
-        searchQuery={searchQuery}
-        searchResults={searchResults}
+        searchQuery={query}
+        searchResults={results}
         isSearching={isSearching}
-        onSearch={debouncedSearch}
-        onClearSearch={handleClearSearch}
+        onSearch={() => {}}
+        onClearSearch={clear}
         searchContext="all-books"
-        searchError={searchError}
+        searchError={error}
         onBookScopeChange={handleBookScopeChange}
       />
 
       {/* Book grid */}
-      {!searchQuery && (
+      {!query && (
         <section className="mx-auto mt-8 max-w-[1800px] px-4 pb-12 sm:mt-12 sm:px-8 sm:pb-16 md:px-16 lg:px-20 xl:px-32">
           <div className="mb-6 sm:mb-8">
             <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Browse Books</h2>

@@ -5,6 +5,7 @@ import { SettingsProvider } from '@/lib/settings-context'
 import { ChapterProvider } from '@/lib/chapter-context'
 import { NavigationProvider } from '@/lib/navigation-context'
 import { BookmarksProvider } from '@/lib/bookmarks-context'
+import { SearchProvider } from '@/lib/search-context'
 import { prefetchAllStructures } from '@/lib/book-structure'
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,9 @@ export default function ClientProviders({ children }: { children: React.ReactNod
     <SettingsProvider>
       <ChapterProvider>
         <NavigationProvider>
-          <BookmarksProvider>{children}</BookmarksProvider>
+          <BookmarksProvider>
+            <SearchProvider>{children}</SearchProvider>
+          </BookmarksProvider>
         </NavigationProvider>
       </ChapterProvider>
     </SettingsProvider>
