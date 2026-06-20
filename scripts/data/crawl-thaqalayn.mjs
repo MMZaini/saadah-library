@@ -53,22 +53,32 @@ async function assertRobotsAllowsSearch() {
   return text
 }
 
+// The published runtime artifacts do not live under current/runtime; the
+// current/ folder only holds manifest.json, and the artifacts are at
+// <version>/runtime (the version is resolved via the manifest, exactly as the
+// app's server-repository does). Resolving the wrong path silently yields an
+// empty legacy map and forces every hadith onto a fallback volume id.
+async function resolveCurrentRuntimePath(...segments) {
+  const manifest = await readJson(path.join(PUBLIC_CURRENT_ROOT, 'manifest.json'))
+  return path.join(PUBLIC_CURRENT_ROOT, '..', manifest.version, 'runtime', ...segments)
+}
+
 async function loadCurrentLegacyMap() {
-  const lookupPath = path.join(PUBLIC_CURRENT_ROOT, 'runtime', 'lookup.json')
   try {
-    const lookup = await readJson(lookupPath)
+    const lookup = await readJson(await resolveCurrentRuntimePath('lookup.json'))
     return lookup.bySourceUrl || {}
-  } catch {
+  } catch (error) {
+    process.stderr.write(`Warning: could not load current legacy lookup map: ${error.message}\n`)
     return {}
   }
 }
 
 async function loadCurrentBooksById() {
-  const booksPath = path.join(PUBLIC_CURRENT_ROOT, 'runtime', 'books.json')
   try {
-    const books = await readJson(booksPath)
+    const books = await readJson(await resolveCurrentRuntimePath('books.json'))
     return new Map(books.map((book) => [book.bookId, book]))
-  } catch {
+  } catch (error) {
+    process.stderr.write(`Warning: could not load current books map: ${error.message}\n`)
     return new Map()
   }
 }
@@ -159,6 +169,18 @@ async function main() {
 
   const legacyBySourceUrl = await loadCurrentLegacyMap()
   const currentBooksById = await loadCurrentBooksById()
+
+  // The crawler maps freshly scraped hadiths back onto the blessed dataset's
+  // legacy book ids via this map. An empty map means every hadith would fall
+  // back to a synthetic Thaqalayn-Volume-* id, producing a garbage release —
+  // fail fast instead of silently shipping that as a candidate.
+  if (generateRelease && Object.keys(legacyBySourceUrl).length === 0) {
+    throw new Error(
+      'Legacy source-URL map is empty; refusing to generate a release. ' +
+        'Verify public/data/thaqalayn/current points at a runtime dataset with lookup.json.',
+    )
+  }
+
   const volumeMap = new Map()
   const warnings = []
 
@@ -241,11 +263,18 @@ async function main() {
     throw new Error('Crawler parsed no volumes; refusing to generate release')
   }
 
+  // Only flip the blessed public "current" dataset when auto-publish is
+  // explicitly enabled. By default the crawl produces a reviewable candidate
+  // release (written under data/thaqalayn/releases) without replacing the
+  // served data, so tests/validation/build keep running against the blessed
+  // dataset and a human blesses the candidate via the PR.
+  const autoPublish = process.env.DATA_AUTO_PUBLISH === 'true'
   const version = getArg('--version', `website-${runId.slice(0, 10)}`)
   const { manifest, releaseDir } = await generateReleaseFromLegacy({
     version,
     booksRaw,
     volumeEntries,
+    publishCurrent: autoPublish,
     source: {
       kind: 'thaqalayn-website-crawl',
       url: THAQALAYN_ORIGIN,
@@ -258,6 +287,11 @@ async function main() {
       ],
     },
   })
+  process.stdout.write(
+    autoPublish
+      ? 'Auto-publish enabled: blessed current dataset was updated.\n'
+      : 'Auto-publish disabled: generated a candidate release without changing the served dataset.\n',
+  )
 
   await copyDir(crawlDir, path.join(releaseDir, 'crawl'))
   process.stdout.write(
