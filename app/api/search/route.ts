@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { filterLocalHadiths, searchLocalHadiths } from '@/lib/data/server-repository'
+import { normalizeSearchModes } from '@/lib/search-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,6 +9,7 @@ export async function GET(request: NextRequest) {
     const bookParam = searchParams.get('book') // comma-separated book IDs for scoped search
     const filterOnly = searchParams.get('filterOnly') === '1'
     const gradingParam = searchParams.get('grading')
+    const modeParam = searchParams.get('mode')
 
     const bookIds = bookParam
       ? bookParam
@@ -29,9 +31,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response)
     }
 
-    // searchLocalHadiths detects Arabic vs English queries internally and
-    // searches the generated local shards (diacritic-insensitive for Arabic).
-    const response = await searchLocalHadiths(query, bookIds)
+    // searchLocalHadiths detects Arabic vs English queries internally.
+    // Missing/invalid modes default to exact phrase.
+    const modes = normalizeSearchModes(modeParam?.split(','))
+    const response = await searchLocalHadiths(query, bookIds, modes)
     return NextResponse.json(response)
   } catch {
     return NextResponse.json({ error: 'Search failed', results: [], total: 0 }, { status: 500 })

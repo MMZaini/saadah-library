@@ -297,3 +297,52 @@ export const SEARCHABLE_BOOKS: SearchableBook[] = [
     volumeCount: 1,
   },
 ]
+
+// Runtime volume IDs (one per `runtime/volumes/*.json`) that contain at least
+// one graded hadith in the active dataset. Most books carry no grading data, so
+// the search "Grading Classification" filter is only meaningful for these.
+// Derived from the dataset and validated by tests/data/gradings.test.mjs — if
+// the dataset changes, that test fails until this set is updated.
+export const VOLUMES_WITH_GRADINGS: ReadonlySet<string> = new Set([
+  'Al-Amali-Mufid',
+  'Al-Kafi-Volume-1-Kulayni',
+  'Al-Kafi-Volume-2-Kulayni',
+  'Al-Kafi-Volume-3-Kulayni',
+  'Al-Kafi-Volume-4-Kulayni',
+  'Al-Kafi-Volume-5-Kulayni',
+  'Al-Kafi-Volume-6-Kulayni',
+  'Al-Kafi-Volume-7-Kulayni',
+  'Al-Kafi-Volume-8-Kulayni',
+  'Al-Khisal-Saduq',
+  'Al-Tawhid-Saduq',
+  'Kitab-al-Zuhd-Ahwazi',
+  'Maani-al-Akhbar-Saduq',
+  'Man-La-Yahduruh-al-Faqih-Volume-5-Saduq',
+  'Mujam-al-Ahadith-al-Mutabara-Muhsini',
+  'Uyun-akhbar-al-Rida-Volume-1-Saduq',
+  'Uyun-akhbar-al-Rida-Volume-2-Saduq',
+])
+
+// True if any of the given runtime volume IDs has graded hadith.
+export const volumesHaveGradings = (volumeIds: string[]): boolean =>
+  volumeIds.some((id) => VOLUMES_WITH_GRADINGS.has(id))
+
+/**
+ * Whether the "Grading Classification" search filter should be offered for a
+ * given SearchInterface context. Global search ('all-books'/undefined) and
+ * Al-Kāfi always qualify; a specific book qualifies only if it actually has
+ * graded hadith in any of its volumes.
+ */
+export const searchContextHasGradings = (searchContext?: string): boolean => {
+  if (!searchContext || searchContext === 'all-books') {
+    return SEARCHABLE_BOOKS.some((book) => volumesHaveGradings(book.volumeIds))
+  }
+  if (searchContext === 'al-kafi') return volumesHaveGradings(AL_KAFI_VOLUMES)
+
+  // A specific book page passes the (first) volume ID; resolve the full volume
+  // set so multi-volume books are evaluated across every volume (e.g. Man lā
+  // yaḥḍuruh, where only volume 5 carries gradings).
+  const config = getBookConfig(searchContext)
+  const volumeIds = config?.volumes?.length ? config.volumes : [searchContext]
+  return volumesHaveGradings(volumeIds)
+}

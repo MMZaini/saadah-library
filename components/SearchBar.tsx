@@ -102,9 +102,6 @@ export default function SearchBar({
               <SlidersHorizontal className="h-3.5 w-3.5" />
             </button>
           )}
-          <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-foreground-faint sm:inline-block">
-            ⌘K
-          </kbd>
         </div>
 
         {/* Search history dropdown */}

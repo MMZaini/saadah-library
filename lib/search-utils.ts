@@ -37,6 +37,141 @@ export function isArabicQuery(query: string): boolean {
   return nonSpaceChars > 0 && arabicChars / nonSpaceChars > 0.3
 }
 
+export type SearchMode = 'exactPhrase' | 'exactWords' | 'flexibleMatching'
+
+const SEARCH_MODES: SearchMode[] = ['exactPhrase', 'exactWords', 'flexibleMatching']
+const ENGLISH_TOKEN_REGEX = /[\p{L}\p{M}\p{N}]+(?:'[\p{L}\p{M}\p{N}]+)*/gu
+
+export function normalizeSearchModes(modes?: readonly string[] | null): SearchMode[] {
+  const unique = new Set<SearchMode>()
+  for (const mode of modes ?? []) {
+    if (SEARCH_MODES.includes(mode as SearchMode)) unique.add(mode as SearchMode)
+  }
+  return unique.size > 0 ? Array.from(unique) : ['exactPhrase']
+}
+
+export function normalizeEnglishForSearch(input: string | null | undefined): string {
+  if (!input) return ''
+  return String(input)
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[‘’`]/g, "'")
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+export function tokenizeEnglish(input: string | null | undefined): string[] {
+  return normalizeEnglishForSearch(input).match(ENGLISH_TOKEN_REGEX) ?? []
+}
+
+function matchesEnglishExactPhrase(text: string, query: string): boolean {
+  const textTokens = tokenizeEnglish(text)
+  const queryTokens = tokenizeEnglish(query)
+  if (queryTokens.length === 0 || textTokens.length < queryTokens.length) return false
+
+  for (let i = 0; i <= textTokens.length - queryTokens.length; i++) {
+    let matched = true
+    for (let j = 0; j < queryTokens.length; j++) {
+      if (textTokens[i + j] !== queryTokens[j]) {
+        matched = false
+        break
+      }
+    }
+    if (matched) return true
+  }
+
+  return false
+}
+
+function matchesEnglishExactWords(text: string, query: string): boolean {
+  const textWords = new Set(tokenizeEnglish(text))
+  const queryWords = tokenizeEnglish(query)
+  return queryWords.length > 0 && queryWords.every((word) => textWords.has(word))
+}
+
+function getEnglishTermSet(text: string): Set<string> {
+  const terms = new Set<string>()
+  for (const token of tokenizeEnglish(text)) {
+    terms.add(token)
+    for (const stem of stemEnglishWord(token)) terms.add(stem)
+  }
+  return terms
+}
+
+function getFlexibleEnglishQueryTerms(word: string): Set<string> {
+  const terms = new Set<string>([word])
+  for (const stem of stemEnglishWord(word)) terms.add(stem)
+  for (const synonym of getWordSynonyms(word)) {
+    for (const token of tokenizeEnglish(synonym)) {
+      terms.add(token)
+      for (const stem of stemEnglishWord(token)) terms.add(stem)
+    }
+  }
+  return terms
+}
+
+function matchesEnglishFlexible(text: string, query: string): boolean {
+  const queryWords = tokenizeEnglish(query)
+  if (queryWords.length === 0) return false
+
+  const textTerms = getEnglishTermSet(text)
+  return queryWords.every((word) => {
+    for (const term of getFlexibleEnglishQueryTerms(word)) {
+      if (textTerms.has(term)) return true
+    }
+    return false
+  })
+}
+
+function matchesArabicExactPhrase(text: string, query: string): boolean {
+  const normalizedText = normalizeArabic(text)
+  const normalizedQuery = normalizeArabic(query)
+  return Boolean(normalizedQuery) && normalizedText.includes(normalizedQuery)
+}
+
+function matchesArabicExactWords(text: string, query: string): boolean {
+  const textWords = new Set(normalizeArabic(text).split(/\s+/).filter(Boolean))
+  const queryWords = normalizeArabic(query).split(/\s+/).filter(Boolean)
+  return queryWords.length > 0 && queryWords.every((word) => textWords.has(word))
+}
+
+function matchesArabicFlexible(text: string, query: string): boolean {
+  const normalizedText = normalizeArabic(text)
+  const queryWords = normalizeArabic(query).split(/\s+/).filter(Boolean)
+  return (
+    queryWords.length > 0 &&
+    queryWords.every((word) => flexibleArabicWordMatch(normalizedText, word))
+  )
+}
+
+export function matchesSearchMode({
+  query,
+  mode,
+  englishText,
+  arabicText,
+}: {
+  query: string
+  mode: SearchMode
+  englishText?: string | null
+  arabicText?: string | null
+}): boolean {
+  const trimmed = query.trim()
+  if (!trimmed) return false
+
+  if (isArabicQuery(trimmed)) {
+    const text = arabicText || ''
+    if (mode === 'exactPhrase') return matchesArabicExactPhrase(text, trimmed)
+    if (mode === 'exactWords') return matchesArabicExactWords(text, trimmed)
+    return matchesArabicFlexible(text, trimmed)
+  }
+
+  const text = englishText || ''
+  if (mode === 'exactPhrase') return matchesEnglishExactPhrase(text, trimmed)
+  if (mode === 'exactWords') return matchesEnglishExactWords(text, trimmed)
+  return matchesEnglishFlexible(text, trimmed)
+}
+
 /**
  * Checks if a hadith text matches an Arabic search query
  * @param hadithText - The hadith text (Arabic or English)
@@ -480,7 +615,12 @@ function highlightArabicSegments(text: string, query: string): HighlightSegment[
     while (normIdx < normLen && origIdx < origLen) {
       const nc = normText[normIdx]
       const oc = text[origIdx]
-      const normOc = normalizeArabic(oc)
+      // normalizeArabic() trims, so a lone whitespace char would collapse to ''
+      // and be treated as a stripped diacritic — desyncing the map against
+      // normText, which keeps single spaces. Normalize any whitespace to a
+      // single space so the two stay aligned. Collapsed runs of whitespace fall
+      // through the mismatch branch below and are skipped.
+      const normOc = /\s/.test(oc) ? ' ' : normalizeArabic(oc)
 
       if (normOc === '') {
         // This original char is stripped during normalization (diacritics, etc.)
@@ -518,8 +658,11 @@ function highlightArabicSegments(text: string, query: string): HighlightSegment[
 
     if (origStart == null || origEnd == null) continue
 
-    // Extend origEnd to include any trailing diacritics
-    while (origEnd + 1 < text.length && normalizeArabic(text[origEnd + 1]) === '') {
+    // Extend origEnd to include any trailing diacritics, but never whitespace
+    // (normalizeArabic trims, so a space also normalizes to '').
+    while (origEnd + 1 < text.length) {
+      const next = text[origEnd + 1]
+      if (/\s/.test(next) || normalizeArabic(next) !== '') break
       origEnd++
     }
 

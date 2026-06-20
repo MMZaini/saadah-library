@@ -3,14 +3,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
-import {
-  isArabicQuery,
-  normalizeArabic,
-  flexibleEnglishMatch,
-  flexibleArabicWordMatch,
-} from '@/lib/search-utils'
+import { isArabicQuery, matchesSearchMode, type SearchMode } from '@/lib/search-utils'
 import { cn } from '@/lib/utils'
-import { SEARCHABLE_BOOKS } from '@/lib/books-config'
+import { SEARCHABLE_BOOKS, searchContextHasGradings } from '@/lib/books-config'
 import type { ServerSearchFilterCriteria } from '@/lib/use-server-search'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -71,23 +66,16 @@ const GRADING_OPTIONS = [
 
 const SEARCH_MODES = [
   {
-    key: 'flexibleMatching' as const,
-    label: 'Flexible',
-    description: 'Stems words and expands Islamic terms (e.g. "prayer" also finds "salah").',
-  },
-  {
     key: 'exactWords' as const,
     label: 'Exact Words',
     description: 'Every word must appear exactly as typed, but in any order.',
   },
   {
-    key: 'exactPhrase' as const,
-    label: 'Exact Phrase',
-    description: 'The entire phrase must appear exactly and in order.',
+    key: 'flexibleMatching' as const,
+    label: 'Flexible',
+    description: 'Stems words and expands Islamic terms (e.g. "prayer" also finds "salah").',
   },
 ]
-
-type SearchMode = 'exactPhrase' | 'exactWords' | 'flexibleMatching'
 
 export default function SearchInterface({
   searchQuery,
@@ -116,6 +104,10 @@ export default function SearchInterface({
   const [scopeBooks, setScopeBooks] = useState<string[]>([])
   const [scopeVolumes, setScopeVolumes] = useState<Record<string, number[]>>({})
   const showBookScope = searchContext === 'all-books' || !searchContext
+
+  // Only offer the grading filter where graded hadith actually exist: global
+  // search and Al-Kāfi always, other books only if they carry gradings.
+  const showGradingFilter = searchContextHasGradings(searchContext)
 
   // Compute API book IDs from scope selection
   const scopeBookIds = useMemo(() => {
@@ -149,14 +141,19 @@ export default function SearchInterface({
 
   const activeServerGradings = selectedGradings.filter((g) => g !== 'all')
   const hasGlobalBookScope = showBookScope && scopeBooks.length > 0
+  const activeSearchModes = useMemo(
+    () => SEARCH_MODES.filter((mode) => activeModes.has(mode.key)).map((mode) => mode.key),
+    [activeModes],
+  )
 
   useEffect(() => {
     onFilterCriteriaChange?.({
       gradings: activeServerGradings,
       hasBookScope: hasGlobalBookScope,
+      searchModes: activeSearchModes,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeServerGradings.join(','), hasGlobalBookScope])
+  }, [activeServerGradings.join(','), hasGlobalBookScope, activeSearchModes.join(',')])
 
   const toggleScopeBook = (bookKey: string) => {
     const book = SEARCHABLE_BOOKS.find((b) => b.key === bookKey)
@@ -272,6 +269,16 @@ export default function SearchInterface({
     if (!searchQuery.trim() && !showFilters) clearAllFilters()
   }, [searchQuery, showFilters, clearAllFilters])
 
+  // The [bookSlug] page reuses this component instance across books, so a
+  // grading selection can survive navigation to a book without grading data.
+  // Drop it when the filter isn't offered so a hidden filter can't narrow
+  // results silently.
+  useEffect(() => {
+    if (!showGradingFilter) {
+      setSelectedGradings((prev) => (prev.length === 1 && prev[0] === 'all' ? prev : ['all']))
+    }
+  }, [showGradingFilter])
+
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, selectedGradings, selectedBooks, activeModes, scopeBooks, scopeVolumes])
@@ -280,69 +287,18 @@ export default function SearchInterface({
   const filteredResults = useMemo(() => {
     let filtered = [...searchResults]
 
-    // Apply search mode filtering (OR across selected modes — hadith passes if ANY mode matches)
-    if (activeModes.size > 0 && searchQuery.trim()) {
+    // Apply search mode filtering (default exact phrase; selected modes are ORed).
+    if (searchQuery.trim()) {
+      const modes = activeModes.size > 0 ? activeSearchModes : (['exactPhrase'] as SearchMode[])
       filtered = searchResults.filter((hadith) => {
-        const text = searchQuery.trim()
-        const arabic = isArabicQuery(text)
-        const get = (t: string | null | undefined) => (t || '').toLowerCase()
-        const eng = get(hadith.englishText || hadith.thaqalaynMatn)
-        const ar =
-          arabic && hadith.arabicText ? normalizeArabic(hadith.arabicText) : get(hadith.arabicText)
-        const all = `${eng} ${ar}`.trim()
-        const q = arabic ? normalizeArabic(text) : text.toLowerCase()
-
-        // Return true if the hadith matches at least one selected mode
-        for (const mode of activeModes) {
-          if (mode === 'exactPhrase') {
-            if (arabic) {
-              if (ar.includes(q)) return true
-            } else {
-              const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-              if (
-                new RegExp(
-                  '(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])',
-                  'iu',
-                ).test(all)
-              )
-                return true
-            }
-          }
-          if (mode === 'exactWords') {
-            const words = q.split(/\s+/).filter(Boolean)
-            if (arabic) {
-              const set = new Set(ar.split(/\s+/).filter(Boolean))
-              if (words.every((w) => set.has(w))) return true
-            } else {
-              if (
-                words.every((w) => {
-                  const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                  return new RegExp(
-                    '(?<![\\p{L}\\p{M}\\p{N}_])' + esc + '(?![\\p{L}\\p{M}\\p{N}_])',
-                    'iu',
-                  ).test(all)
-                })
-              )
-                return true
-            }
-          }
-          if (mode === 'flexibleMatching') {
-            const words = q.split(/\s+/).filter(Boolean)
-            if (arabic) {
-              if (words.every((w) => flexibleArabicWordMatch(ar, w))) return true
-            } else {
-              if (
-                flexibleEnglishMatch(all, words, {
-                  caseInsensitive: true,
-                  useSynonyms: true,
-                  useStemming: true,
-                })
-              )
-                return true
-            }
-          }
-        }
-        return false
+        return modes.some((mode) =>
+          matchesSearchMode({
+            query: searchQuery,
+            mode,
+            englishText: hadith.englishText || hadith.thaqalaynMatn,
+            arabicText: hadith.arabicText,
+          }),
+        )
       })
     }
 
@@ -353,7 +309,7 @@ export default function SearchInterface({
     }
 
     // Apply grading filters
-    if (shouldShowFilters && !selectedGradings.includes('all')) {
+    if (shouldShowFilters && showGradingFilter && !selectedGradings.includes('all')) {
       filtered = filtered.filter((hadith) => {
         const gradingText = [
           hadith.majlisiGrading,
@@ -394,8 +350,10 @@ export default function SearchInterface({
     selectedGradings,
     selectedBooks,
     activeModes,
+    activeSearchModes,
     searchQuery,
     shouldShowFilters,
+    showGradingFilter,
     showBookScope,
   ])
 
@@ -417,6 +375,14 @@ export default function SearchInterface({
 
   const trimmedSearchQuery = searchQuery.trim()
   const isFilterOnly = !trimmedSearchQuery
+
+  // Which filter panel sections are actually rendered for this context. Used to
+  // show a fallback message when nothing is filterable (e.g. filter-only mode on
+  // a single-volume book without grading data).
+  const showBookPostFilter = !showBookScope && availableBooks.length > 1
+  const showSearchModeSection = !isFilterOnly
+  const hasAnyFilterSection =
+    showBookScope || showBookPostFilter || showSearchModeSection || showGradingFilter
 
   if (!trimmedSearchQuery && !showFilters) return null
 
@@ -591,7 +557,7 @@ export default function SearchInterface({
           )}
 
           {/* Book / Volume post-filter (non-global search, derived from results) */}
-          {!showBookScope && availableBooks.length > 1 && (
+          {showBookPostFilter && (
             <>
               <h3 className="mb-3 text-sm font-medium text-foreground">
                 {isVolumeMode ? 'Volume' : 'Book'}
@@ -628,7 +594,10 @@ export default function SearchInterface({
               {/* Search mode */}
               <div>
                 <h3 className="mb-3 text-sm font-medium text-foreground">Search Mode</h3>
-                <div className="grid grid-cols-3 gap-2">
+                <p className="mb-3 text-xs leading-snug text-foreground-faint">
+                  Default is exact phrase. Select a mode below to broaden the search.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
                   {SEARCH_MODES.map((mode) => {
                     const isActive = activeModes.has(mode.key)
                     return (
@@ -666,47 +635,56 @@ export default function SearchInterface({
                 </div>
               </div>
 
-              <Separator className="my-4" />
+              {showGradingFilter && <Separator className="my-4" />}
             </>
           )}
 
-          {/* Gradings */}
-          <div>
-            <h3 className="mb-3 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              Grading Classification
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 cursor-help text-foreground-faint" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px] text-center">
-                  Gradings are mainly available for Al-Kāfi. Most other books do not include grading
-                  data.
-                </TooltipContent>
-              </Tooltip>
-            </h3>
-            <div className="flex flex-wrap gap-1.5">
-              {GRADING_OPTIONS.map((opt) => {
-                const active = selectedGradings.includes(opt.value)
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      if (opt.value === 'all') clearAllFilters()
-                      else handleGradingChange(opt.value, !active)
-                    }}
-                    className={cn(
-                      'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
-                      active
-                        ? 'bg-accent/10 border-accent text-accent'
-                        : 'border-border text-foreground-muted hover:bg-surface-2',
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                )
-              })}
+          {/* Gradings — only books with grading data offer this filter */}
+          {showGradingFilter && (
+            <div>
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                Grading Classification
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 cursor-help text-foreground-faint" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-center">
+                    Filter by hadith authenticity grading (e.g. Ṣaḥīḥ, Ḍaʿīf). Grading coverage
+                    varies by book.
+                  </TooltipContent>
+                </Tooltip>
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {GRADING_OPTIONS.map((opt) => {
+                  const active = selectedGradings.includes(opt.value)
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        if (opt.value === 'all') clearAllFilters()
+                        else handleGradingChange(opt.value, !active)
+                      }}
+                      className={cn(
+                        'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                        active
+                          ? 'bg-accent/10 border-accent text-accent'
+                          : 'border-border text-foreground-muted hover:bg-surface-2',
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Nothing to filter (e.g. filter-only mode on a book without gradings) */}
+          {!hasAnyFilterSection && (
+            <p className="text-sm text-foreground-muted">
+              No filters available for this book. Start a search to filter the results.
+            </p>
+          )}
 
           {/* Active filter tags */}
           {hasActiveFilters() && (
@@ -808,7 +786,7 @@ export default function SearchInterface({
               showViewChapter
               showArabicByDefault={showArabicDefault(hadith)}
               highlightQuery={highlightQuery || searchQuery}
-              exactMatch={activeModes.has('exactWords') || activeModes.has('exactPhrase')}
+              exactMatch={activeModes.size === 0 || activeModes.has('exactWords')}
             />
           ))
         ) : (

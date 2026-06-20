@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import type { BookInfo, Hadith, QueryResponse } from '@/lib/api'
-import { flexibleEnglishMatch, isArabicQuery, normalizeArabic } from '@/lib/search-utils'
+import { matchesSearchMode, normalizeSearchModes, type SearchMode } from '@/lib/search-utils'
 import type { DatasetManifest, LocalHadithRef, LocalSearchEntry } from '@/lib/data/types'
 
 const DATA_ROOT = path.join(process.cwd(), 'public', 'data', 'thaqalayn', 'current')
@@ -229,14 +229,13 @@ export async function filterLocalHadiths(
 export async function searchLocalHadiths(
   query: string,
   bookIds?: string[],
+  modes?: SearchMode[],
 ): Promise<QueryResponse> {
   const trimmed = query.trim()
   if (!trimmed) return { results: [], total: 0 }
 
   const scope = bookIds && bookIds.length > 0 ? bookIds : await getAvailableBookIds()
-  const arabic = isArabicQuery(trimmed)
-  const arabicQuery = arabic ? normalizeArabic(trimmed) : ''
-  const englishWords = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
+  const activeModes = normalizeSearchModes(modes)
   const hits: Array<Pick<LocalSearchEntry, 'bookId' | 'id'>> = []
 
   const shards = await Promise.all(
@@ -245,13 +244,14 @@ export async function searchLocalHadiths(
 
   for (const shard of shards) {
     for (const entry of shard) {
-      const matched = arabic
-        ? entry.arabic.includes(arabicQuery)
-        : flexibleEnglishMatch(entry.english, englishWords, {
-            caseInsensitive: true,
-            useSynonyms: true,
-            useStemming: true,
-          })
+      const matched = activeModes.some((mode) =>
+        matchesSearchMode({
+          query: trimmed,
+          mode,
+          englishText: entry.english,
+          arabicText: entry.arabic,
+        }),
+      )
 
       if (matched) hits.push({ bookId: entry.bookId, id: entry.id })
     }

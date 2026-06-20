@@ -5,6 +5,7 @@ import { Hadith } from '@/lib/api'
 import { debounce } from '@/lib/performance'
 import { useSearch } from '@/lib/search-context'
 import { useNavigation } from '@/lib/navigation-context'
+import type { SearchMode } from '@/lib/search-utils'
 
 interface UseServerSearchOptions {
   /** Placeholder shown in the TopBar field. */
@@ -20,6 +21,8 @@ export interface ServerSearchFilterCriteria {
   gradings: string[]
   /** True when the global "Search In" selector has been narrowed by the user. */
   hasBookScope: boolean
+  /** Selected non-default search modes. Empty means exact phrase. */
+  searchModes: SearchMode[]
 }
 
 interface UseServerSearchResult {
@@ -61,6 +64,7 @@ export function useServerSearch({
   const [filterCriteria, setFilterCriteria] = useState<ServerSearchFilterCriteria>({
     gradings: [],
     hasBookScope: false,
+    searchModes: [],
   })
 
   // Read inside the debounced fetch so a scope change doesn't recreate it.
@@ -83,7 +87,7 @@ export function useServerSearch({
   useEffect(() => {
     const saved = getSearchState()
     setFiltersOpen(false)
-    setFilterCriteria({ gradings: [], hasBookScope: false })
+    setFilterCriteria({ gradings: [], hasBookScope: false, searchModes: [] })
     setQuery(saved?.query ?? '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey])
@@ -104,6 +108,9 @@ export function useServerSearch({
           const params = new URLSearchParams()
           if (trimmed) params.set('q', trimmed)
           if (bookParamRef.current) params.set('book', bookParamRef.current)
+          if (trimmed && criteria.searchModes.length > 0) {
+            params.set('mode', criteria.searchModes.join(','))
+          }
           if (!trimmed && filtersOpenRef.current) {
             params.set('filterOnly', '1')
             if (criteria.gradings.length > 0) params.set('grading', criteria.gradings.join(','))
@@ -143,10 +150,12 @@ export function useServerSearch({
   // Re-run whenever the query or the book scope changes.
   const trimmedQuery = query.trim()
   const activeGradings = filterCriteria.gradings.filter(Boolean)
+  const activeSearchModes = filterCriteria.searchModes.filter(Boolean)
   const filterOnlyKey =
     trimmedQuery.length === 0
       ? `${filtersOpen}:${filterCriteria.hasBookScope}:${activeGradings.join(',')}`
       : ''
+  const searchModeKey = trimmedQuery.length > 0 ? activeSearchModes.join(',') : ''
 
   useEffect(() => {
     const hasFilterOnlyCriteria = filterCriteria.hasBookScope || activeGradings.length > 0
@@ -163,13 +172,13 @@ export function useServerSearch({
     setIsSearching(true)
     runSearch(trimmedQuery)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, bookParam, filterOnlyKey])
+  }, [query, bookParam, filterOnlyKey, searchModeKey])
 
   const clear = useCallback(() => {
     runSearch.cancel()
     requestSeqRef.current += 1
     setFiltersOpen(false)
-    setFilterCriteria({ gradings: [], hasBookScope: false })
+    setFilterCriteria({ gradings: [], hasBookScope: false, searchModes: [] })
     setQuery('')
     setResults([])
     setError(null)

@@ -206,7 +206,7 @@ const HadithCard = ({
 
   const [showArabic, setShowArabic] = useState(resolvedArabicDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
-  const [arabicExpanded, setArabicExpanded] = useState(true)
+  const [arabicExpanded, setArabicExpanded] = useState(settings.alwaysShowFullHadith)
   const arabicRef = useRef<HTMLDivElement | null>(null)
   const [arabicOverflow, setArabicOverflow] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
@@ -215,6 +215,10 @@ const HadithCard = ({
 
   useEffect(() => {
     setExpanded(settings.alwaysShowFullHadith)
+  }, [settings.alwaysShowFullHadith])
+
+  useEffect(() => {
+    setArabicExpanded(settings.alwaysShowFullHadith)
   }, [settings.alwaysShowFullHadith])
 
   useEffect(() => {
