@@ -150,6 +150,82 @@ async function hydrateSearchHits(hits: Array<Pick<LocalSearchEntry, 'bookId' | '
   return hydrated
 }
 
+const GRADING_KEYWORDS: Record<string, string[]> = {
+  sahih: ['صحيح', 'sahih', 'authentic'],
+  hasan: ['حسن', 'hasan', 'good'],
+  muwathaq: ['موثق', 'muwathaq', 'reliable'],
+  qawi: ['قوي', 'qawi', 'strong'],
+  daif: ['ضعيف', 'daif', 'weak'],
+  majhul: ['مجهول', 'majhul', 'unknown'],
+  mursal: ['مرسل', 'mursal'],
+}
+
+const COMMON_GRADING_TERMS = ['صحيح', 'حسن', 'موثق', 'قوي', 'ضعيف', 'مجهول', 'مرسل', 'لم يخرجه']
+
+function getHadithGradingText(hadith: Hadith) {
+  return [
+    hadith.majlisiGrading,
+    hadith.mohseniGrading,
+    hadith.behbudiGrading,
+    ...(hadith.gradingsFull || []).map((grading) => `${grading.grade_en} ${grading.grade_ar}`),
+  ]
+    .join(' ')
+    .toLowerCase()
+}
+
+function hasNoIncludedGrading(hadith: Hadith, gradingText: string) {
+  const none =
+    !hadith.majlisiGrading &&
+    !hadith.mohseniGrading &&
+    !hadith.behbudiGrading &&
+    (!hadith.gradingsFull || hadith.gradingsFull.length === 0)
+
+  return none || gradingText.includes('لم يخرجه')
+}
+
+function matchesGrading(hadith: Hadith, grading: string) {
+  const gradingText = getHadithGradingText(hadith)
+
+  if (grading === 'lam-yukhrijhu') return hasNoIncludedGrading(hadith, gradingText)
+
+  if (grading === 'other') {
+    return (
+      gradingText.trim().length > 0 &&
+      !COMMON_GRADING_TERMS.some((term) => gradingText.includes(term.toLowerCase()))
+    )
+  }
+
+  return (
+    GRADING_KEYWORDS[grading]?.some((keyword) => gradingText.includes(keyword.toLowerCase())) ??
+    false
+  )
+}
+
+export async function filterLocalHadiths(
+  bookIds?: string[],
+  gradings: string[] = [],
+): Promise<QueryResponse> {
+  const activeGradings = gradings.filter((grading) => grading && grading !== 'all')
+  if ((!bookIds || bookIds.length === 0) && activeGradings.length === 0) {
+    return { results: [], total: 0 }
+  }
+
+  const scope = bookIds && bookIds.length > 0 ? bookIds : await getAvailableBookIds()
+  const volumes = await Promise.all(
+    scope.map((bookId) => getLocalBookHadiths(bookId).catch(() => [] as Hadith[])),
+  )
+
+  let results = volumes.flat()
+  if (activeGradings.length > 0) {
+    results = results.filter((hadith) =>
+      activeGradings.some((grading) => matchesGrading(hadith, grading)),
+    )
+  }
+
+  results.sort((a, b) => (a.volume || 0) - (b.volume || 0) || (a.id || 0) - (b.id || 0))
+  return { results, total: results.length }
+}
+
 export async function searchLocalHadiths(
   query: string,
   bookIds?: string[],

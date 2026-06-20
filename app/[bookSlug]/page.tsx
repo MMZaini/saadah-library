@@ -58,6 +58,9 @@ export default function BookPage() {
     results,
     error: searchError,
     isSearching,
+    filtersOpen,
+    setFiltersOpen,
+    setFilterCriteria,
     clear,
   } = useServerSearch({
     placeholder: `Search ${searchTitle}…`,
@@ -261,10 +264,13 @@ export default function BookPage() {
         onClearSearch={clear}
         searchContext={bookId}
         searchError={searchError}
+        filtersOpen={filtersOpen}
+        onFiltersOpenChange={setFiltersOpen}
+        onFilterCriteriaChange={setFilterCriteria}
       />
 
       {/* Volume Explorer / Chapter Tree */}
-      {!query && (
+      {!query && !filtersOpen && (
         <section className="mx-auto mt-6 max-w-5xl px-4 pb-12 sm:px-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Explore</h2>

@@ -17,7 +17,8 @@ export default function TopBar() {
   const { toggleSettings } = useSettings()
   const { chapterInfo } = useChapter()
   const { bookmarkCount } = useBookmarks()
-  const { query, setQuery, isSearching, placeholder } = useSearch()
+  const { query, setQuery, isSearching, placeholder, filtersEnabled, filtersOpen, setFiltersOpen } =
+    useSearch()
   const pathname = usePathname()
   const params = useParams()
   const router = useRouter()
@@ -204,6 +205,9 @@ export default function TopBar() {
             onChange={setQuery}
             placeholder={placeholder}
             isSearching={isSearching}
+            showFilterButton={filtersEnabled}
+            filtersOpen={filtersOpen}
+            onFilterClick={() => setFiltersOpen(!filtersOpen)}
             className="w-full max-w-xs sm:max-w-sm md:max-w-md"
           />
         </div>

@@ -259,3 +259,11 @@ textarea:focus-visible {
   scroll-behavior: auto !important;
   transition-duration: 0.01ms !important;
 }
+
+/* ── Side-by-side bilingual reading gets a little more width on large screens.
+   Unlayered so it overrides Tailwind's layered max-w-* utilities. ── */
+@media (min-width: 1024px) {
+  html.side-by-side .hadith-reading-container {
+    max-width: 72rem;
+  }
+}

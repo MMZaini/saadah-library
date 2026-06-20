@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Search, Loader2, Clock } from 'lucide-react'
+import { Search, Loader2, Clock, SlidersHorizontal } from 'lucide-react'
 import { useSearchShortcuts } from '@/lib/use-search-shortcuts'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +11,9 @@ interface SearchBarProps {
   onChange: (value: string) => void
   placeholder?: string
   isSearching?: boolean
+  showFilterButton?: boolean
+  filtersOpen?: boolean
+  onFilterClick?: () => void
   /** Tailwind classes for the outer container (e.g. a max-width override). */
   className?: string
   /**
@@ -30,6 +33,9 @@ export default function SearchBar({
   onChange,
   placeholder = 'Search hadith… (Ctrl+K)',
   isSearching = false,
+  showFilterButton = false,
+  filtersOpen = false,
+  onFilterClick,
   className,
   variant = 'page',
 }: SearchBarProps) {
@@ -77,6 +83,24 @@ export default function SearchBar({
           />
           {isSearching && (
             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
+          )}
+          {isTopbar && showFilterButton && (
+            <button
+              type="button"
+              aria-label={filtersOpen ? 'Close hadith filters' : 'Open hadith filters'}
+              aria-pressed={filtersOpen}
+              title={filtersOpen ? 'Close hadith filters' : 'Hadith filters'}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={onFilterClick}
+              className={cn(
+                'flex h-6 w-6 shrink-0 items-center justify-center rounded border transition-colors',
+                filtersOpen
+                  ? 'border-accent bg-accent text-accent-foreground'
+                  : 'border-border text-foreground-faint hover:bg-surface-2 hover:text-foreground-muted',
+              )}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+            </button>
           )}
           <kbd className="hidden shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-foreground-faint sm:inline-block">
             ⌘K

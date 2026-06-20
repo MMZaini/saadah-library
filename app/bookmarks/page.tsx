@@ -228,7 +228,7 @@ export default function BookmarksPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="hadith-reading-container mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-6 flex items-center gap-3">
           <Bookmark className="h-5 w-5 text-bookmark" />
           <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
@@ -242,7 +242,7 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="hadith-reading-container mx-auto max-w-5xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <Bookmark className="h-5 w-5 text-bookmark" />

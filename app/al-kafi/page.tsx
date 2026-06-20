@@ -22,7 +22,16 @@ export default function AlKafiPage() {
 
   const alKafiBookParam = useMemo(() => alKafiApi.getAlKafiVolumes().join(','), [])
 
-  const { query, results, error, isSearching, clear } = useServerSearch({
+  const {
+    query,
+    results,
+    error,
+    isSearching,
+    filtersOpen,
+    setFiltersOpen,
+    setFilterCriteria,
+    clear,
+  } = useServerSearch({
     placeholder: 'Search Al-Kāfi…',
     bookParam: alKafiBookParam,
     resetKey: '/al-kafi',
@@ -103,10 +112,13 @@ export default function AlKafiPage() {
         onClearSearch={clear}
         searchContext="al-kafi"
         searchError={error}
+        filtersOpen={filtersOpen}
+        onFiltersOpenChange={setFiltersOpen}
+        onFilterCriteriaChange={setFilterCriteria}
       />
 
       {/* Volume Explorer / Chapter Tree */}
-      {!query && (
+      {!query && !filtersOpen && (
         <section className="mx-auto mt-6 max-w-5xl px-4 pb-12 sm:px-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Explore</h2>

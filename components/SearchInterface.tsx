@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/lib/search-utils'
 import { cn } from '@/lib/utils'
 import { SEARCHABLE_BOOKS } from '@/lib/books-config'
+import type { ServerSearchFilterCriteria } from '@/lib/use-server-search'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -36,6 +37,9 @@ interface SearchInterfaceProps {
   searchError?: string | null
   highlightQuery?: string
   onBookScopeChange?: (volumeIds: string[]) => void
+  filtersOpen?: boolean
+  onFiltersOpenChange?: (open: boolean) => void
+  onFilterCriteriaChange?: (criteria: ServerSearchFilterCriteria) => void
 }
 
 const RESULTS_PER_PAGE = 10
@@ -96,12 +100,17 @@ export default function SearchInterface({
   searchError = null,
   highlightQuery,
   onBookScopeChange,
+  filtersOpen,
+  onFiltersOpenChange,
+  onFilterCriteriaChange,
 }: SearchInterfaceProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedGradings, setSelectedGradings] = useState<string[]>(['all'])
   const [selectedBooks, setSelectedBooks] = useState<string[]>([])
-  const [showFilters, setShowFilters] = useState(false)
+  const [internalShowFilters, setInternalShowFilters] = useState(false)
   const [activeModes, setActiveModes] = useState<Set<SearchMode>>(new Set())
+  const showFilters = filtersOpen ?? internalShowFilters
+  const setShowFilters = onFiltersOpenChange ?? setInternalShowFilters
 
   // Book scope pre-filter (global search only)
   const [scopeBooks, setScopeBooks] = useState<string[]>([])
@@ -137,6 +146,17 @@ export default function SearchInterface({
     onBookScopeChange?.(scopeBookIds)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey])
+
+  const activeServerGradings = selectedGradings.filter((g) => g !== 'all')
+  const hasGlobalBookScope = showBookScope && scopeBooks.length > 0
+
+  useEffect(() => {
+    onFilterCriteriaChange?.({
+      gradings: activeServerGradings,
+      hasBookScope: hasGlobalBookScope,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeServerGradings.join(','), hasGlobalBookScope])
 
   const toggleScopeBook = (bookKey: string) => {
     const book = SEARCHABLE_BOOKS.find((b) => b.key === bookKey)
@@ -220,9 +240,10 @@ export default function SearchInterface({
 
   const hasActiveFilters = () => {
     const hasGrading = !selectedGradings.includes('all') && selectedGradings.length > 0
+    const hasSearchMode = searchQuery.trim() ? activeModes.size > 0 : false
     const hasBookScope = showBookScope && scopeBooks.length > 0
     const hasBookPost = !showBookScope && selectedBooks.length > 0
-    return hasGrading || activeModes.size > 0 || hasBookScope || hasBookPost
+    return hasGrading || hasSearchMode || hasBookScope || hasBookPost
   }
 
   const handleGradingChange = (value: string, checked: boolean) => {
@@ -237,7 +258,7 @@ export default function SearchInterface({
     }
   }
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setSelectedGradings(['all'])
     setSelectedBooks([])
     setActiveModes(new Set())
@@ -245,7 +266,11 @@ export default function SearchInterface({
       setScopeBooks([])
       setScopeVolumes({})
     }
-  }
+  }, [showBookScope])
+
+  useEffect(() => {
+    if (!searchQuery.trim() && !showFilters) clearAllFilters()
+  }, [searchQuery, showFilters, clearAllFilters])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -390,7 +415,10 @@ export default function SearchInterface({
     document.getElementById('search-results')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  if (!searchQuery) return null
+  const trimmedSearchQuery = searchQuery.trim()
+  const isFilterOnly = !trimmedSearchQuery
+
+  if (!trimmedSearchQuery && !showFilters) return null
 
   const contextLabel =
     searchContext === 'al-kafi'
@@ -400,19 +428,30 @@ export default function SearchInterface({
         : ''
 
   return (
-    <section id="search-results" className="mx-auto mt-6 max-w-5xl px-4 sm:px-6">
+    <section
+      id="search-results"
+      className="hadith-reading-container mx-auto mt-6 max-w-5xl px-4 sm:px-6"
+    >
       {/* ── Header ── */}
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-lg font-semibold text-foreground sm:text-xl">
-            Results{contextLabel} for &ldquo;{searchQuery}&rdquo;
+            {isFilterOnly ? (
+              <>Filter hadith{contextLabel}</>
+            ) : (
+              <>
+                Results{contextLabel} for &ldquo;{searchQuery}&rdquo;
+              </>
+            )}
           </h2>
           <p className="mt-1 text-sm text-foreground-muted">
             {isSearching ? (
               <span className="flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 animate-spin text-accent" />
-                Searching…
+                {isFilterOnly ? 'Loading hadith…' : 'Searching…'}
               </span>
+            ) : isFilterOnly && !hasActiveFilters() ? (
+              'Choose filters to find hadith without a search term.'
             ) : (
               <>
                 <span className="font-medium text-accent">{filteredResults.length}</span>{' '}
@@ -427,9 +466,16 @@ export default function SearchInterface({
             )}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={onClearSearch} className="shrink-0 gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClearSearch}
+          aria-label={isFilterOnly ? 'Back to browsing' : 'Clear search'}
+          title={isFilterOnly ? 'Back to browsing' : 'Clear search'}
+          className="shrink-0 gap-1.5"
+        >
           <X className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Clear</span>
+          <span className="hidden sm:inline">{isFilterOnly ? 'Back' : 'Clear'}</span>
         </Button>
       </div>
 
@@ -455,7 +501,7 @@ export default function SearchInterface({
             {hasActiveFilters() && (
               <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
                 {selectedGradings.filter((g) => g !== 'all').length +
-                  activeModes.size +
+                  (searchQuery.trim() ? activeModes.size : 0) +
                   (showBookScope ? scopeBooks.length : selectedBooks.length)}
               </Badge>
             )}
@@ -577,48 +623,52 @@ export default function SearchInterface({
             </>
           )}
 
-          {/* Search mode */}
-          <div>
-            <h3 className="mb-3 text-sm font-medium text-foreground">Search Mode</h3>
-            <div className="grid grid-cols-3 gap-2">
-              {SEARCH_MODES.map((mode) => {
-                const isActive = activeModes.has(mode.key)
-                return (
-                  <button
-                    key={mode.key}
-                    onClick={() =>
-                      setActiveModes((prev) => {
-                        const next = new Set(prev)
-                        if (next.has(mode.key)) next.delete(mode.key)
-                        else next.add(mode.key)
-                        return next
-                      })
-                    }
-                    className={cn(
-                      'group rounded-lg border px-3 py-2.5 text-left transition-all',
-                      isActive
-                        ? 'bg-accent/5 ring-accent/20 border-accent ring-1'
-                        : 'border-border hover:border-foreground-faint hover:bg-surface-2',
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'block text-xs font-semibold',
-                        isActive ? 'text-accent' : 'text-foreground',
-                      )}
-                    >
-                      {mode.label}
-                    </span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-foreground-muted">
-                      {mode.description}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          {!isFilterOnly && (
+            <>
+              {/* Search mode */}
+              <div>
+                <h3 className="mb-3 text-sm font-medium text-foreground">Search Mode</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {SEARCH_MODES.map((mode) => {
+                    const isActive = activeModes.has(mode.key)
+                    return (
+                      <button
+                        key={mode.key}
+                        onClick={() =>
+                          setActiveModes((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(mode.key)) next.delete(mode.key)
+                            else next.add(mode.key)
+                            return next
+                          })
+                        }
+                        className={cn(
+                          'group rounded-lg border px-3 py-2.5 text-left transition-all',
+                          isActive
+                            ? 'bg-accent/5 ring-accent/20 border-accent ring-1'
+                            : 'border-border hover:border-foreground-faint hover:bg-surface-2',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'block text-xs font-semibold',
+                            isActive ? 'text-accent' : 'text-foreground',
+                          )}
+                        >
+                          {mode.label}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] leading-snug text-foreground-muted">
+                          {mode.description}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-          <Separator className="my-4" />
+              <Separator className="my-4" />
+            </>
+          )}
 
           {/* Gradings */}
           <div>
@@ -718,7 +768,7 @@ export default function SearchInterface({
                         </Badge>
                       ) : null
                     })}
-                {Array.from(activeModes).map((modeKey) => {
+                {(searchQuery.trim() ? Array.from(activeModes) : []).map((modeKey) => {
                   const mode = SEARCH_MODES.find((m) => m.key === modeKey)
                   return mode ? (
                     <Badge key={modeKey} variant="outline" className="gap-1 pr-1">
@@ -767,14 +817,24 @@ export default function SearchInterface({
               <Search className="h-5 w-5 text-foreground-faint" />
             </div>
             <h3 className="text-base font-medium text-foreground">
-              {searchResults.length === 0 ? 'No Results Found' : 'No Results Match Filters'}
+              {isFilterOnly && !hasActiveFilters()
+                ? 'Choose filters'
+                : searchResults.length === 0
+                  ? isFilterOnly
+                    ? 'No Hadith Match Filters'
+                    : 'No Results Found'
+                  : 'No Results Match Filters'}
             </h3>
             <p className="mt-1 text-sm text-foreground-muted">
-              {searchResults.length === 0
-                ? `No hadith found for "${searchQuery}"${contextLabel}`
-                : 'Try adjusting your filters'}
+              {isFilterOnly && !hasActiveFilters()
+                ? 'Select a grading or narrow the search scope to start.'
+                : searchResults.length === 0
+                  ? isFilterOnly
+                    ? 'Try adjusting your filters'
+                    : `No hadith found for "${searchQuery}"${contextLabel}`
+                  : 'Try adjusting your filters'}
             </p>
-            {hasActiveFilters() && searchResults.length > 0 && (
+            {hasActiveFilters() && (
               <Button variant="outline" size="sm" className="mt-3" onClick={clearAllFilters}>
                 Clear all filters
               </Button>

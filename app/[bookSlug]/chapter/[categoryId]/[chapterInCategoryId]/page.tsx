@@ -111,7 +111,7 @@ export default function GenericChapterDetailPage() {
   if (error) {
     return (
       <main className="min-h-screen">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="hadith-reading-container mx-auto max-w-5xl px-4 py-8 sm:px-6">
           <div className="border-destructive/30 bg-destructive/10 rounded-lg border p-4">
             <p className="text-sm text-destructive">{error}</p>
           </div>
@@ -122,7 +122,7 @@ export default function GenericChapterDetailPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="hadith-reading-container mx-auto max-w-5xl px-4 py-8 sm:px-6">
         {/* Chapter header */}
         {chapterInfo && (
           <div className="mb-6 rounded-lg border border-border bg-surface-1 p-5">

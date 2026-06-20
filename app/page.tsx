@@ -10,7 +10,16 @@ export default function Page() {
   // Book-scope pre-filter selected from the search filters (global search only).
   const [scopeBookParam, setScopeBookParam] = useState('')
 
-  const { query, results, error, isSearching, clear } = useServerSearch({
+  const {
+    query,
+    results,
+    error,
+    isSearching,
+    filtersOpen,
+    setFiltersOpen,
+    setFilterCriteria,
+    clear,
+  } = useServerSearch({
     placeholder: 'Search all books…',
     bookParam: scopeBookParam,
     resetKey: '/',
@@ -39,10 +48,13 @@ export default function Page() {
         searchContext="all-books"
         searchError={error}
         onBookScopeChange={handleBookScopeChange}
+        filtersOpen={filtersOpen}
+        onFiltersOpenChange={setFiltersOpen}
+        onFilterCriteriaChange={setFilterCriteria}
       />
 
       {/* Book grid */}
-      {!query && (
+      {!query && !filtersOpen && (
         <section className="mx-auto mt-8 max-w-[1800px] px-4 pb-12 sm:mt-12 sm:px-8 sm:pb-16 md:px-16 lg:px-20 xl:px-32">
           <div className="mb-6 sm:mb-8">
             <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Browse Books</h2>

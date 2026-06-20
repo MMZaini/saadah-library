@@ -96,7 +96,7 @@ export default function HadithPage() {
   if (error || !hadith) {
     return (
       <main className="min-h-screen">
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        <div className="hadith-reading-container mx-auto max-w-4xl px-4 py-8 sm:px-6">
           <button
             onClick={handleBackClick}
             className="mb-6 flex items-center gap-1.5 text-sm text-foreground-muted transition-colors hover:text-foreground"
@@ -123,7 +123,7 @@ export default function HadithPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+      <div className="hadith-reading-container mx-auto max-w-4xl px-4 py-8 sm:px-6">
         <button
           onClick={handleBackClick}
           className="mb-6 flex items-center gap-1.5 text-sm text-foreground-muted transition-colors hover:text-foreground"

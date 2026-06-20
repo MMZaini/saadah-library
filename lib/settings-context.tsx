@@ -22,6 +22,7 @@ type Settings = {
   englishFontFamily: 'inter' | 'merriweather'
   alwaysShowFullHadith: boolean // whether to show full hadith text by default
   defaultLanguage: 'english' | 'arabic' // which language to show on hadith open
+  sideBySide: boolean // show Arabic and English together in two columns
   reduceMotion: boolean // whether to minimize non-essential UI motion
 }
 
@@ -43,6 +44,7 @@ const defaultSettings: Settings = {
   englishFontFamily: 'inter', // Default to inter
   alwaysShowFullHadith: false, // false = collapsed by default (current behavior)
   defaultLanguage: 'english', // english = show English by default (new users)
+  sideBySide: true, // on by default; persisted per-browser like other settings
   reduceMotion: false,
 }
 
@@ -104,6 +106,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const root = document.documentElement
       root.setAttribute('data-theme', settings.theme)
       root.setAttribute('data-motion', settings.reduceMotion ? 'reduced' : 'full')
+      root.classList.toggle('side-by-side', settings.sideBySide)
 
       // Set font size/family CSS custom properties
       root.style.setProperty('--hadith-arabic-font-size', `${settings.arabicFontSize * 1.485}%`)
@@ -126,6 +129,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('data-theme', 'dark')
         document.documentElement.setAttribute('data-motion', 'full')
+        document.documentElement.classList.toggle('side-by-side', settings.sideBySide)
       }
     }
   }, [
@@ -134,6 +138,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     settings.englishFontSize,
     settings.englishFontFamily,
     settings.alwaysShowFullHadith,
+    settings.sideBySide,
     settings.reduceMotion,
     isHydrated,
   ])
@@ -177,6 +182,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             }
             if (updated.reduceMotion !== undefined) {
               root.setAttribute('data-motion', updated.reduceMotion ? 'reduced' : 'full')
+            }
+            if (updated.sideBySide !== undefined) {
+              root.classList.toggle('side-by-side', updated.sideBySide)
             }
           }
         } catch {

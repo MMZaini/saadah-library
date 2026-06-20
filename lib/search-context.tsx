@@ -20,6 +20,12 @@ interface SearchContextValue {
   /** Placeholder the active page wants shown in the field. */
   placeholder: string
   configurePlaceholder: (p: string) => void
+  /** Whether the active page can show the hadith search filter panel. */
+  filtersEnabled: boolean
+  configureFilters: (enabled: boolean) => void
+  /** Global control for the hadith search filter panel in the TopBar. */
+  filtersOpen: boolean
+  setFiltersOpen: (open: boolean) => void
 }
 
 const SearchContext = createContext<SearchContextValue | undefined>(undefined)
@@ -35,12 +41,37 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [query, setQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [placeholder, setPlaceholder] = useState(DEFAULT_PLACEHOLDER)
+  const [filtersEnabled, setFiltersEnabled] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const configurePlaceholder = useCallback((p: string) => setPlaceholder(p), [])
+  const configureFilters = useCallback((enabled: boolean) => {
+    setFiltersEnabled(enabled)
+    if (!enabled) setFiltersOpen(false)
+  }, [])
 
   const value = useMemo<SearchContextValue>(
-    () => ({ query, setQuery, isSearching, setIsSearching, placeholder, configurePlaceholder }),
-    [query, isSearching, placeholder, configurePlaceholder],
+    () => ({
+      query,
+      setQuery,
+      isSearching,
+      setIsSearching,
+      placeholder,
+      configurePlaceholder,
+      filtersEnabled,
+      configureFilters,
+      filtersOpen,
+      setFiltersOpen,
+    }),
+    [
+      query,
+      isSearching,
+      placeholder,
+      configurePlaceholder,
+      filtersEnabled,
+      configureFilters,
+      filtersOpen,
+    ],
   )
 
   return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>
@@ -67,11 +98,12 @@ export function usePageSearch({
   placeholder: string
   resetKey: unknown
 }) {
-  const { query, setQuery, configurePlaceholder } = useSearch()
+  const { query, setQuery, configurePlaceholder, configureFilters } = useSearch()
 
   useEffect(() => {
     configurePlaceholder(placeholder)
-  }, [placeholder, configurePlaceholder])
+    configureFilters(false)
+  }, [placeholder, configurePlaceholder, configureFilters])
 
   useEffect(() => {
     setQuery('')

@@ -35,6 +35,10 @@ import {
   Type,
 } from 'lucide-react'
 
+// In side-by-side mode the text is scaled down a touch so two columns fit
+// comfortably; the Arabic/English font-size sliders still apply on top of this.
+const SIDE_BY_SIDE_FONT_SCALE = 0.9
+
 interface HadithCardProps {
   hadith: Hadith
   className?: string
@@ -231,6 +235,11 @@ const HadithCard = ({
     }
   }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad])
 
+  const hasArabic = Boolean(arabicText)
+  const hasEnglish = Boolean(englishText)
+  const bothLanguages = hasArabic && hasEnglish
+  const fontScale = settings.sideBySide ? SIDE_BY_SIDE_FONT_SCALE : 1
+
   // Render text with search highlighting
   const renderHighlighted = useCallback(
     (text: string | undefined, truncate?: boolean): ReactNode => {
@@ -277,7 +286,7 @@ const HadithCard = ({
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
-  }, [arabicText, settings.arabicFontSize, arabicExpanded])
+  }, [arabicText, settings.arabicFontSize, arabicExpanded, settings.sideBySide])
 
   // Grading data
   const gradingData = useMemo(
@@ -410,6 +419,65 @@ const HadithCard = ({
     )
   }
 
+  // Reusable render blocks so the single and side-by-side layouts share markup.
+  const arabicTextBlock = (
+    <>
+      <div
+        ref={arabicRef}
+        className="hadith-arabic-text text-right font-arabic text-foreground"
+        dir="rtl"
+        style={{ fontSize: `${settings.arabicFontSize * 1.485 * fontScale}%` }}
+      >
+        {arabicOverflow && !arabicExpanded
+          ? renderHighlighted(arabicText, true)
+          : renderHighlighted(arabicText)}
+      </div>
+      {arabicOverflow && (
+        <button
+          onClick={() => setArabicExpanded(!arabicExpanded)}
+          className="mt-1 text-xs font-medium text-accent transition-colors hover:underline"
+        >
+          {arabicExpanded ? 'اعرض أقل' : 'اقرأ المزيد'}
+        </button>
+      )}
+    </>
+  )
+
+  const arabicBoxedBlock = (
+    <div className="hadith-block bg-surface-2/50 rounded-md border border-border">
+      {arabicTextBlock}
+    </div>
+  )
+
+  const englishBlock = (
+    <>
+      {hadith.thaqalaynSanad && (
+        <p
+          className="hadith-english-size-only mb-2 line-clamp-3 font-lora text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
+          style={{ fontSize: `${settings.englishFontSize * fontScale}%` }}
+        >
+          {hadith.thaqalaynSanad.trim()}
+        </p>
+      )}
+      <div
+        className="hadith-english-text text-sm leading-relaxed text-foreground sm:text-base"
+        style={{ fontSize: `${settings.englishFontSize * fontScale}%` }}
+      >
+        {isLongText && !expanded
+          ? renderHighlighted(englishText, true)
+          : renderHighlighted(englishText)}
+        {isLongText && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="ml-1 text-xs font-medium text-accent transition-colors hover:underline"
+          >
+            {expanded ? 'Show less' : 'Read more'}
+          </button>
+        )}
+      </div>
+    </>
+  )
+
   return (
     <article className={cn('rounded-lg border border-border bg-surface-1 p-4 sm:p-5', className)}>
       {/* ── Header ── */}
@@ -433,7 +501,7 @@ const HadithCard = ({
           <TooltipContent>{bookmarked ? 'Remove bookmark' : 'Bookmark'}</TooltipContent>
         </Tooltip>
 
-        {arabicText && (
+        {hasArabic && !settings.sideBySide && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -461,54 +529,21 @@ const HadithCard = ({
 
       {/* ── Content ── */}
       <div className="space-y-3">
-        {showArabic && arabicText ? (
-          <div className="hadith-block bg-surface-2/50 rounded-md border border-border">
-            <div
-              ref={arabicRef}
-              className="hadith-arabic-text text-right font-arabic text-foreground"
-              dir="rtl"
-              style={{ fontSize: `${settings.arabicFontSize * 1.485}%` }}
-            >
-              {arabicOverflow && !arabicExpanded
-                ? renderHighlighted(arabicText, true)
-                : renderHighlighted(arabicText)}
+        {settings.sideBySide ? (
+          bothLanguages ? (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="min-w-0">{englishBlock}</div>
+              <div className="lg:border-border/60 min-w-0 lg:border-l lg:pl-6">
+                {arabicTextBlock}
+              </div>
             </div>
-            {arabicOverflow && (
-              <button
-                onClick={() => setArabicExpanded(!arabicExpanded)}
-                className="mt-1 text-xs font-medium text-accent transition-colors hover:underline"
-              >
-                {arabicExpanded ? 'اعرض أقل' : 'اقرأ المزيد'}
-              </button>
-            )}
-          </div>
+          ) : (
+            <div className="lg:max-w-2xl">{hasArabic ? arabicBoxedBlock : englishBlock}</div>
+          )
+        ) : showArabic && hasArabic ? (
+          arabicBoxedBlock
         ) : (
-          <div>
-            {hadith.thaqalaynSanad && (
-              <p
-                className="hadith-english-size-only mb-2 line-clamp-3 font-lora text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
-                style={{ fontSize: `${settings.englishFontSize}%` }}
-              >
-                {hadith.thaqalaynSanad.trim()}
-              </p>
-            )}
-            <div
-              className="hadith-english-text text-sm leading-relaxed text-foreground sm:text-base"
-              style={{ fontSize: `${settings.englishFontSize}%` }}
-            >
-              {isLongText && !expanded
-                ? renderHighlighted(englishText, true)
-                : renderHighlighted(englishText)}
-              {isLongText && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="ml-1 text-xs font-medium text-accent transition-colors hover:underline"
-                >
-                  {expanded ? 'Show less' : 'Read more'}
-                </button>
-              )}
-            </div>
-          </div>
+          englishBlock
         )}
       </div>
 
