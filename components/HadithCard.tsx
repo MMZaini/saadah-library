@@ -103,13 +103,22 @@ function getHadithUrl(hadith: Hadith): string {
   const bookId = hadith.bookId || ''
   const cfg = getBookConfig(bookId)
 
+  // Multi-volume books: ids restart at 1 per volume, so the volume must be in
+  // the URL or the link is ambiguous. Single-volume books need no volume segment.
+  if (cfg?.hasMultipleVolumes && hadith.volume) {
+    const slug = cfg.bookId === 'Al-Kafi' ? 'al-kafi' : getBookUrlSlug(cfg.bookId)
+    return `/${slug}/volume/${hadith.volume}/hadith/${hadith.id}`
+  }
+
   if (cfg) {
     return cfg.bookId === 'Al-Kafi'
       ? `/al-kafi/hadith/${hadith.id}`
       : `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
   }
   if (bookId.includes('Uyun') || hadith.book?.toLowerCase().includes('uyun')) {
-    return `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
+    return hadith.volume
+      ? `/uyun-akhbar-al-rida/volume/${hadith.volume}/hadith/${hadith.id}`
+      : `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
   }
   if (bookId) return `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
   return `/al-kafi/hadith/${hadith.id}`

@@ -193,6 +193,14 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     router.push(buildChapterHref(categoryId, chapterInCategoryId, sourceVolume))
   }
 
+  // Warm a chapter's Al-Kāfi volume in the background on hover intent so a click
+  // loads from cache instead of downloading the volume. Best-effort/no-throw.
+  const prefetchChapterVolume = (sourceVolume?: number) => {
+    const volume = sourceVolume ?? (selectedVolume === 'all' ? null : Number(selectedVolume))
+    if (volume == null || Number.isNaN(volume)) return
+    void alKafiApi.getVolumeHadiths(Number(volume)).catch(() => {})
+  }
+
   const getChapterKey = (categoryId: string, chapterInCategoryId: number) =>
     `${categoryId}-${chapterInCategoryId}`
 
@@ -514,6 +522,9 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                               hoverLeaveTimerRef.current = null
                             }
                             if (hoveredKey === key) return
+                            // Warm the chapter's volume in the background so a
+                            // click loads from cache instead of downloading it.
+                            prefetchChapterVolume(chapter.volume)
                             // Expand only after a brief dwell so quick fly-overs don't trigger it.
                             if (hoverEnterTimerRef.current)
                               window.clearTimeout(hoverEnterTimerRef.current)

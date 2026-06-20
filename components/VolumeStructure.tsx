@@ -295,6 +295,28 @@ export default function VolumeStructure({
     return `${baseRoute}/chapter/${categoryId}/${chapterInCategoryId}`
   }
 
+  // Resolve the runtime volume id a chapter card should warm on hover intent.
+  // Mirrors buildChapterHref's volume resolution but yields the dataset bookId
+  // (the artifact the chapter page fetches), not a URL segment. Best-effort:
+  // returns null when the volume can't be determined, in which case we skip
+  // prefetching entirely.
+  const getChapterVolumeBookId = (chapter: ChapterSummary): string | null => {
+    if (chapter.bookId) return chapter.bookId
+    if (selectedVolume === 'all') return null
+    const selected = String(selectedVolume)
+    if (bookId.includes('Al-Kafi')) {
+      const volumeNumber = Number(selected)
+      return Number.isFinite(volumeNumber) ? `Al-Kafi-Volume-${volumeNumber}-Kulayni` : null
+    }
+    // Generic multi/single-volume books: selectedVolume already is the runtime id.
+    return selected
+  }
+
+  const prefetchChapterVolume = (chapter: ChapterSummary) => {
+    const volumeBookId = getChapterVolumeBookId(chapter)
+    if (volumeBookId) thaqalaynApi.prefetchVolume(volumeBookId)
+  }
+
   const handleChapterClick = (
     categoryId: string,
     chapterInCategoryId: number,
@@ -458,6 +480,9 @@ export default function VolumeStructure({
           }
           if (hoveredKey === key) return
           // Expand only after a brief dwell so quick fly-overs don't trigger it.
+          // Warm the chapter's volume in the background once the hover settles,
+          // so a click loads from cache instead of downloading the volume.
+          prefetchChapterVolume(chapter)
           if (hoverEnterTimerRef.current) window.clearTimeout(hoverEnterTimerRef.current)
           hoverEnterTimerRef.current = window.setTimeout(() => {
             setHoveredKey(key)
@@ -877,6 +902,9 @@ export default function VolumeStructure({
                             }
                             if (hoveredKey === key) return
                             // Expand only after a brief dwell so quick fly-overs don't trigger it.
+                            // Warm the chapter's volume in the background once
+                            // the hover settles, so a click loads from cache.
+                            prefetchChapterVolume(chapter)
                             if (hoverEnterTimerRef.current)
                               window.clearTimeout(hoverEnterTimerRef.current)
                             hoverEnterTimerRef.current = window.setTimeout(() => {

@@ -68,7 +68,12 @@ export default function TopBar() {
     pathname.includes('/chapter/')
   const isChapterPage = isAlKafiChapterPage || isGenericChapterPage
 
-  const isAlKafiHadithPage = pathname.includes('/al-kafi/hadith/')
+  // Matches both the legacy /al-kafi/hadith/<id> and the canonical
+  // /al-kafi/volume/<vol>/hadith/<id> forms (chapter pages have /chapter/, not
+  // /hadith/, so the two never overlap).
+  const isAlKafiHadithPage =
+    pathname.includes('/al-kafi/hadith/') ||
+    (pathname.startsWith('/al-kafi/volume/') && pathname.includes('/hadith/'))
   const isGenericHadithPage =
     pathname !== '/' &&
     pathname !== '/al-kafi' &&

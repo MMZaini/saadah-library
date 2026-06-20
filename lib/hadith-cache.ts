@@ -198,3 +198,21 @@ export async function cacheSet(key: string, data: unknown, ttl?: number): Promis
     void idbSet(entry)
   }
 }
+
+// ─── Persistent-only helpers (skip the in-memory LRU) ─────────────────────
+// Used by the content layer (lib/api.ts) to durably cache large volume
+// payloads in IndexedDB without (a) evicting the small structure entries the
+// in-memory LRU is sized for, or (b) holding several multi-MB blobs in JS
+// memory beyond the caller's own session cache.
+
+/** Read a value from IndexedDB only (no memory cache). Null if absent/expired. */
+export async function idbGetData(key: string): Promise<unknown | null> {
+  const entry = await idbGet(key)
+  return entry ? entry.data : null
+}
+
+/** Persist a value to IndexedDB only (no memory cache). No-op if ttl <= 0. */
+export async function idbSetData(key: string, data: unknown, ttl: number): Promise<void> {
+  if (ttl <= 0) return
+  await idbSet({ key, data, timestamp: Date.now(), ttl })
+}

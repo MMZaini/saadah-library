@@ -27,8 +27,17 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
   const getHadithUrl = () => {
     try {
       const cfg = getBookConfig(bookmark.bookId)
+      // Multi-volume books need the volume in the URL (ids restart per volume).
+      if (cfg?.hasMultipleVolumes && bookmark.volume) {
+        const slug = cfg.bookId === 'Al-Kafi' ? 'al-kafi' : getBookUrlSlug(cfg.bookId)
+        return `/${slug}/volume/${bookmark.volume}/hadith/${bookmark.id}`
+      }
       if (cfg?.bookId === 'Al-Kafi') return `/al-kafi/hadith/${bookmark.id}`
-      if (bookmark.bookId.includes('Uyun')) return `/Uyun-akhbar-al-Rida/hadith/${bookmark.id}`
+      if (bookmark.bookId.includes('Uyun')) {
+        return bookmark.volume
+          ? `/uyun-akhbar-al-rida/volume/${bookmark.volume}/hadith/${bookmark.id}`
+          : `/Uyun-akhbar-al-Rida/hadith/${bookmark.id}`
+      }
       return `/${getBookUrlSlug(bookmark.bookId)}/hadith/${bookmark.id}`
     } catch {
       return `/al-kafi/hadith/${bookmark.id}`
