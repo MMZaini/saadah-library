@@ -52,6 +52,50 @@ function readJsonValue(source, startIndex) {
   return null
 }
 
+// Escapes raw control characters (U+0000–U+001F) that appear *inside* JSON
+// string literals. Strict JSON forbids unescaped control characters in strings,
+// but rendered/streamed payloads can occasionally contain them. Control
+// characters outside of strings (structural whitespace) are left untouched.
+function escapeControlCharsInJsonStrings(raw) {
+  let result = ''
+  let inString = false
+  let escaped = false
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]
+    if (inString) {
+      if (escaped) {
+        escaped = false
+        result += ch
+        continue
+      }
+      if (ch === '\\') {
+        escaped = true
+        result += ch
+        continue
+      }
+      if (ch === '"') {
+        inString = false
+        result += ch
+        continue
+      }
+      const code = raw.charCodeAt(i)
+      if (code < 0x20) {
+        const SHORT = { 8: '\\b', 9: '\\t', 10: '\\n', 12: '\\f', 13: '\\r' }
+        result += SHORT[code] || `\\u${code.toString(16).padStart(4, '0')}`
+        continue
+      }
+      result += ch
+      continue
+    }
+
+    if (ch === '"') inString = true
+    result += ch
+  }
+
+  return result
+}
+
 export function extractJsonValueAfter(source, token) {
   const tokenIndex = source.indexOf(token)
   if (tokenIndex === -1) return null
@@ -62,7 +106,12 @@ export function extractJsonValueAfter(source, token) {
   const start = startSearch + arrayStart
   const raw = readJsonValue(source, start)
   if (!raw) return null
-  return JSON.parse(raw)
+  try {
+    return JSON.parse(raw)
+  } catch {
+    // Safety net: tolerate stray raw control characters inside string literals.
+    return JSON.parse(escapeControlCharsInJsonStrings(raw))
+  }
 }
 
 function extractScalar(source, key) {
@@ -75,7 +124,11 @@ function extractScalar(source, key) {
 
 export function parseChapterPage(html, sourceUrl = null) {
   const chunks = extractFlightStrings(html)
-  const joined = chunks.join('\n')
+  // Flight chunks are pieces of one continuous RSC stream split at arbitrary
+  // byte boundaries; concatenate them directly. Joining with a separator would
+  // inject characters into values that straddle a chunk boundary (a separating
+  // newline lands inside a string literal and breaks JSON.parse).
+  const joined = chunks.join('')
   const hadiths = extractJsonValueAfter(joined, '"hadiths":') || []
 
   return {

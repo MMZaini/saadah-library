@@ -21,6 +21,33 @@ describe('Thaqalayn page parser', () => {
     expect(parsed.hadiths[0].text_en).toBe('English text')
   })
 
+  it('reassembles hadith arrays that span multiple flight chunks', () => {
+    // Next.js splits the RSC stream at arbitrary byte boundaries. Force a
+    // boundary to land inside a string literal — the regression that broke the
+    // data workflow with "Bad control character in string literal in JSON".
+    const rawStream = JSON.parse(encodedChunk)
+    const splitAt = rawStream.indexOf('English text') + 4
+    const html =
+      `<html><script>self.__next_f.push([1,${JSON.stringify(rawStream.slice(0, splitAt))}])</script>` +
+      `<script>self.__next_f.push([1,${JSON.stringify(rawStream.slice(splitAt))}])</script></html>`
+
+    const parsed = parseChapterPage(html, 'https://thaqalayn.net/chapter/1/1/0')
+
+    expect(parsed.warnings).toEqual([])
+    expect(parsed.hadiths).toHaveLength(1)
+    expect(parsed.hadiths[0].text_en).toBe('English text')
+  })
+
+  it('tolerates raw control characters inside string literals', () => {
+    const rawStream = JSON.parse(encodedChunk).replace('English text', 'English\ttext\nline')
+    const html = `<html><script>self.__next_f.push([1,${JSON.stringify(rawStream)}])</script></html>`
+
+    const parsed = parseChapterPage(html, 'https://thaqalayn.net/chapter/1/1/0')
+
+    expect(parsed.hadiths).toHaveLength(1)
+    expect(parsed.hadiths[0].text_en).toBe('English\ttext\nline')
+  })
+
   it('returns a parser warning when the hadith payload disappears', () => {
     const parsed = parseChapterPage('<html><script>self.__next_f.push([1,"empty"])</script></html>')
 

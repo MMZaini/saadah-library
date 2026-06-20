@@ -166,7 +166,13 @@ async function main() {
     chapterUrls.map((url) =>
       runLimited(async () => {
         const html = await fetchTextCached(url, rawDir)
-        const parsed = parseChapterPage(html, url)
+        let parsed
+        try {
+          parsed = parseChapterPage(html, url)
+        } catch (error) {
+          warnings.push({ url, warning: `Failed to parse chapter page: ${error.message}` })
+          return
+        }
         warnings.push(...parsed.warnings.map((warning) => ({ url, warning })))
 
         for (const websiteHadith of parsed.hadiths) {
