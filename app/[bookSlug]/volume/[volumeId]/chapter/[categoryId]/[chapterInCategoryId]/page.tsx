@@ -53,7 +53,7 @@ export default function GenericVolumeChapterPage() {
   )
 
   const { query: searchQuery } = usePageSearch({
-    placeholder: 'Filter this chapter…',
+    placeholder: 'Search this chapter…',
     resetKey: `${bookSlug}/${volumeParam}/${categoryId}/${chapterInCategoryId}`,
   })
   const [chapterInfo, setLocalChapterInfo] = useState<{

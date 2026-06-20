@@ -31,7 +31,7 @@ export default function ChapterDetailPage() {
   )
 
   const { query: searchQuery } = usePageSearch({
-    placeholder: 'Filter this chapter…',
+    placeholder: 'Search this chapter…',
     resetKey: `${volumeId}/${categoryId}/${chapterInCategoryId}`,
   })
   const [chapterInfo, setLocalChapterInfo] = useState<{

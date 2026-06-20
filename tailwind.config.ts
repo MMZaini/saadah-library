@@ -20,6 +20,7 @@ export default {
         'surface-1': 'var(--surface-1)',
         'surface-2': 'var(--surface-2)',
         border: 'var(--border)',
+        divider: 'var(--divider)',
         ring: 'var(--ring)',
         accent: {
           DEFAULT: 'var(--accent)',

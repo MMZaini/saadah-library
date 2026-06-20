@@ -28,7 +28,7 @@ export default function GenericChapterDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { query: searchQuery } = usePageSearch({
-    placeholder: 'Filter this chapter…',
+    placeholder: 'Search this chapter…',
     resetKey: `${bookSlug}/${categoryId}/${chapterInCategoryId}`,
   })
   const [chapterInfo, setLocalChapterInfo] = useState<{

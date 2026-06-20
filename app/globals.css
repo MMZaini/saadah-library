@@ -40,6 +40,7 @@
     --surface-2: #1a1a1c;
 
     --border: rgba(255, 255, 255, 0.08);
+    --divider: #2a2a2e;
     --input: #151517;
     --ring: #2a2a2e;
 
@@ -62,6 +63,7 @@
     --surface-2: #f4f4f5;
 
     --border: #e4e4e7;
+    --divider: #d4d4d8;
     --input: #e4e4e7;
     --ring: #a1a1aa;
 
@@ -264,6 +266,6 @@ textarea:focus-visible {
    Unlayered so it overrides Tailwind's layered max-w-* utilities. ── */
 @media (min-width: 1024px) {
   html.side-by-side .hadith-reading-container {
-    max-width: 72rem;
+    max-width: 80rem;
   }
 }

@@ -37,7 +37,11 @@ import {
 
 // In side-by-side mode the text is scaled down a touch so two columns fit
 // comfortably; the Arabic/English font-size sliders still apply on top of this.
-const SIDE_BY_SIDE_FONT_SCALE = 0.9
+// The wider side-by-side reading container (see globals.css) lets this sit
+// closer to full size than it otherwise could. English reads comfortably a
+// little larger than Arabic in the two-column layout, so it gets its own scale.
+const SIDE_BY_SIDE_FONT_SCALE = 0.95
+const SIDE_BY_SIDE_ENGLISH_FONT_SCALE = 1
 
 interface HadithCardProps {
   hadith: Hadith
@@ -243,6 +247,7 @@ const HadithCard = ({
   const hasEnglish = Boolean(englishText)
   const bothLanguages = hasArabic && hasEnglish
   const fontScale = settings.sideBySide ? SIDE_BY_SIDE_FONT_SCALE : 1
+  const englishFontScale = settings.sideBySide ? SIDE_BY_SIDE_ENGLISH_FONT_SCALE : 1
 
   // Render text with search highlighting
   const renderHighlighted = useCallback(
@@ -458,14 +463,14 @@ const HadithCard = ({
       {hadith.thaqalaynSanad && (
         <p
           className="hadith-english-size-only mb-2 line-clamp-3 font-lora text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
-          style={{ fontSize: `${settings.englishFontSize * fontScale}%` }}
+          style={{ fontSize: `${settings.englishFontSize * englishFontScale}%` }}
         >
           {hadith.thaqalaynSanad.trim()}
         </p>
       )}
       <div
         className="hadith-english-text text-sm leading-relaxed text-foreground sm:text-base"
-        style={{ fontSize: `${settings.englishFontSize * fontScale}%` }}
+        style={{ fontSize: `${settings.englishFontSize * englishFontScale}%` }}
       >
         {isLongText && !expanded
           ? renderHighlighted(englishText, true)
@@ -537,9 +542,7 @@ const HadithCard = ({
           bothLanguages ? (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <div className="min-w-0">{englishBlock}</div>
-              <div className="lg:border-border/60 min-w-0 lg:border-l lg:pl-6">
-                {arabicTextBlock}
-              </div>
+              <div className="min-w-0 lg:border-l lg:border-divider lg:pl-6">{arabicTextBlock}</div>
             </div>
           ) : (
             <div className="lg:max-w-2xl">{hasArabic ? arabicBoxedBlock : englishBlock}</div>

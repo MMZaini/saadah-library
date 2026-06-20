@@ -14,6 +14,7 @@ import {
   Search,
   SlidersHorizontal,
   X,
+  CornerUpLeft,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
@@ -440,7 +441,7 @@ export default function SearchInterface({
           title={isFilterOnly ? 'Back to browsing' : 'Clear search'}
           className="shrink-0 gap-1.5"
         >
-          <X className="h-3.5 w-3.5" />
+          {isFilterOnly ? <CornerUpLeft className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
           <span className="hidden sm:inline">{isFilterOnly ? 'Back' : 'Clear'}</span>
         </Button>
       </div>
