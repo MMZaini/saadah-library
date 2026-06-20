@@ -6,7 +6,9 @@ import { bookApi, Hadith } from '@/lib/api'
 import { getBookIdFromUrlSlug } from '@/lib/books-config'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
+import ChapterNavigation from '@/components/ChapterNavigation'
 import { useChapter } from '@/lib/chapter-context'
+import { useChapterNavigation } from '@/lib/use-chapter-navigation'
 import { usePageSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +36,8 @@ export default function GenericChapterDetailPage() {
     chapter: string
     hadithCount: number
   } | null>(null)
+
+  const chapterNav = useChapterNavigation(bookId, categoryId, chapterInCategoryId)
 
   useEffect(() => {
     const loadChapter = async () => {
@@ -154,8 +158,13 @@ export default function GenericChapterDetailPage() {
           ))}
         </div>
 
-        {/* Back */}
-        <div className="mt-10 border-t border-border pt-6">
+        {/* Chapter navigation + back */}
+        <div className="mt-10 space-y-6 border-t border-border pt-6">
+          <ChapterNavigation
+            prev={chapterNav.prev}
+            next={chapterNav.next}
+            buildHref={(catId, chId) => `/${bookSlug}/chapter/${catId}/${chId}`}
+          />
           <Button variant="outline" onClick={() => router.push('/')}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { alKafiApi, thaqalaynApi } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import { useNavigation } from '@/lib/navigation-context'
+import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 
@@ -264,16 +265,15 @@ export default function VolumeStructure({
     setExpandedCategories(newExpanded)
   }
 
-  const handleChapterClick = (
+  const buildChapterHref = (
     categoryId: string,
     chapterInCategoryId: number,
     sourceBookId?: string,
     sourceVolume?: number,
-  ) => {
-    // Save current scroll position before navigation
-    navigation.saveScrollPosition(window.scrollY)
+  ): string => {
+    if (!baseRoute) return ''
 
-    // Handle navigation based on book type and baseRoute
+    // Resolve the chapter's source volume for the URL based on book type.
     let volumeForUrl: string | number
     if (sourceVolume) {
       volumeForUrl = sourceVolume
@@ -289,15 +289,22 @@ export default function VolumeStructure({
       else volumeForUrl = selectedVolume
     }
 
-    if (baseRoute) {
-      if (bookId.includes('Al_Kafi') || bookId.includes('Al-Kafi') || volumes.length > 1) {
-        router.push(
-          `${baseRoute}/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`,
-        )
-      } else {
-        router.push(`${baseRoute}/chapter/${categoryId}/${chapterInCategoryId}`)
-      }
+    if (bookId.includes('Al_Kafi') || bookId.includes('Al-Kafi') || volumes.length > 1) {
+      return `${baseRoute}/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`
     }
+    return `${baseRoute}/chapter/${categoryId}/${chapterInCategoryId}`
+  }
+
+  const handleChapterClick = (
+    categoryId: string,
+    chapterInCategoryId: number,
+    sourceBookId?: string,
+    sourceVolume?: number,
+  ) => {
+    // Save current scroll position before navigation
+    navigation.saveScrollPosition(window.scrollY)
+    const href = buildChapterHref(categoryId, chapterInCategoryId, sourceBookId, sourceVolume)
+    if (href) router.push(href)
   }
 
   const getChapterKey = (categoryId: string, chapterInCategoryId: number) =>
@@ -399,10 +406,17 @@ export default function VolumeStructure({
     const isExpanded = mobileExpandedKey === key
     // "Active" = mobile long-press expansion OR a settled desktop hover.
     const isActive = isExpanded || hoveredKey === key
+    const chapterHref = buildChapterHref(
+      category.categoryId,
+      chapter.chapterInCategoryId,
+      chapter.bookId,
+      chapter.volume,
+    )
 
     return (
-      <button
+      <a
         key={chapterKey}
+        href={chapterHref ? withBasePath(chapterHref) : undefined}
         onClick={(e) => {
           if (ignoreNextClickRef.current) {
             e.preventDefault()
@@ -410,6 +424,9 @@ export default function VolumeStructure({
             ignoreNextClickRef.current = false
             return
           }
+          // Let the browser handle open-in-new-tab/window, etc.
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+          e.preventDefault()
           handleChapterClick(
             category.categoryId,
             chapter.chapterInCategoryId,
@@ -470,9 +487,9 @@ export default function VolumeStructure({
           el.style.setProperty('--my', `${y}px`)
         }}
         className={cn(
-          'border-theme bg-card group relative rounded-xl border text-left',
+          'border-theme bg-card group relative block rounded-xl border text-left',
           'p-4 transition-all duration-500 ease-out sm:p-5',
-          'touch-manipulation select-none',
+          'touch-manipulation select-none [-webkit-touch-callout:none]',
           'shadow-soft hover:shadow-md',
           'hover:border-zinc-600',
           isActive &&
@@ -549,7 +566,7 @@ export default function VolumeStructure({
             </div>
           </div>
         </div>
-      </button>
+      </a>
     )
   }
 
@@ -808,9 +825,16 @@ export default function VolumeStructure({
                       const isExpanded = mobileExpandedKey === key
                       // "Active" = mobile long-press expansion OR a settled desktop hover.
                       const isActive = isExpanded || hoveredKey === key
+                      const chapterHref = buildChapterHref(
+                        category.categoryId,
+                        chapter.chapterInCategoryId,
+                        chapter.bookId,
+                        chapter.volume,
+                      )
                       return (
-                        <button
+                        <a
                           key={chapterKey}
+                          href={chapterHref ? withBasePath(chapterHref) : undefined}
                           onClick={(e) => {
                             if (ignoreNextClickRef.current) {
                               e.preventDefault()
@@ -818,6 +842,10 @@ export default function VolumeStructure({
                               ignoreNextClickRef.current = false
                               return
                             }
+                            // Let the browser handle open-in-new-tab/window, etc.
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+                              return
+                            e.preventDefault()
                             handleChapterClick(
                               category.categoryId,
                               chapter.chapterInCategoryId,
@@ -880,9 +908,9 @@ export default function VolumeStructure({
                             el.style.setProperty('--my', `${y}px`)
                           }}
                           className={cn(
-                            'border-theme bg-card group relative rounded-xl border text-left',
+                            'border-theme bg-card group relative block rounded-xl border text-left',
                             'p-4 transition-all duration-500 ease-out sm:p-5',
-                            'touch-manipulation select-none',
+                            'touch-manipulation select-none [-webkit-touch-callout:none]',
                             'shadow-soft hover:shadow-md',
                             'hover:border-zinc-600',
                             isActive &&
@@ -970,7 +998,7 @@ export default function VolumeStructure({
                           </div>
 
                           {/* Subtle hover gradient overlay */}
-                        </button>
+                        </a>
                       )
                     })}
                   </div>

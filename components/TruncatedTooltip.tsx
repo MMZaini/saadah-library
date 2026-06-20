@@ -20,7 +20,11 @@ interface TruncatedTooltipProps {
  * keeps the clipped/visible decision correct as the layout reflows. The tooltip
  * content is simply omitted while the text fits, so no tooltip fires.
  */
-export default function TruncatedTooltip({ text, className, side = 'bottom' }: TruncatedTooltipProps) {
+export default function TruncatedTooltip({
+  text,
+  className,
+  side = 'bottom',
+}: TruncatedTooltipProps) {
   const ref = useRef<HTMLSpanElement>(null)
   const [clipped, setClipped] = useState(false)
 
@@ -42,7 +46,10 @@ export default function TruncatedTooltip({ text, className, side = 'bottom' }: T
         </span>
       </TooltipTrigger>
       {clipped && (
-        <TooltipContent side={side} className="max-w-[min(88vw,360px)] whitespace-normal break-words">
+        <TooltipContent
+          side={side}
+          className="max-w-[min(88vw,360px)] whitespace-normal break-words"
+        >
           {text}
         </TooltipContent>
       )}

@@ -6,7 +6,9 @@ import { alKafiApi, Hadith } from '@/lib/api'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
+import ChapterNavigation from '@/components/ChapterNavigation'
 import { useChapter } from '@/lib/chapter-context'
+import { useChapterNavigation } from '@/lib/use-chapter-navigation'
 import { usePageSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +39,12 @@ export default function ChapterDetailPage() {
     chapter: string
     hadithCount: number
   } | null>(null)
+
+  const chapterNav = useChapterNavigation(
+    `Al-Kafi-Volume-${volumeId}-Kulayni`,
+    categoryId,
+    chapterInCategoryId,
+  )
 
   useEffect(() => {
     const loadChapterHadiths = async () => {
@@ -184,8 +192,13 @@ export default function ChapterDetailPage() {
           ))}
         </div>
 
-        {/* Back */}
-        <div className="mt-10 border-t border-border pt-6">
+        {/* Chapter navigation + back */}
+        <div className="mt-10 space-y-6 border-t border-border pt-6">
+          <ChapterNavigation
+            prev={chapterNav.prev}
+            next={chapterNav.next}
+            buildHref={(catId, chId) => `/al-kafi/volume/${volumeId}/chapter/${catId}/${chId}`}
+          />
           <Button variant="outline" onClick={() => router.push('/al-kafi')}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Al-Kāfi Explorer

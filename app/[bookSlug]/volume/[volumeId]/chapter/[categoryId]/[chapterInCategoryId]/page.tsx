@@ -7,7 +7,9 @@ import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
+import ChapterNavigation from '@/components/ChapterNavigation'
 import { useChapter } from '@/lib/chapter-context'
+import { useChapterNavigation } from '@/lib/use-chapter-navigation'
 import { usePageSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -60,6 +62,8 @@ export default function GenericVolumeChapterPage() {
     hadithCount: number
     volume: number
   } | null>(null)
+
+  const chapterNav = useChapterNavigation(volumeBookId, categoryId, chapterInCategoryId)
 
   useEffect(() => {
     const loadChapter = async () => {
@@ -197,7 +201,14 @@ export default function GenericVolumeChapterPage() {
           ))}
         </div>
 
-        <div className="mt-10 border-t border-border pt-6">
+        <div className="mt-10 space-y-6 border-t border-border pt-6">
+          <ChapterNavigation
+            prev={chapterNav.prev}
+            next={chapterNav.next}
+            buildHref={(catId, chId) =>
+              `/${bookSlug}/volume/${volumeParam}/chapter/${catId}/${chId}`
+            }
+          />
           <Button variant="outline" onClick={() => router.push(`/${bookSlug}`)}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Explorer

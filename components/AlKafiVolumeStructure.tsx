@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { alKafiApi } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import { useNavigation } from '@/lib/navigation-context'
+import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
 
 interface ChapterSummary {
@@ -170,6 +171,18 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     setExpandedCategories(newExpanded)
   }
 
+  const buildChapterHref = (
+    categoryId: string,
+    chapterInCategoryId: number,
+    sourceVolume?: number,
+  ) => {
+    // Route to the chapter's own source volume. In "All Volumes" mode the chapter
+    // carries its source volume; otherwise fall back to the selected volume (and
+    // only to volume 1 as a last resort when neither is available).
+    const volumeForUrl = sourceVolume ?? (selectedVolume === 'all' ? 1 : selectedVolume)
+    return `/al-kafi/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`
+  }
+
   const handleChapterClick = (
     categoryId: string,
     chapterInCategoryId: number,
@@ -177,12 +190,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
   ) => {
     // Save current scroll position before navigation
     navigation.saveScrollPosition(window.scrollY)
-
-    // Route to the chapter's own source volume. In "All Volumes" mode the chapter
-    // carries its source volume; otherwise fall back to the selected volume (and
-    // only to volume 1 as a last resort when neither is available).
-    const volumeForUrl = sourceVolume ?? (selectedVolume === 'all' ? 1 : selectedVolume)
-    router.push(`/al-kafi/volume/${volumeForUrl}/chapter/${categoryId}/${chapterInCategoryId}`)
+    router.push(buildChapterHref(categoryId, chapterInCategoryId, sourceVolume))
   }
 
   const getChapterKey = (categoryId: string, chapterInCategoryId: number) =>
@@ -456,9 +464,17 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                       const isExpanded = mobileExpandedKey === key
                       // "Active" = mobile long-press expansion OR a settled desktop hover.
                       const isActive = isExpanded || hoveredKey === key
+                      const chapterHref = withBasePath(
+                        buildChapterHref(
+                          category.categoryId,
+                          chapter.chapterInCategoryId,
+                          chapter.volume,
+                        ),
+                      )
                       return (
-                        <button
+                        <a
                           key={chapterKey}
+                          href={chapterHref}
                           onClick={(e) => {
                             if (ignoreNextClickRef.current) {
                               e.preventDefault()
@@ -466,6 +482,10 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                               ignoreNextClickRef.current = false
                               return
                             }
+                            // Let the browser handle open-in-new-tab/window, etc.
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+                              return
+                            e.preventDefault()
                             handleChapterClick(
                               category.categoryId,
                               chapter.chapterInCategoryId,
@@ -526,9 +546,9 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                             el.style.setProperty('--my', `${y}px`)
                           }}
                           className={cn(
-                            'border-theme bg-card group relative rounded-xl border text-left',
+                            'border-theme bg-card group relative block rounded-xl border text-left',
                             'p-4 transition-all duration-500 ease-out sm:p-5',
-                            'touch-manipulation select-none',
+                            'touch-manipulation select-none [-webkit-touch-callout:none]',
                             'shadow-soft hover:shadow-md',
                             'hover:border-zinc-600',
                             isActive &&
@@ -616,7 +636,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                           </div>
 
                           {/* Subtle hover gradient overlay */}
-                        </button>
+                        </a>
                       )
                     })}
                   </div>

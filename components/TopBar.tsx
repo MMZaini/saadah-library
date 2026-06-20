@@ -119,10 +119,7 @@ export default function TopBar() {
             </>
           )}
           <ChevronRight className="h-3 w-3" />
-          <TruncatedTooltip
-            text={chapterInfo.chapter}
-            className="max-w-[200px] text-foreground"
-          />
+          <TruncatedTooltip text={chapterInfo.chapter} className="max-w-[200px] text-foreground" />
         </div>
       )
     }
@@ -151,7 +148,9 @@ export default function TopBar() {
         findTitleFromBooksList(currentBookId) ||
         getBookConfig(currentBookId)?.englishName ||
         humanizeBookId(currentBookId)
-      return <TruncatedTooltip text={title} className="max-w-[260px] text-sm text-foreground-muted" />
+      return (
+        <TruncatedTooltip text={title} className="max-w-[260px] text-sm text-foreground-muted" />
+      )
     }
 
     return null
