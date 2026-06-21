@@ -281,7 +281,7 @@ export default function NarratorPdfViewer() {
             <Button size="sm" className="h-8 gap-1.5" asChild>
               <a href={scanUrl}>
                 <Highlighter className="h-3.5 w-3.5" />
-                Scan Maker
+                Open in Scan Maker
               </a>
             </Button>
           )}

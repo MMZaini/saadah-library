@@ -101,7 +101,6 @@ export default function ScansStudio() {
   const loadHandleRef = useRef<ReturnType<typeof loadPdf> | null>(null)
   const docRef = useRef<PDFDocumentProxy | null>(null)
   const lastSelectedPageRef = useRef<number | null>(null)
-  const deepLinkLoadedRef = useRef(false)
   const selectedCount = selectedPages.size
 
   // Tear down the active document + any in-flight load when leaving the studio.
@@ -286,14 +285,20 @@ export default function ScansStudio() {
     [],
   )
 
-  useEffect(() => {
-    if (deepLinkLoadedRef.current) return
-    if (searchParams.get('source') !== 'rijal-khoei') return
+  // Load a narrator deep link (?source=rijal-khoei&volume=&pages=). Keyed on the
+  // param *values* (not the searchParams object) so it fires once per link. No
+  // one-shot ref guard: under React StrictMode the mount → teardown → mount cycle
+  // destroys the first in-flight load, so the effect must be allowed to re-run on
+  // the second mount. loadRijalVolume's token guard makes the torn-down first
+  // load a no-op instead of surfacing a spurious "could not load" error.
+  const deepLinkSource = searchParams.get('source')
+  const deepLinkVolume = searchParams.get('volume')
+  const deepLinkPages = searchParams.get('pages')
 
-    deepLinkLoadedRef.current = true
-    const volumeNumber = Number(searchParams.get('volume'))
-    void loadRijalVolume(volumeNumber, searchParams.get('pages'))
-  }, [loadRijalVolume, searchParams])
+  useEffect(() => {
+    if (deepLinkSource !== 'rijal-khoei') return
+    void loadRijalVolume(Number(deepLinkVolume), deepLinkPages)
+  }, [loadRijalVolume, deepLinkSource, deepLinkVolume, deepLinkPages])
 
   const handleChangePdf = useCallback(() => {
     loadTokenRef.current++

@@ -1,21 +1,13 @@
 'use client'
 
 import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import {
-  Bookmark,
-  BookOpen,
-  Copy,
-  ExternalLink,
-  FileText,
-  Highlighter,
-  Loader2,
-} from 'lucide-react'
+import { Bookmark, BookOpen, Copy, ExternalLink, FileText, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { getHighlightSegments } from '@/lib/search-utils'
 import { cleanNarratorName } from '@/lib/data/rijal-display'
-import { getKhoeiRijalScanUrl, getKhoeiRijalViewerUrl } from '@/lib/rijal-pdfs'
+import { getKhoeiRijalViewerUrl } from '@/lib/rijal-pdfs'
 import { useNarratorBookmarks } from '@/lib/narrator-bookmarks-context'
 import { cn } from '@/lib/utils'
 import type { NarratorEntry } from '@/lib/data/rijal-types'
@@ -143,7 +135,6 @@ export default function NarratorDetail({
   }, [narrator])
   const displayEntryNumber = narrator?.entryNumber ?? narrator?.sourceEntryNumber
   const pdfViewerUrl = narrator ? getKhoeiRijalViewerUrl(narrator.id) : null
-  const scanUrl = narrator ? getKhoeiRijalScanUrl(narrator) : null
 
   const flash = useCallback((message: string) => {
     setCopyFeedback(message)
@@ -236,14 +227,6 @@ export default function NarratorDetail({
               <a href={pdfViewerUrl}>
                 <BookOpen className="h-3.5 w-3.5" />
                 PDF
-              </a>
-            </Button>
-          )}
-          {scanUrl && (
-            <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
-              <a href={scanUrl}>
-                <Highlighter className="h-3.5 w-3.5" />
-                Scans
               </a>
             </Button>
           )}
