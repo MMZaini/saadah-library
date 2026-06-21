@@ -1,6 +1,7 @@
 'use client'
 
 import VolumeStructure from './VolumeStructure'
+import type { SelectedVolume } from '@/lib/volume-utils'
 
 interface GenericVolumeStructureProps {
   bookId: string
@@ -8,6 +9,8 @@ interface GenericVolumeStructureProps {
   volumes: number[] | string[]
   baseRoute?: string
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }
 
 // Simple thin wrapper that forwards props to the existing VolumeStructure component.
@@ -18,6 +21,8 @@ export default function GenericVolumeStructure({
   volumes,
   baseRoute,
   className,
+  selectedVolume,
+  onSelectedVolumeChange,
 }: GenericVolumeStructureProps) {
   return (
     <VolumeStructure
@@ -26,6 +31,8 @@ export default function GenericVolumeStructure({
       volumes={volumes as (number | string)[]}
       baseRoute={baseRoute}
       className={className}
+      selectedVolume={selectedVolume}
+      onSelectedVolumeChange={onSelectedVolumeChange}
     />
   )
 }

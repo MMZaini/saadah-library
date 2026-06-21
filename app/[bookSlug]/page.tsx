@@ -10,6 +10,8 @@ import { useNavigation } from '@/lib/navigation-context'
 import { useServerSearch } from '@/lib/use-server-search'
 import { cn } from '@/lib/utils'
 import { withBasePath } from '@/lib/assets'
+import { getPdfUrlForVolume } from '@/lib/book-pdfs'
+import type { SelectedVolume } from '@/lib/volume-utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
@@ -40,6 +42,7 @@ export default function BookPage() {
   })
 
   const [viewMode, setViewMode] = useState<'structure' | 'chapters' | 'explorer'>('structure')
+  const [selectedPdfVolume, setSelectedPdfVolume] = useState<SelectedVolume | null>(null)
 
   // Detect multi-volume books and get all their volume IDs
   const volumeIds = useMemo(() => {
@@ -49,6 +52,10 @@ export default function BookPage() {
     }
     return [bookId]
   }, [bookId])
+
+  useEffect(() => {
+    setSelectedPdfVolume(volumeIds[0] ?? bookId)
+  }, [bookId, volumeIds])
 
   const bookParam = useMemo(() => volumeIds.join(','), [volumeIds])
   const searchTitle = getBookConfig(bookId)?.englishName || urlSlug?.replace(/-/g, ' ') || 'book'
@@ -206,6 +213,7 @@ export default function BookPage() {
     bookId
 
   const coverSrc = bookInfo?.bookCover || findImageFromBooksList(bookId)
+  const selectedPdfUrl = getPdfUrlForVolume(bookId, selectedPdfVolume)
 
   const VIEW_MODES = [
     { key: 'structure' as const, label: 'Volume Explorer', short: 'Explorer' },
@@ -219,14 +227,30 @@ export default function BookPage() {
       <section className="mx-auto mt-6 max-w-5xl px-4 sm:px-6">
         <div className="rounded-lg border border-border bg-surface-1 p-5 sm:p-6">
           <div className="flex items-start gap-5">
-            {coverSrc && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={withBasePath(coverSrc)}
-                alt={bookInfo?.englishName || displayTitle}
-                className="hidden w-32 shrink-0 rounded object-cover md:block"
-              />
-            )}
+            {coverSrc &&
+              (selectedPdfUrl ? (
+                <a
+                  href={selectedPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open ${displayTitle} PDF`}
+                  className="hidden w-32 shrink-0 rounded md:block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={withBasePath(coverSrc)}
+                    alt={bookInfo?.englishName || displayTitle}
+                    className="w-full rounded object-cover transition-opacity hover:opacity-90"
+                  />
+                </a>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={withBasePath(coverSrc)}
+                  alt={bookInfo?.englishName || displayTitle}
+                  className="hidden w-32 shrink-0 rounded object-cover md:block"
+                />
+              ))}
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{displayTitle}</h1>
               {bookInfo?.englishName && bookInfo.englishName !== displayTitle && (
@@ -306,9 +330,16 @@ export default function BookPage() {
                 bookName={bookInfo.englishName}
                 volumes={bookConfig?.volumes ?? [bookInfo.bookId]}
                 baseRoute={`/${urlSlug}`}
+                selectedVolume={selectedPdfVolume ?? undefined}
+                onSelectedVolumeChange={setSelectedPdfVolume}
               />
             ) : viewMode === 'chapters' ? (
-              <GenericBookBrowser bookId={bookId} bookConfig={bookConfig} />
+              <GenericBookBrowser
+                bookId={bookId}
+                bookConfig={bookConfig}
+                selectedVolume={selectedPdfVolume ?? undefined}
+                onSelectedVolumeChange={setSelectedPdfVolume}
+              />
             ) : (
               <GenericVolumeExplorer
                 bookConfig={
@@ -320,6 +351,8 @@ export default function BookPage() {
                     hasMultipleVolumes: false,
                   }
                 }
+                selectedVolume={selectedPdfVolume ?? undefined}
+                onSelectedVolumeChange={setSelectedPdfVolume}
               />
             )}
           </Suspense>

@@ -3,6 +3,8 @@ export interface VolumeOption {
   label: string
 }
 
+export type SelectedVolume = string | number | 'all'
+
 export function makeVolumeOptions(volumes: (string | number)[] | undefined): VolumeOption[] {
   const vols = Array.isArray(volumes) && volumes.length > 0 ? volumes : []
 

@@ -7,6 +7,7 @@ import HadithCard from '@/components/HadithCard'
 import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import type { SelectedVolume } from '@/lib/volume-utils'
 import { BookConfig } from '@/lib/books-config'
 
 interface ChapterSummaryData {
@@ -26,6 +27,8 @@ interface GenericBookBrowserProps {
   bookId: string
   bookConfig?: BookConfig | null
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }
 
 const GENERIC_CATEGORY_NAMES = new Set(['content', 'uncategorized', 'no category'])
@@ -45,11 +48,14 @@ export default function GenericBookBrowser({
   bookId,
   bookConfig = null,
   className,
+  selectedVolume: selectedVolumeProp,
+  onSelectedVolumeChange,
 }: GenericBookBrowserProps) {
-  const [selectedVolume, setSelectedVolume] = useState<string | 'all'>(() => {
+  const [internalSelectedVolume, setInternalSelectedVolume] = useState<SelectedVolume>(() => {
     if (bookConfig?.hasMultipleVolumes) return bookConfig?.volumes?.[0] || 'all'
     return bookId
   })
+  const selectedVolume = selectedVolumeProp ?? internalSelectedVolume
 
   const [volumeSummary, setVolumeSummary] = useState<Record<string, CategorySummaryData>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -85,7 +91,6 @@ export default function GenericBookBrowser({
       ),
     [categoryEntries],
   )
-  const useCompactVolumeControls = volumeOptions.length > 1 && volumeOptions.length <= 6
 
   useEffect(() => {
     const loadVolumeSummary = async () => {
@@ -149,7 +154,8 @@ export default function GenericBookBrowser({
           }
         } else {
           // Single volume
-          const structureResult = await fetchBookStructure(selectedVolume)
+          const selectedVolumeId = String(selectedVolume)
+          const structureResult = await fetchBookStructure(selectedVolumeId)
 
           if (structureResult && Object.keys(structureResult).length > 0) {
             summary = structureResult as Record<string, CategorySummaryData>
@@ -158,7 +164,7 @@ export default function GenericBookBrowser({
           if (!summary || Object.keys(summary).length === 0) {
             // Fallback: download full hadiths
             summary = {}
-            const hadiths = await bookApi.getBookHadiths(selectedVolume)
+            const hadiths = await bookApi.getBookHadiths(selectedVolumeId)
             hadiths.forEach((hadith: Hadith) => {
               const categoryKey = hadith.category || 'Uncategorized'
               const chapterKey = hadith.chapter || 'No Chapter'
@@ -227,7 +233,7 @@ export default function GenericBookBrowser({
         const results = await Promise.all(promises)
         hadiths = results.flat()
       } else {
-        hadiths = await bookApi.getChapterHadiths(selectedVolume, categoryId, chapterId)
+        hadiths = await bookApi.getChapterHadiths(String(selectedVolume), categoryId, chapterId)
       }
 
       const sorted = hadiths.sort((a, b) => a.id - b.id)
@@ -253,7 +259,8 @@ export default function GenericBookBrowser({
   const handleVolumeSelect = (rawValue: string | number) => {
     const raw = String(rawValue)
     const value = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : String(raw)
-    setSelectedVolume(value)
+    if (selectedVolumeProp === undefined) setInternalSelectedVolume(value)
+    onSelectedVolumeChange?.(value)
   }
 
   return (
@@ -289,30 +296,7 @@ export default function GenericBookBrowser({
 
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            {useCompactVolumeControls ? (
-              <div className="flex flex-wrap gap-1.5">
-                {volumeOptions.map((option) => {
-                  const active = String(selectedVolume) === String(option.value)
-                  return (
-                    <button
-                      key={String(option.value)}
-                      type="button"
-                      onClick={() => handleVolumeSelect(option.value)}
-                      disabled={loading}
-                      className={cn(
-                        'rounded-lg border px-3 py-2 text-sm font-semibold transition-colors',
-                        active
-                          ? 'border-accent bg-accent text-accent-foreground'
-                          : 'border-border bg-surface-2 text-foreground-muted hover:text-foreground',
-                        loading && 'cursor-not-allowed opacity-50',
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  )
-                })}
-              </div>
-            ) : volumeOptions.length > 1 ? (
+            {volumeOptions.length > 1 ? (
               <div className="relative">
                 <select
                   value={String(selectedVolume)}

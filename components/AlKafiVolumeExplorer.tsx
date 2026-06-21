@@ -4,13 +4,21 @@ import { useState, useEffect } from 'react'
 import { alKafiApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { cn } from '@/lib/utils'
+import type { SelectedVolume } from '@/lib/volume-utils'
 
 interface AlKafiVolumeExplorerProps {
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }
 
-export default function AlKafiVolumeExplorer({ className }: AlKafiVolumeExplorerProps) {
-  const [selectedVolume, setSelectedVolume] = useState<number | 'all'>(1)
+export default function AlKafiVolumeExplorer({
+  className,
+  selectedVolume: selectedVolumeProp,
+  onSelectedVolumeChange,
+}: AlKafiVolumeExplorerProps) {
+  const [internalSelectedVolume, setInternalSelectedVolume] = useState<SelectedVolume>(1)
+  const selectedVolume = selectedVolumeProp ?? internalSelectedVolume
   const [randomHadith, setRandomHadith] = useState<Hadith | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +29,7 @@ export default function AlKafiVolumeExplorer({ className }: AlKafiVolumeExplorer
     { value: 'all' as const, label: 'All Volumes' },
   ]
 
-  const loadRandomHadithFromVolume = async (volume: number | 'all') => {
+  const loadRandomHadithFromVolume = async (volume: SelectedVolume) => {
     setLoading(true)
     setError(null)
 
@@ -32,7 +40,7 @@ export default function AlKafiVolumeExplorer({ className }: AlKafiVolumeExplorer
         const randomVolume = Math.floor(Math.random() * 8) + 1
         hadith = await alKafiApi.getRandomHadithFromVolume(randomVolume)
       } else {
-        hadith = await alKafiApi.getRandomHadithFromVolume(volume)
+        hadith = await alKafiApi.getRandomHadithFromVolume(Number(volume))
       }
       setRandomHadith(hadith)
     } catch {
@@ -43,14 +51,16 @@ export default function AlKafiVolumeExplorer({ className }: AlKafiVolumeExplorer
     }
   }
 
-  const handleVolumeSelect = (volume: number | 'all') => {
-    setSelectedVolume(volume)
+  const handleVolumeSelect = (volume: SelectedVolume) => {
+    if (selectedVolumeProp === undefined) setInternalSelectedVolume(volume)
+    onSelectedVolumeChange?.(volume)
     loadRandomHadithFromVolume(volume)
   }
 
-  // Load initial hadith from volume 1
+  // Load initial hadith from the current shared volume.
   useEffect(() => {
-    loadRandomHadithFromVolume(1)
+    loadRandomHadithFromVolume(selectedVolume)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

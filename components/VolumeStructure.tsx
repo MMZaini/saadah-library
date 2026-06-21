@@ -7,7 +7,7 @@ import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-struct
 import { useNavigation } from '@/lib/navigation-context'
 import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
-import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import { makeVolumeOptions, getVolumeLabelForValue, SelectedVolume } from '@/lib/volume-utils'
 
 interface ChapterSummary {
   chapter: string
@@ -34,6 +34,8 @@ interface VolumeStructureProps {
   volumes: (string | number)[]
   baseRoute?: string // e.g., '/al-kafi' or '/uyun-akhbar-al-rida'
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }
 
 const GENERIC_CATEGORY_NAMES = new Set(['content', 'uncategorized', 'no category'])
@@ -55,14 +57,17 @@ export default function VolumeStructure({
   volumes,
   baseRoute,
   className,
+  selectedVolume: selectedVolumeProp,
+  onSelectedVolumeChange,
 }: VolumeStructureProps) {
   const router = useRouter()
   const navigation = useNavigation()
 
-  const [selectedVolume, setSelectedVolume] = useState<string | number | 'all'>(() => {
+  const [internalSelectedVolume, setInternalSelectedVolume] = useState<SelectedVolume>(() => {
     if (!volumes || volumes.length === 0) return 'all'
     return volumes[0]
   })
+  const selectedVolume = selectedVolumeProp ?? internalSelectedVolume
   const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
@@ -102,7 +107,6 @@ export default function VolumeStructure({
       ),
     [categoryEntries],
   )
-  const useCompactVolumeControls = volumes.length > 1 && volumeOptions.length <= 6
 
   // Load volume summary (categories and chapter counts)
   useEffect(() => {
@@ -416,7 +420,8 @@ export default function VolumeStructure({
   const handleVolumeSelect = (rawValue: string | number) => {
     const raw = String(rawValue)
     const value = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : Number(raw)
-    setSelectedVolume(value)
+    if (selectedVolumeProp === undefined) setInternalSelectedVolume(value)
+    onSelectedVolumeChange?.(value)
   }
 
   const renderChapterCard = (
@@ -637,30 +642,7 @@ export default function VolumeStructure({
           </div>
 
           <div className="flex items-center gap-4">
-            {useCompactVolumeControls ? (
-              <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
-                {volumeOptions.map((option) => {
-                  const active = String(selectedVolume) === String(option.value)
-                  return (
-                    <button
-                      key={String(option.value)}
-                      type="button"
-                      onClick={() => handleVolumeSelect(option.value)}
-                      disabled={loading}
-                      className={cn(
-                        'rounded-lg border px-3 py-2 text-sm font-semibold transition-colors',
-                        active
-                          ? 'border-accent bg-accent text-accent-foreground'
-                          : 'border-border bg-surface-2 text-foreground-muted hover:text-foreground',
-                        loading && 'cursor-not-allowed opacity-50',
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  )
-                })}
-              </div>
-            ) : volumes.length > 1 ? (
+            {volumes.length > 1 ? (
               <div className="relative">
                 <select
                   value={selectedVolume}

@@ -6,6 +6,7 @@ import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-struct
 import HadithCard from './HadithCard'
 import { Book, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { SelectedVolume } from '@/lib/volume-utils'
 
 interface ChapterSummary {
   chapter: string
@@ -27,13 +28,19 @@ interface VolumeSummary {
 interface AlKafiBookBrowserProps {
   initialVolume?: number
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }
 
 export default function AlKafiBookBrowser({
   initialVolume = 1,
   className,
+  selectedVolume: selectedVolumeProp,
+  onSelectedVolumeChange,
 }: AlKafiBookBrowserProps) {
-  const [selectedVolume, setSelectedVolume] = useState<string | number | 'all'>(initialVolume)
+  const [internalSelectedVolume, setInternalSelectedVolume] =
+    useState<SelectedVolume>(initialVolume)
+  const selectedVolume = selectedVolumeProp ?? internalSelectedVolume
   const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [selectedChapter, setSelectedChapter] = useState<{
@@ -206,6 +213,11 @@ export default function AlKafiBookBrowser({
     }, 0)
   }
 
+  const handleVolumeSelect = (volume: SelectedVolume) => {
+    if (selectedVolumeProp === undefined) setInternalSelectedVolume(volume)
+    onSelectedVolumeChange?.(volume)
+  }
+
   return (
     <div className={cn('space-y-6', className)}>
       {/* Volume Selector */}
@@ -233,7 +245,7 @@ export default function AlKafiBookBrowser({
                 onChange={(e) => {
                   const raw = e.target.value
                   const parsed = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : Number(raw)
-                  setSelectedVolume(parsed)
+                  handleVolumeSelect(parsed)
                 }}
                 disabled={loading}
                 className={cn(

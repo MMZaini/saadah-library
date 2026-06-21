@@ -5,19 +5,25 @@ import { thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
+import type { SelectedVolume } from '@/lib/volume-utils'
 import { BookConfig } from '@/lib/books-config'
 
 export default function GenericVolumeExplorer({
   bookConfig,
   className,
+  selectedVolume: selectedVolumeProp,
+  onSelectedVolumeChange,
 }: {
   bookConfig: BookConfig
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }) {
-  const [selectedVolume, setSelectedVolume] = useState<string | 'all'>(() => {
+  const [internalSelectedVolume, setInternalSelectedVolume] = useState<SelectedVolume>(() => {
     if (bookConfig?.hasMultipleVolumes) return bookConfig?.volumes?.[0] ?? 'all'
     return bookConfig?.volumes?.[0] ?? bookConfig?.bookId ?? 'all'
   })
+  const selectedVolume = selectedVolumeProp ?? internalSelectedVolume
 
   const [randomHadith, setRandomHadith] = useState<Hadith | null>(null)
   const [loading, setLoading] = useState(false)
@@ -31,7 +37,7 @@ export default function GenericVolumeExplorer({
   const displayTitle = bookConfig?.englishName || bookConfig?.bookId || 'This Book'
   const volumesCount = (Array.isArray(volumesList) && volumesList.length) || 1
 
-  const loadRandomHadithFromVolume = async (volume: string | 'all') => {
+  const loadRandomHadithFromVolume = async (volume: SelectedVolume) => {
     setLoading(true)
     setError(null)
     setRandomHadith(null)
@@ -44,7 +50,7 @@ export default function GenericVolumeExplorer({
         const randomBook = candidates[Math.floor(Math.random() * candidates.length)]
         hadith = await thaqalaynApi.getRandomHadithFromBook(randomBook)
       } else {
-        hadith = await thaqalaynApi.getRandomHadithFromBook(volume)
+        hadith = await thaqalaynApi.getRandomHadithFromBook(String(volume))
       }
 
       setRandomHadith(hadith)
@@ -62,8 +68,9 @@ export default function GenericVolumeExplorer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleVolumeSelect = (volume: string | 'all') => {
-    setSelectedVolume(volume)
+  const handleVolumeSelect = (volume: SelectedVolume) => {
+    if (selectedVolumeProp === undefined) setInternalSelectedVolume(volume)
+    onSelectedVolumeChange?.(volume)
     loadRandomHadithFromVolume(volume)
   }
 

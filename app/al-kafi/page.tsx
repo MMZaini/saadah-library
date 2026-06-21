@@ -7,6 +7,8 @@ import { useNavigation } from '@/lib/navigation-context'
 import { useServerSearch } from '@/lib/use-server-search'
 import { cn } from '@/lib/utils'
 import { withBasePath } from '@/lib/assets'
+import { getPdfUrlForVolume } from '@/lib/book-pdfs'
+import type { SelectedVolume } from '@/lib/volume-utils'
 import { Badge } from '@/components/ui/badge'
 import { Loader2 } from 'lucide-react'
 
@@ -19,6 +21,7 @@ export default function AlKafiPage() {
 
   const [bookInfo, setBookInfo] = useState<BookInfo | null>(null)
   const [viewMode, setViewMode] = useState<'structure' | 'chapters' | 'explorer'>('structure')
+  const [selectedPdfVolume, setSelectedPdfVolume] = useState<SelectedVolume>(1)
 
   const alKafiBookParam = useMemo(() => alKafiApi.getAlKafiVolumes().join(','), [])
 
@@ -67,6 +70,7 @@ export default function AlKafiPage() {
     { key: 'chapters' as const, label: 'Chapter Tree', short: 'Tree' },
     { key: 'explorer' as const, label: 'Random', short: 'Random' },
   ]
+  const selectedPdfUrl = getPdfUrlForVolume('Al-Kafi', selectedPdfVolume)
 
   return (
     <main className="min-h-screen">
@@ -74,14 +78,32 @@ export default function AlKafiPage() {
       <section className="mx-auto mt-6 max-w-5xl px-4 sm:px-6">
         <div className="rounded-lg border border-border bg-surface-1 p-5 sm:p-6">
           <div className="flex items-start gap-5">
-            {bookInfo?.bookCover && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={withBasePath(bookInfo.bookCover)}
-                alt="Al-Kāfi"
-                className="hidden w-32 shrink-0 rounded object-cover md:block"
-              />
-            )}
+            {bookInfo?.bookCover &&
+              (selectedPdfUrl ? (
+                <a
+                  href={selectedPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open selected Al-Kafi PDF"
+                  className="hidden w-32 shrink-0 rounded md:block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={withBasePath(bookInfo.bookCover)}
+                    alt="Al-Kafi"
+                    className="w-full rounded object-cover transition-opacity hover:opacity-90"
+                  />
+                </a>
+              ) : (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={withBasePath(bookInfo.bookCover)}
+                    alt="Al-Kāfi"
+                    className="hidden w-32 shrink-0 rounded object-cover md:block"
+                  />
+                </>
+              ))}
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
                 Al-Kāfi <span className="font-arabic text-foreground-muted">(الكافي)</span>
@@ -149,11 +171,20 @@ export default function AlKafiPage() {
             }
           >
             {viewMode === 'structure' ? (
-              <BookStructureExplorer />
+              <BookStructureExplorer
+                selectedVolume={selectedPdfVolume}
+                onSelectedVolumeChange={setSelectedPdfVolume}
+              />
             ) : viewMode === 'chapters' ? (
-              <AlKafiBookBrowser />
+              <AlKafiBookBrowser
+                selectedVolume={selectedPdfVolume}
+                onSelectedVolumeChange={setSelectedPdfVolume}
+              />
             ) : (
-              <AlKafiVolumeExplorer />
+              <AlKafiVolumeExplorer
+                selectedVolume={selectedPdfVolume}
+                onSelectedVolumeChange={setSelectedPdfVolume}
+              />
             )}
           </Suspense>
         </section>

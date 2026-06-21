@@ -7,6 +7,7 @@ import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-struct
 import { useNavigation } from '@/lib/navigation-context'
 import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
+import type { SelectedVolume } from '@/lib/volume-utils'
 
 interface ChapterSummary {
   chapter: string
@@ -31,13 +32,20 @@ interface VolumeSummary {
 
 interface BookStructureExplorerProps {
   className?: string
+  selectedVolume?: SelectedVolume
+  onSelectedVolumeChange?: (volume: SelectedVolume) => void
 }
 
-export default function BookStructureExplorer({ className }: BookStructureExplorerProps) {
+export default function BookStructureExplorer({
+  className,
+  selectedVolume: selectedVolumeProp,
+  onSelectedVolumeChange,
+}: BookStructureExplorerProps) {
   const router = useRouter()
   const navigation = useNavigation()
 
-  const [selectedVolume, setSelectedVolume] = useState<string | number | 'all'>(1)
+  const [internalSelectedVolume, setInternalSelectedVolume] = useState<SelectedVolume>(1)
+  const selectedVolume = selectedVolumeProp ?? internalSelectedVolume
   const [volumeSummary, setVolumeSummary] = useState<VolumeSummary>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
@@ -290,6 +298,11 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
     }, 0)
   }
 
+  const handleVolumeSelect = (volume: SelectedVolume) => {
+    if (selectedVolumeProp === undefined) setInternalSelectedVolume(volume)
+    onSelectedVolumeChange?.(volume)
+  }
+
   return (
     <div className={cn('space-y-6', className)}>
       {/* Volume Selection */}
@@ -326,7 +339,7 @@ export default function BookStructureExplorer({ className }: BookStructureExplor
                 onChange={(e) => {
                   const raw = e.target.value
                   const val = raw === 'all' ? 'all' : isNaN(Number(raw)) ? raw : Number(raw)
-                  setSelectedVolume(val)
+                  handleVolumeSelect(val)
                 }}
                 disabled={loading}
                 className={cn(
