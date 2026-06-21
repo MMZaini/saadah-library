@@ -1,4 +1,6 @@
 const SCRIPT_PUSH_RE = /self\.__next_f\.push\(\[1,"((?:\\.|[^"\\])*)"\]\)/g
+const FLIGHT_TEXT_REF_RE = /^\$[0-9a-f]+$/i
+const FLIGHT_TEXT_RECORD_RE = /([0-9a-f]+):T([0-9a-f]+),/gi
 
 function decodeFlightString(raw) {
   try {
@@ -15,6 +17,60 @@ export function extractFlightStrings(html) {
     if (decoded) chunks.push(decoded)
   }
   return chunks
+}
+
+function utf8ByteLengthAt(source, index) {
+  const codePoint = source.codePointAt(index)
+  if (codePoint <= 0x7f) return { bytes: 1, width: 1 }
+  if (codePoint <= 0x7ff) return { bytes: 2, width: 1 }
+  if (codePoint <= 0xffff) return { bytes: 3, width: 1 }
+  return { bytes: 4, width: 2 }
+}
+
+function sliceByUtf8ByteLength(source, startIndex, byteLength) {
+  let bytes = 0
+  let index = startIndex
+
+  while (index < source.length && bytes < byteLength) {
+    const next = utf8ByteLengthAt(source, index)
+    bytes += next.bytes
+    index += next.width
+  }
+
+  return source.slice(startIndex, index)
+}
+
+export function extractFlightTextReferences(source) {
+  const refs = new Map()
+
+  for (const match of source.matchAll(FLIGHT_TEXT_RECORD_RE)) {
+    const previous = match.index > 0 ? source[match.index - 1] : ''
+    if (previous && /[A-Za-z0-9_$]/.test(previous)) continue
+
+    const id = match[1]
+    const byteLength = Number.parseInt(match[2], 16)
+    if (!Number.isFinite(byteLength)) continue
+
+    const start = match.index + match[0].length
+    refs.set(`$${id}`, sliceByUtf8ByteLength(source, start, byteLength))
+  }
+
+  return refs
+}
+
+function resolveFlightTextReference(value, textRefs) {
+  if (typeof value !== 'string' || !FLIGHT_TEXT_REF_RE.test(value)) return value
+  return textRefs.get(value) ?? value
+}
+
+function resolveHadithTextReferences(hadith, textRefs) {
+  return {
+    ...hadith,
+    text_en: resolveFlightTextReference(hadith.text_en, textRefs),
+    text_ar: resolveFlightTextReference(hadith.text_ar, textRefs),
+    summary_en: resolveFlightTextReference(hadith.summary_en, textRefs),
+    summary_ar: resolveFlightTextReference(hadith.summary_ar, textRefs),
+  }
 }
 
 function readJsonValue(source, startIndex) {
@@ -129,7 +185,10 @@ export function parseChapterPage(html, sourceUrl = null) {
   // inject characters into values that straddle a chunk boundary (a separating
   // newline lands inside a string literal and breaks JSON.parse).
   const joined = chunks.join('')
-  const hadiths = extractJsonValueAfter(joined, '"hadiths":') || []
+  const textRefs = extractFlightTextReferences(joined)
+  const hadiths = (extractJsonValueAfter(joined, '"hadiths":') || []).map((hadith) =>
+    resolveHadithTextReferences(hadith, textRefs),
+  )
 
   return {
     sourceUrl,
@@ -144,6 +203,23 @@ export function parseChapterPage(html, sourceUrl = null) {
     hadiths,
     warnings: hadiths.length === 0 ? ['No hadiths array found in chapter page'] : [],
   }
+}
+
+export function deriveFallbackHadithIdFromSourceUrl(url) {
+  if (!url) return null
+  let pathname = String(url)
+  try {
+    pathname = new URL(url).pathname
+  } catch {
+    // Already a path.
+  }
+
+  const match = pathname.match(/^\/hadith\/[^/]+\/(\d+)\/(\d+)\/(\d+)$/)
+  if (!match) return null
+
+  const [, sectionNumber, chapterNumber, hadithNumber] = match.map(Number)
+  const id = sectionNumber * 10_000_000 + chapterNumber * 10_000 + hadithNumber
+  return Number.isSafeInteger(id) ? id : null
 }
 
 export function parseBookPage(html, sourceUrl = null) {
@@ -172,8 +248,13 @@ export function parseSitemap(xmlText) {
 export function websiteHadithToLegacyShape({ hadith, meta, sourceUrl, legacyRef, fallbackBookId }) {
   const hadithNumber = Number(hadith.number ?? hadith.hadithNumber ?? hadith.id)
   const bookId = legacyRef?.bookId || fallbackBookId
-  const id = Number(legacyRef?.id ?? hadith.number_by_book ?? hadithNumber)
   const url = `${sourceUrl.replace(/\/chapter\//, '/hadith/')}/${hadithNumber}`
+  const id = Number(
+    legacyRef?.id ??
+      hadith.number_by_book ??
+      deriveFallbackHadithIdFromSourceUrl(url) ??
+      hadithNumber,
+  )
 
   const majlisi = (hadith.gradings || []).find((grading) =>
     String(grading?.author?.name_en || '')
@@ -212,5 +293,7 @@ export function websiteHadithToLegacyShape({ hadith, meta, sourceUrl, legacyRef,
     thaqalaynSanad: '',
     thaqalaynMatn: '',
     gradingsFull: hadith.gradings || [],
+    sourceHadithId: hadith.id,
+    legacyMatched: Boolean(legacyRef),
   }
 }

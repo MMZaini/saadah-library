@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  deriveFallbackHadithIdFromSourceUrl,
   parseChapterPage,
   parseSitemap,
   websiteHadithToLegacyShape,
@@ -48,6 +49,17 @@ describe('Thaqalayn page parser', () => {
     expect(parsed.hadiths[0].text_en).toBe('English\ttext\nline')
   })
 
+  it('resolves React Flight text records referenced from hadith fields', () => {
+    const rawStream =
+      '30:Tb,hello world25:[{"hadiths":[{"number":1,"text_en":"$30","text_ar":"Arabic"}]}]'
+    const html = `<html><script>self.__next_f.push([1,${JSON.stringify(rawStream)}])</script></html>`
+
+    const parsed = parseChapterPage(html, 'https://thaqalayn.net/chapter/1/1/0')
+
+    expect(parsed.hadiths).toHaveLength(1)
+    expect(parsed.hadiths[0].text_en).toBe('hello world')
+  })
+
   it('returns a parser warning when the hadith payload disappears', () => {
     const parsed = parseChapterPage('<html><script>self.__next_f.push([1,"empty"])</script></html>')
 
@@ -93,5 +105,34 @@ describe('Thaqalayn page parser', () => {
     expect(legacy.id).toBe(4)
     expect(legacy.URL).toBe('https://thaqalayn.net/hadith/1/1/0/3')
     expect(legacy.behbudiGrading).toBe('لم يخرجه')
+  })
+
+  it('uses source-derived fallback ids when book-level numbering is unavailable', () => {
+    expect(deriveFallbackHadithIdFromSourceUrl('https://thaqalayn.net/hadith/35/1/5/1')).toBe(
+      10050001,
+    )
+
+    const legacy = websiteHadithToLegacyShape({
+      hadith: {
+        number: 1,
+        number_by_book: null,
+        text_en: 'English',
+        text_ar: 'Arabic',
+        gradings: [],
+      },
+      meta: {
+        bookName: 'Man La Yahduruh al-Faqih',
+        volumeNumber: 2,
+        bookSectionNumber: 1,
+        chapterNumber: 5,
+        chapterName: 'Chapter',
+      },
+      sourceUrl: 'https://thaqalayn.net/chapter/35/1/5',
+      legacyRef: null,
+      fallbackBookId: 'Man-La-Yahduruh-al-Faqih-Volume-2-Saduq',
+    })
+
+    expect(legacy.id).toBe(10050001)
+    expect(legacy.URL).toBe('https://thaqalayn.net/hadith/35/1/5/1')
   })
 })

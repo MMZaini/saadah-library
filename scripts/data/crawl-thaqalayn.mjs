@@ -7,6 +7,7 @@ import {
   copyDir,
   emptyDir,
   fetchWithRetry,
+  listFiles,
   makeConcurrency,
   parseThaqalaynHadithUrl,
   readJson,
@@ -63,13 +64,284 @@ async function resolveCurrentRuntimePath(...segments) {
   return path.join(PUBLIC_CURRENT_ROOT, '..', manifest.version, 'runtime', ...segments)
 }
 
-async function loadCurrentLegacyMap() {
+function sourceUrlKey(url) {
+  const parsed = parseThaqalaynHadithUrl(url)
+  if (parsed) return `${THAQALAYN_ORIGIN}${parsed.pathname}`
+
   try {
-    const lookup = await readJson(await resolveCurrentRuntimePath('lookup.json'))
-    return lookup.bySourceUrl || {}
+    const parsedUrl = new URL(url, THAQALAYN_ORIGIN)
+    return `${THAQALAYN_ORIGIN}${parsedUrl.pathname}`
+  } catch {
+    return String(url)
+  }
+}
+
+function scopedSourceKey(bookId, sourceUrl) {
+  return `${bookId}\0${sourceUrlKey(sourceUrl)}`
+}
+
+function scopedHadithIdKey(bookId, id) {
+  return `${bookId}\0${id}`
+}
+
+function sourceUrlWithVolumePointer(sourceUrl, volumePointer) {
+  const parsed = parseThaqalaynHadithUrl(sourceUrl)
+  if (!parsed || !volumePointer) return sourceUrl
+
+  const parts = parsed.pathname.split('/')
+  parts[2] = String(volumePointer)
+  return `${THAQALAYN_ORIGIN}${parts.join('/')}`
+}
+
+function incrementMap(map, key) {
+  map.set(key, (map.get(key) || 0) + 1)
+}
+
+function mostCommonKey(counts) {
+  let bestKey = null
+  let bestCount = 0
+  for (const [key, count] of counts) {
+    if (count > bestCount) {
+      bestKey = key
+      bestCount = count
+    }
+  }
+  return bestKey
+}
+
+function normalizeBookTitle(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}]+/gu, ' ')
+    .trim()
+}
+
+function titleVolumeKey(title, volume) {
+  const normalizedTitle = normalizeBookTitle(title)
+  const normalizedVolume = Number(volume || 1)
+  if (!normalizedTitle || !Number.isFinite(normalizedVolume)) return null
+  return `${normalizedTitle}:${normalizedVolume}`
+}
+
+function buildBookIdByTitleAndVolume(currentBooksById) {
+  const candidates = new Map()
+
+  for (const book of currentBooksById.values()) {
+    for (const title of [book.BookName, book.book]) {
+      const key = titleVolumeKey(title, book.volume)
+      if (!key) continue
+      const ids = candidates.get(key) || new Set()
+      ids.add(book.bookId)
+      candidates.set(key, ids)
+    }
+  }
+
+  const resolved = new Map()
+  for (const [key, ids] of candidates) {
+    if (ids.size === 1) resolved.set(key, [...ids][0])
+  }
+  return resolved
+}
+
+function resolveBookIdFromMetadata(meta, bookIdByTitleAndVolume) {
+  const key = titleVolumeKey(meta.bookName, meta.volumeNumber)
+  return key ? (bookIdByTitleAndVolume.get(key) ?? null) : null
+}
+
+async function loadCurrentLegacyContext() {
+  try {
+    const runtimeDir = await resolveCurrentRuntimePath()
+    const lookup = await readJson(path.join(runtimeDir, 'lookup.json'))
+    const bySourceUrl = lookup.bySourceUrl || {}
+    const byBookAndSourceUrl = new Map()
+    const byBookAndId = new Map()
+    const basePointerByBookId = new Map()
+    const maxIdByBookId = new Map()
+    const volumeFiles = await listFiles(path.join(runtimeDir, 'volumes'), (file) =>
+      file.endsWith('.json'),
+    )
+
+    await Promise.all(
+      volumeFiles.map(async (file) => {
+        const bookId = path.basename(file, '.json')
+        const hadiths = await readJson(file)
+        const pointerCounts = new Map()
+
+        for (const hadith of hadiths) {
+          if (!hadith.URL) continue
+          byBookAndSourceUrl.set(scopedSourceKey(bookId, hadith.URL), {
+            bookId,
+            id: hadith.id,
+            volume: hadith.volume,
+            sourceKey: parseThaqalaynHadithUrl(hadith.URL)?.pathname || sourceUrlKey(hadith.URL),
+          })
+          byBookAndId.set(scopedHadithIdKey(bookId, hadith.id), hadith)
+          maxIdByBookId.set(bookId, Math.max(maxIdByBookId.get(bookId) || 0, Number(hadith.id)))
+
+          const parsed = parseThaqalaynHadithUrl(hadith.URL)
+          if (parsed?.volumePointer) incrementMap(pointerCounts, parsed.volumePointer)
+        }
+
+        const basePointer = mostCommonKey(pointerCounts)
+        if (basePointer) basePointerByBookId.set(bookId, basePointer)
+      }),
+    )
+
+    return {
+      bySourceUrl,
+      byBookAndSourceUrl,
+      byBookAndId,
+      basePointerByBookId,
+      maxIdByBookId,
+    }
   } catch (error) {
-    process.stderr.write(`Warning: could not load current legacy lookup map: ${error.message}\n`)
-    return {}
+    process.stderr.write(`Warning: could not load current legacy context: ${error.message}\n`)
+    return {
+      bySourceUrl: {},
+      byBookAndSourceUrl: new Map(),
+      byBookAndId: new Map(),
+      basePointerByBookId: new Map(),
+      maxIdByBookId: new Map(),
+    }
+  }
+}
+
+function resolveLegacyRef({ sourceUrl, candidateBookId, legacyContext }) {
+  if (candidateBookId) {
+    const scopedExact = legacyContext.byBookAndSourceUrl.get(
+      scopedSourceKey(candidateBookId, sourceUrl),
+    )
+    if (scopedExact) return scopedExact
+
+    const basePointer = legacyContext.basePointerByBookId.get(candidateBookId)
+    const normalizedSourceUrl = sourceUrlWithVolumePointer(sourceUrl, basePointer)
+    const scopedNormalized = legacyContext.byBookAndSourceUrl.get(
+      scopedSourceKey(candidateBookId, normalizedSourceUrl),
+    )
+    if (scopedNormalized) return scopedNormalized
+
+    const exact = legacyContext.bySourceUrl[sourceUrlKey(sourceUrl)]
+    return exact?.bookId === candidateBookId ? exact : null
+  }
+
+  return legacyContext.bySourceUrl[sourceUrlKey(sourceUrl)] || null
+}
+
+function readableText(hadith) {
+  return [hadith.englishText, hadith.arabicText, hadith.thaqalaynMatn].filter(Boolean).join(' ')
+}
+
+function comparableText(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function sharedPrefixLength(a, b) {
+  const limit = Math.min(a.length, b.length)
+  let index = 0
+  while (index < limit && a[index] === b[index]) index++
+  return index
+}
+
+function legacyMatchScore(bookId, id, hadith, legacyContext) {
+  const legacy = legacyContext.byBookAndId.get(scopedHadithIdKey(bookId, id))
+  let score = readableText(hadith) ? 1 : 0
+  if (!legacy) return score
+
+  if (legacy.URL && hadith.URL && sourceUrlKey(legacy.URL) === sourceUrlKey(hadith.URL)) {
+    score += 5
+  }
+
+  const legacyText = comparableText(readableText(legacy))
+  const candidateText = comparableText(readableText(hadith))
+  if (!legacyText || !candidateText) return score
+
+  if (legacyText === candidateText) return score + 100
+
+  const legacyHead = legacyText.slice(0, 240)
+  const candidateHead = candidateText.slice(0, 240)
+  if (legacyHead && candidateText.includes(legacyHead)) score += 70
+  if (candidateHead && legacyText.includes(candidateHead)) score += 70
+  score += Math.min(sharedPrefixLength(legacyText, candidateText) / 12, 40)
+  return score
+}
+
+function compareHadithSourceOrder(a, b) {
+  return (
+    sourceUrlKey(a.URL).localeCompare(sourceUrlKey(b.URL)) ||
+    Number(a.sourceHadithId || 0) - Number(b.sourceHadithId || 0) ||
+    comparableText(readableText(a)).localeCompare(comparableText(readableText(b)))
+  )
+}
+
+function chooseHadithToKeepDuplicateId(bookId, id, hadiths, legacyContext) {
+  return hadiths
+    .slice()
+    .sort(
+      (a, b) =>
+        legacyMatchScore(bookId, id, b, legacyContext) -
+          legacyMatchScore(bookId, id, a, legacyContext) || compareHadithSourceOrder(a, b),
+    )[0]
+}
+
+function nextAvailableHadithId(bookId, usedIds, nextIdByBookId, legacyContext) {
+  let nextId =
+    nextIdByBookId.get(bookId) ??
+    (legacyContext.maxIdByBookId.get(bookId) || Math.max(0, ...usedIds)) + 1
+
+  while (usedIds.has(nextId)) nextId++
+  usedIds.add(nextId)
+  nextIdByBookId.set(bookId, nextId + 1)
+  return nextId
+}
+
+function shouldCompactGeneratedHadithId(bookId, hadith, legacyContext, hadithCount) {
+  const maxLegacyId = legacyContext.maxIdByBookId.get(bookId)
+  if (!maxLegacyId || hadith.legacyMatched) return false
+  return Number(hadith.id) > maxLegacyId + hadithCount
+}
+
+function reassignGeneratedHadithIds(bookId, hadiths, legacyContext, warnings) {
+  const groupsById = new Map()
+  for (const hadith of hadiths) {
+    const group = groupsById.get(hadith.id) || []
+    group.push(hadith)
+    groupsById.set(hadith.id, group)
+  }
+
+  const reassignments = new Set(
+    hadiths.filter((hadith) =>
+      shouldCompactGeneratedHadithId(bookId, hadith, legacyContext, hadiths.length),
+    ),
+  )
+
+  const nextIdByBookId = new Map()
+  for (const [id, group] of groupsById) {
+    if (group.length === 1) continue
+
+    const keep = chooseHadithToKeepDuplicateId(bookId, id, group, legacyContext)
+    for (const hadith of group) {
+      if (hadith !== keep) reassignments.add(hadith)
+    }
+  }
+
+  if (reassignments.size === 0) return
+
+  const usedIds = new Set(
+    hadiths.filter((hadith) => !reassignments.has(hadith)).map((hadith) => hadith.id),
+  )
+  for (const hadith of [...reassignments].sort(compareHadithSourceOrder)) {
+    const previousId = hadith.id
+    hadith.id = nextAvailableHadithId(bookId, usedIds, nextIdByBookId, legacyContext)
+    warnings.push({
+      url: hadith.URL,
+      warning: `Reassigned generated hadith id ${previousId} in ${bookId} to ${hadith.id}`,
+    })
   }
 }
 
@@ -167,14 +439,15 @@ async function main() {
     ),
   )
 
-  const legacyBySourceUrl = await loadCurrentLegacyMap()
+  const legacyContext = await loadCurrentLegacyContext()
   const currentBooksById = await loadCurrentBooksById()
+  const bookIdByTitleAndVolume = buildBookIdByTitleAndVolume(currentBooksById)
 
   // The crawler maps freshly scraped hadiths back onto the blessed dataset's
   // legacy book ids via this map. An empty map means every hadith would fall
   // back to a synthetic Thaqalayn-Volume-* id, producing a garbage release —
   // fail fast instead of silently shipping that as a candidate.
-  if (generateRelease && Object.keys(legacyBySourceUrl).length === 0) {
+  if (generateRelease && Object.keys(legacyContext.bySourceUrl).length === 0) {
     throw new Error(
       'Legacy source-URL map is empty; refusing to generate a release. ' +
         'Verify public/data/thaqalayn/current points at a runtime dataset with lookup.json.',
@@ -199,8 +472,10 @@ async function main() {
 
         for (const websiteHadith of parsed.hadiths) {
           const sourceUrl = `${url.replace('/chapter/', '/hadith/')}/${websiteHadith.number}`
-          const legacyRef = legacyBySourceUrl[sourceUrl]
-          const fallbackBookId = legacyRef?.bookId || fallbackBookIdForChapterUrl(url)
+          const candidateBookId = resolveBookIdFromMetadata(parsed.meta, bookIdByTitleAndVolume)
+          const legacyRef = resolveLegacyRef({ sourceUrl, candidateBookId, legacyContext })
+          const fallbackBookId =
+            legacyRef?.bookId || candidateBookId || fallbackBookIdForChapterUrl(url)
           const legacyHadith = websiteHadithToLegacyShape({
             hadith: websiteHadith,
             meta: parsed.meta,
@@ -208,6 +483,10 @@ async function main() {
             legacyRef,
             fallbackBookId,
           })
+          if (!readableText(legacyHadith)) {
+            warnings.push({ url: sourceUrl, warning: 'Skipped hadith with no readable text' })
+            continue
+          }
           const bucket = volumeMap.get(legacyHadith.bookId) || []
           bucket.push(legacyHadith)
           volumeMap.set(legacyHadith.bookId, bucket)
@@ -217,6 +496,7 @@ async function main() {
   )
 
   for (const [bookId, hadiths] of volumeMap) {
+    reassignGeneratedHadithIds(bookId, hadiths, legacyContext, warnings)
     hadiths.sort((a, b) => a.id - b.id)
     const maxId = Math.max(...hadiths.map((hadith) => hadith.id), 0)
     const book = buildBookInfoFromFallback(bookId, hadiths[0], currentBooksById)
