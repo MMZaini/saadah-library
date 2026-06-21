@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getNarrator,
+  getNarratorSummary,
   rankNarratorSearchEntry,
   searchNarrators,
 } from '@/lib/data/rijal-server-repository'
@@ -43,5 +44,18 @@ describe('local narrator repository', () => {
     const narrator = await getNarrator(response.results[0].id)
     expect(narrator?.plainText).toContain('أبان')
     await expect(getNarrator('../metadata')).resolves.toBeNull()
+  })
+
+  it('returns a lightweight summary without the heavy fields', async () => {
+    const response = await searchNarrators({ query: 'أبان', limit: 1 })
+    const id = response.results[0].id
+    const summary = await getNarratorSummary(id)
+    expect(summary?.id).toBe(id)
+    expect(summary?.volumeNumber).toBeGreaterThan(0)
+    expect(summary?.startPage).toBeGreaterThan(0)
+    // The summary is the index record — it must not carry the multi-KB detail.
+    expect((summary as Record<string, unknown>).plainText).toBeUndefined()
+    expect((summary as Record<string, unknown>).textBlocks).toBeUndefined()
+    await expect(getNarratorSummary('../metadata')).resolves.toBeNull()
   })
 })

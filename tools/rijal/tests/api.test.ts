@@ -40,4 +40,22 @@ describe('narrator API routes', () => {
     })
     expect(missing.status).toBe(404)
   })
+
+  it('serves a lightweight summary via ?view=summary', async () => {
+    const searched = await searchNarratorsRoute(
+      request('http://localhost/api/narrators/search?q=%D8%A3%D8%A8%D8%A7%D9%86&limit=1'),
+    )
+    const id = (await searched.json()).results[0].id
+
+    const summary = await getNarratorRoute(
+      request(`http://localhost/api/narrators/${id}?view=summary`),
+      { params: Promise.resolve({ id }) },
+    )
+    expect(summary.status).toBe(200)
+    const body = await summary.json()
+    expect(body.volumeNumber).toBeGreaterThan(0)
+    expect(body.startPage).toBeGreaterThan(0)
+    // Summary must stay lightweight — no full text payload.
+    expect(body.plainText).toBeUndefined()
+  })
 })

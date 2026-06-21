@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getNarrator } from '@/lib/data/rijal-server-repository'
+import { getNarrator, getNarratorSummary } from '@/lib/data/rijal-server-repository'
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const narrator = await getNarrator(id)
+    // `?view=summary` returns only the lightweight index record (volume, page
+    // range, name) — enough for the PDF viewer — without reading the multi-MB
+    // detail shard or sending the full entry. Default stays full detail.
+    const summaryOnly = request.nextUrl.searchParams.get('view') === 'summary'
+    const narrator = summaryOnly ? await getNarratorSummary(id) : await getNarrator(id)
     if (!narrator) {
       return NextResponse.json({ error: 'Narrator not found' }, { status: 404 })
     }

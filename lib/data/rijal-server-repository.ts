@@ -58,6 +58,44 @@ interface SearchStructure {
   indexById: Map<string, NarratorIndexEntry>
 }
 
+// id → lightweight index entry, joined once per dataset version and reused. Both
+// the search join and the single-narrator summary lookup share this map, so a
+// summary never builds a fresh 15.6K-entry Map and never touches search.json.
+let indexMapCache: {
+  version: string
+  promise: Promise<Map<string, NarratorIndexEntry>>
+} | null = null
+
+async function getNarratorIndexMap(): Promise<Map<string, NarratorIndexEntry>> {
+  const manifest = await getRijalManifest()
+  if (indexMapCache && indexMapCache.version === manifest.version) {
+    return indexMapCache.promise
+  }
+
+  const promise = getNarratorIndex().then(
+    (index) => new Map(index.map((entry) => [entry.id, entry])),
+  )
+  promise.catch(() => {
+    if (indexMapCache?.promise === promise) indexMapCache = null
+  })
+  indexMapCache = { version: manifest.version, promise }
+  return promise
+}
+
+// Lightweight lookup for callers that only need volume + page range + name (e.g.
+// the PDF viewer). Reads the small shared index map instead of the 2–4 MB
+// per-volume detail shard that getNarrator() loads, and returns a ~1KB record
+// rather than the full (up to ~300KB) entry with all text blocks.
+export async function getNarratorSummary(id: string): Promise<NarratorIndexEntry | null> {
+  if (!ID_PATTERN.test(id)) return null
+  try {
+    const map = await getNarratorIndexMap()
+    return map.get(id) ?? null
+  } catch {
+    return null
+  }
+}
+
 // The id→index Map is rebuilt-free across requests: it is joined once per dataset
 // version and reused, so each search is just the linear scan, not a fresh
 // 15.6K-entry Map build every keystroke.
@@ -70,8 +108,10 @@ async function getSearchStructure(): Promise<SearchStructure> {
   }
 
   const promise = (async () => {
-    const [index, searchIndex] = await Promise.all([getNarratorIndex(), getNarratorSearchIndex()])
-    const indexById = new Map(index.map((entry) => [entry.id, entry]))
+    const [searchIndex, indexById] = await Promise.all([
+      getNarratorSearchIndex(),
+      getNarratorIndexMap(),
+    ])
     return { searchIndex, indexById }
   })()
   promise.catch(() => {

@@ -25,7 +25,7 @@ import {
   type PdfPageRange,
 } from '@/lib/rijal-pdfs'
 import { cleanNarratorName } from '@/lib/data/rijal-display'
-import type { NarratorEntry } from '@/lib/data/rijal-types'
+import type { NarratorIndexEntry } from '@/lib/data/rijal-types'
 
 const ZOOM_MIN = 0.4
 const ZOOM_MAX = 3
@@ -44,7 +44,7 @@ export default function NarratorPdfViewer() {
   const params = useParams()
   const id = Array.isArray(params.id) ? (params.id[0] ?? '') : (params.id ?? '')
 
-  const [narrator, setNarrator] = useState<NarratorEntry | null>(null)
+  const [narrator, setNarrator] = useState<NarratorIndexEntry | null>(null)
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null)
   const [docLoading, setDocLoading] = useState(false)
@@ -61,7 +61,9 @@ export default function NarratorPdfViewer() {
 
     async function loadNarrator() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/narrators/${id}`)
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/narrators/${id}?view=summary`,
+        )
         if (res.status === 404) {
           if (!cancelled) setStatus('notfound')
           return
