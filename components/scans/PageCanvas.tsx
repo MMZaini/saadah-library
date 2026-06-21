@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFPageProxy, RenderTask, PDFDocumentProxy } from '@/lib/pdf-engine'
 import { renderPage, pageDimensions } from '@/lib/pdf-engine'
 import { pdfRenderScheduler, RENDER_PRIORITY } from '@/lib/pdf-render-queue'
+import { isConstrainedDevice } from '@/lib/device'
 import type { Highlight } from '@/lib/scan-export'
 import { cn } from '@/lib/utils'
 
@@ -12,7 +13,15 @@ const MAX_FIT_WIDTH = 1100 // cap page width at zoom = 1 on large screens
 const DISPLAY_BASE_SCALE = 0.8 // 100% now matches the old 80% view.
 const MIN_DRAW_PX = 6 // ignore tiny accidental drags
 const FALLBACK_ASPECT = 1.4 // assumed page height/width before real dims load
-const RENDER_ROOT_MARGIN = '700px 0px' // render pages this far outside the viewport
+
+// Mobile Safari caps total canvas memory, so on constrained devices we (a) render
+// far fewer pages ahead of the viewport, (b) cap the device-pixel-ratio, and (c)
+// cap each canvas's backing-store area. Together these keep peak canvas memory
+// well under the budget that otherwise makes scanned pages render white.
+const CONSTRAINED = isConstrainedDevice()
+const RENDER_ROOT_MARGIN = CONSTRAINED ? '200px 0px' : '700px 0px'
+const MAX_RENDER_DPR = 2 // plenty sharp for a bilevel scan; halves backing-store size vs DPR 3
+const MAX_CANVAS_PIXELS = 4_000_000 // ceiling on a single output canvas (constrained devices)
 
 export type ScanTool = 'draw' | 'erase'
 
@@ -142,9 +151,18 @@ function PageView({
             return
           }
           const displayScale = (fitWidth / dims.width) * renderZoom * DISPLAY_BASE_SCALE
-          const dpr = window.devicePixelRatio || 1
+          const rawDpr = window.devicePixelRatio || 1
+          const dpr = CONSTRAINED ? Math.min(rawDpr, MAX_RENDER_DPR) : rawDpr
+          let renderScale = displayScale * dpr
+          // Keep the backing store under mobile Safari's per-canvas budget. The
+          // page reflows to its CSS size regardless, so this only trades a little
+          // sharpness for a canvas that actually paints instead of going white.
+          if (CONSTRAINED) {
+            const area = renderScale * dims.width * (renderScale * dims.height)
+            if (area > MAX_CANVAS_PIXELS) renderScale *= Math.sqrt(MAX_CANVAS_PIXELS / area)
+          }
           try {
-            task = renderPage(page, canvas, displayScale * dpr)
+            task = renderPage(page, canvas, renderScale)
             signal?.addEventListener('abort', () => task?.cancel(), { once: true })
             await task.promise
           } finally {

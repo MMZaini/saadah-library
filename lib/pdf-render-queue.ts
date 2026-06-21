@@ -7,6 +7,14 @@
 // scheduler caps how many renders run concurrently and always starts the
 // highest-priority waiter next (the page nearest the viewport / the active page),
 // so the visible work finishes first and the worker is never swamped.
+//
+// On memory-constrained devices the cap also guards *canvas memory*, not just the
+// worker: each scanned page decodes to a large full-resolution bitmap (~37MB for
+// the 9.3-megapixel rijal scans), and mobile Safari blanks every canvas once a few
+// of those are alive at once. Limiting concurrency to 1 there keeps at most one
+// such bitmap in flight, so the peak stays under the budget. See [[lib/device]].
+
+import { isConstrainedDevice } from './device'
 
 interface Waiter {
   priority: number
@@ -93,8 +101,10 @@ class RenderScheduler {
 
 // Shared across thumbnails and the main viewer because they contend for the one
 // worker. 3 lets a couple of renders overlap their decode/IO without starving
-// the higher-priority page the user is actually looking at.
-export const pdfRenderScheduler = new RenderScheduler(3)
+// the higher-priority page the user is actually looking at — but on phones/tablets
+// we drop to 1 so only a single large page bitmap is ever decoded at a time
+// (otherwise mobile Safari blanks the canvases).
+export const pdfRenderScheduler = new RenderScheduler(isConstrainedDevice() ? 1 : 3)
 
 // Priority tiers (higher = sooner). Keep callers consistent.
 export const RENDER_PRIORITY = {

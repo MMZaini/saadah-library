@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import PageCanvas from '@/components/scans/PageCanvas'
+import type { Highlight } from '@/lib/scan-export'
 import { loadPdf, type PDFDocumentProxy } from '@/lib/pdf-engine'
 import {
   formatPageRange,
@@ -30,6 +31,11 @@ import type { NarratorIndexEntry } from '@/lib/data/rijal-types'
 const ZOOM_MIN = 0.4
 const ZOOM_MAX = 3
 const ZOOM_STEP = 0.2
+
+// The narrator viewer is read-only (no highlighting), so this never changes. A
+// stable reference keeps PageCanvas/PageView from re-rendering on every parent
+// render (a fresh `new Map()` each time would invalidate them needlessly).
+const NO_HIGHLIGHTS: Map<number, Highlight[]> = new Map()
 
 type LoadStatus = 'loading' | 'ready' | 'notfound' | 'error'
 
@@ -308,7 +314,7 @@ export default function NarratorPdfViewer() {
           zoom={zoom}
           tool="erase"
           activeColor="#ffe600"
-          highlightsByPage={new Map()}
+          highlightsByPage={NO_HIGHLIGHTS}
           onActivatePage={setCurrentPage}
           onAddHighlight={() => {}}
           onDeleteHighlight={() => {}}
