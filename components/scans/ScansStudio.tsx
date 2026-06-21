@@ -1,9 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Loader2, FileText, AlertTriangle } from 'lucide-react'
 import { withBasePath } from '@/lib/assets'
 import { loadPdf, type PDFDocumentProxy } from '@/lib/pdf-engine'
+import { getKhoeiRijalPdf, KHOEI_RIJAL_TITLE } from '@/lib/rijal-pdfs'
 import { normalizeExportLayout } from '@/lib/scan-layout'
 import { exportPages, HIGHLIGHT_COLORS, type ExportCover, type Highlight } from '@/lib/scan-export'
 import type { ScanBook, ScanVolume } from '@/lib/scan-sources'
@@ -32,6 +34,31 @@ type Source =
       volumeLabel: string
       fileName: string
     }
+  | {
+      kind: 'rijal'
+      path: string
+      title: string
+      volumeLabel: string
+    }
+
+function parsePageSelection(value: string | null, maxPage: number): Set<number> {
+  const selected = new Set<number>()
+  if (!value || maxPage < 1) return selected
+
+  for (const rawPart of value.split(',')) {
+    const part = rawPart.trim()
+    if (!part) continue
+
+    const match = part.match(/^(\d+)(?:-(\d+))?$/)
+    if (!match) continue
+
+    const start = Math.min(maxPage, Math.max(1, Number(match[1])))
+    const end = Math.min(maxPage, Math.max(start, Number(match[2] ?? match[1])))
+    for (let page = start; page <= end; page++) selected.add(page)
+  }
+
+  return selected
+}
 
 function slugify(...parts: (string | undefined)[]): string {
   return (
@@ -47,6 +74,7 @@ function slugify(...parts: (string | undefined)[]): string {
 }
 
 export default function ScansStudio() {
+  const searchParams = useSearchParams()
   const [source, setSource] = useState<Source | null>(null)
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null)
   const [numPages, setNumPages] = useState(0)
@@ -73,6 +101,7 @@ export default function ScansStudio() {
   const loadHandleRef = useRef<ReturnType<typeof loadPdf> | null>(null)
   const docRef = useRef<PDFDocumentProxy | null>(null)
   const lastSelectedPageRef = useRef<number | null>(null)
+  const deepLinkLoadedRef = useRef(false)
   const selectedCount = selectedPages.size
 
   // Tear down the active document + any in-flight load when leaving the studio.
@@ -196,6 +225,75 @@ export default function ScansStudio() {
       if (loadTokenRef.current === token) setLoading(false)
     }
   }, [])
+
+  const loadRijalVolume = useCallback(
+    async (volumeNumber: number, pageSelection: string | null) => {
+      const pdf = getKhoeiRijalPdf(volumeNumber)
+      if (!pdf) {
+        setLoadError('Could not find this narrator PDF volume.')
+        return
+      }
+
+      const token = ++loadTokenRef.current
+      loadHandleRef.current?.destroy()
+      loadHandleRef.current = null
+      docRef.current = null
+      setDoc(null)
+
+      setLoading(true)
+      setLoadError(null)
+      setHighlights([])
+      setSelectedPages(new Set())
+      lastSelectedPageRef.current = null
+      setCurrentPage(1)
+      setZoom(1)
+      setSettings((s) => ({ ...s, coverPage: 1, coverEnabled: true }))
+
+      const handle = loadPdf(withBasePath(pdf.path))
+      loadHandleRef.current = handle
+      try {
+        const loaded = await handle.promise
+        if (loadTokenRef.current !== token) {
+          handle.destroy()
+          return
+        }
+
+        const selected = parsePageSelection(pageSelection, loaded.numPages)
+        const firstSelected = selected.size ? Math.min(...selected) : 1
+
+        docRef.current = loaded
+        setDoc(loaded)
+        setNumPages(loaded.numPages)
+        setSource({
+          kind: 'rijal',
+          path: pdf.path,
+          title: KHOEI_RIJAL_TITLE,
+          volumeLabel: `Volume ${pdf.volumeNumber}`,
+        })
+        setSelectedPages(selected)
+        lastSelectedPageRef.current = selected.size ? firstSelected : null
+        setCurrentPage(firstSelected)
+        setSettings((s) => ({ ...s, coverPage: 1 }))
+        setSidebarOpen(false)
+      } catch {
+        if (loadTokenRef.current === token) {
+          setLoadError('Could not load this narrator PDF. Please try again.')
+        }
+      } finally {
+        if (loadTokenRef.current === token) setLoading(false)
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (deepLinkLoadedRef.current) return
+    if (searchParams.get('source') !== 'rijal-khoei') return
+
+    deepLinkLoadedRef.current = true
+    const volumeNumber = Number(searchParams.get('volume'))
+    void loadRijalVolume(volumeNumber, searchParams.get('pages'))
+  }, [loadRijalVolume, searchParams])
 
   const handleChangePdf = useCallback(() => {
     loadTokenRef.current++
@@ -401,9 +499,7 @@ export default function ScansStudio() {
           onZoomOut={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))}
           currentPage={currentPage}
           numPages={numPages}
-          coverMode={
-            source?.kind === 'upload' ? 'page' : source?.kind === 'library' ? 'book' : null
-          }
+          coverMode={source?.kind === 'library' ? 'book' : source ? 'page' : null}
           canPrev={canPrev}
           canNext={canNext}
           onPrev={goPrev}

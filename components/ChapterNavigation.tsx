@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react'
+import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
 import type { ChapterNavLink } from '@/lib/use-chapter-navigation'
 
 interface ChapterNavigationProps {
   prev: ChapterNavLink | null
   next: ChapterNavLink | null
-  /** Builds an unprefixed app path; Next applies the basePath for <Link>. */
+  /** Builds an unprefixed library path; this component applies /read. */
   buildHref: (categoryId: string, chapterInCategoryId: number) => string
   className?: string
 }
@@ -32,7 +33,7 @@ export default function ChapterNavigation({
     <nav aria-label="Chapter navigation" className={cn('grid grid-cols-2 gap-3', className)}>
       {prev ? (
         <Link
-          href={buildHref(prev.categoryId, prev.chapterInCategoryId)}
+          href={withBasePath(buildHref(prev.categoryId, prev.chapterInCategoryId))}
           className="group flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-3.5 text-left transition-colors hover:border-foreground-faint hover:bg-surface-2 sm:p-4"
         >
           <ChevronLeft className="h-5 w-5 shrink-0 text-foreground-faint transition-colors group-hover:text-foreground" />
@@ -57,7 +58,7 @@ export default function ChapterNavigation({
 
       {next ? (
         <Link
-          href={buildHref(next.categoryId, next.chapterInCategoryId)}
+          href={withBasePath(buildHref(next.categoryId, next.chapterInCategoryId))}
           className="group flex items-center justify-end gap-3 rounded-lg border border-border bg-surface-1 p-3.5 text-right transition-colors hover:border-foreground-faint hover:bg-surface-2 sm:p-4"
         >
           <span className="min-w-0">

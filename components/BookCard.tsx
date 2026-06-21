@@ -5,6 +5,7 @@ import Image from './OptimizedImage'
 import Link from 'next/link'
 import { getBookUrlSlug } from '@/lib/books-config'
 import { BOOK_ID_BY_NUMERIC_ID } from '@/lib/books'
+import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
 
 type Book = {
@@ -20,7 +21,12 @@ type Book = {
 export default function BookCard({ book }: { book: Book }) {
   const [hovered, setHovered] = useState(false)
   const bookId = book.bookId || BOOK_ID_BY_NUMERIC_ID[book.id]
-  const href = book.id === 1 ? '/al-kafi' : bookId ? `/${getBookUrlSlug(bookId)}` : '#'
+  const href =
+    book.id === 1
+      ? withBasePath('/al-kafi')
+      : bookId
+        ? withBasePath(`/${getBookUrlSlug(bookId)}`)
+        : '#'
 
   const card = (
     <div

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, Hadith } from '@/lib/api'
+import { withBasePath } from '@/lib/assets'
 import HadithCard from '@/components/HadithCard'
 import { useChapter } from '@/lib/chapter-context'
 import { usePageSearch } from '@/lib/search-context'
@@ -84,10 +85,12 @@ export default function AlKafiVolumeHadithPage() {
       hadith?.chapterInCategoryId !== undefined
     ) {
       router.push(
-        `/al-kafi/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        withBasePath(
+          `/al-kafi/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        ),
       )
     } else {
-      router.push('/al-kafi')
+      router.push(withBasePath('/al-kafi'))
     }
   }
 

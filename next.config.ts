@@ -1,9 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // Serve the app under /read so all routes are prefixed (e.g. /read/al-kafi)
-  basePath: '/read',
-  // Expose basePath to client code for manual uses (fetch, share links, etc.)
+  // The library stays canonical under /read through middleware rewrites while
+  // selected tools (narrators, scans) remain root-level routes.
   env: { NEXT_PUBLIC_BASE_PATH: '/read' },
   images: {
     // Covers are bundled locally and served unoptimized, so no remote image
@@ -38,7 +37,8 @@ const nextConfig: NextConfig = {
       pagesBufferLength: 2,
     },
   }),
-  // Redirect bare domain to /read
+  // Redirect the bare domain to the main library. Middleware owns the /read
+  // namespace and legacy tool redirects so the routes work in local Next too.
   async redirects() {
     return [
       {
@@ -47,22 +47,64 @@ const nextConfig: NextConfig = {
         permanent: true,
         basePath: false as const,
       },
-      // Fallback for the bare /scans entry point. In production an edge rewrite
-      // (vercel.json) serves /read/scans at /scans and keeps the clean URL, so
-      // this redirect never fires there. Locally (next dev/start) there is no
-      // edge layer and Next's basePath gate blocks internal cross-basePath
-      // rewrites, so /scans can only redirect to the real route — this keeps the
-      // /scans link working in local dev instead of 404ing.
       {
-        source: '/scans',
-        destination: '/read/scans',
-        permanent: false,
+        source: '/read/narrators',
+        destination: '/narrators',
+        permanent: true,
         basePath: false as const,
       },
       {
-        source: '/scans/:path*',
-        destination: '/read/scans/:path*',
-        permanent: false,
+        source: '/read/narrators/:path*',
+        destination: '/narrators/:path*',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/read/scans',
+        destination: '/scans',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/read/scans/:path*',
+        destination: '/scans/:path*',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/read/bookmarks',
+        destination: '/bookmarks',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/read/bookmarks/:path*',
+        destination: '/bookmarks/:path*',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/reads/scans',
+        destination: '/scans',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/reads/scans/:path*',
+        destination: '/scans/:path*',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/reads/bookmarks',
+        destination: '/bookmarks',
+        permanent: true,
+        basePath: false as const,
+      },
+      {
+        source: '/reads/bookmarks/:path*',
+        destination: '/bookmarks/:path*',
+        permanent: true,
         basePath: false as const,
       },
     ]

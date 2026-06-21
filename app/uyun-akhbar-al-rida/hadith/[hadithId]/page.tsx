@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { thaqalaynApi, Hadith } from '@/lib/api'
+import { withBasePath } from '@/lib/assets'
 import HadithCard from '@/components/HadithCard'
 import { useChapter } from '@/lib/chapter-context'
 import { usePageSearch } from '@/lib/search-context'
@@ -76,10 +77,12 @@ export default function HadithPage() {
       hadith?.chapterInCategoryId !== undefined
     ) {
       router.push(
-        `/Uyun-akhbar-al-Rida/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        withBasePath(
+          `/Uyun-akhbar-al-Rida/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        ),
       )
     } else {
-      router.push('/Uyun-akhbar-al-Rida')
+      router.push(withBasePath('/Uyun-akhbar-al-Rida'))
     }
   }
 

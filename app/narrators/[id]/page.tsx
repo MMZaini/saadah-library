@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import { ArrowLeft, UserSearch } from 'lucide-react'
 import NarratorDetail from '@/components/narrators/NarratorDetail'
 import { Button } from '@/components/ui/button'
@@ -53,19 +52,29 @@ export default function NarratorEntryPage() {
     }
   }, [id])
 
-  // Give the new tab a meaningful title.
+  // Give the new tab a meaningful title, and publish the name to the TopBar
+  // breadcrumb (which shows it instead of a generic "Entry").
   useEffect(() => {
-    if (narrator) document.title = `${cleanNarratorName(narrator.primaryName)} · Narrators`
+    const name = narrator ? cleanNarratorName(narrator.primaryName) : null
+    if (name) document.title = `${name} · Narrators`
+    window.dispatchEvent(new CustomEvent('narratorTitleChange', { detail: { title: name } }))
   }, [narrator])
+
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(new CustomEvent('narratorTitleChange', { detail: { title: null } }))
+    }
+  }, [])
 
   return (
     <section className="hadith-reading-container mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-4">
         <Button variant="ghost" size="sm" className="-ml-2 h-8 gap-1.5" asChild>
-          <Link href="/narrators">
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/narrators">
             <ArrowLeft className="h-4 w-4" />
             Back to search
-          </Link>
+          </a>
         </Button>
       </div>
 
@@ -81,7 +90,8 @@ export default function NarratorEntryPage() {
               : 'Something went wrong loading this entry. Please try again.'}
           </p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/narrators">Go to narrator search</Link>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a href="/narrators">Go to narrator search</a>
           </Button>
         </div>
       ) : (

@@ -164,7 +164,7 @@ export default function BookPage() {
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             <p className="mb-4 text-destructive">{state.error || 'Book not found'}</p>
-            <Button variant="outline" onClick={() => router.push('/')}>
+            <Button variant="outline" onClick={() => router.push(withBasePath('/'))}>
               Go back to library
             </Button>
           </div>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { BookmarkData } from '@/lib/bookmarks-context'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
+import { withBasePath } from '@/lib/assets'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { useSettings } from '@/lib/settings-context'
 import { cn } from '@/lib/utils'
@@ -171,7 +172,7 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
       <div className="flex items-center justify-between text-xs text-foreground-faint">
         <span>Bookmarked: {new Date(bookmark.timestamp).toLocaleDateString()}</span>
         <Link
-          href={getHadithUrl()}
+          href={withBasePath(getHadithUrl())}
           className="flex items-center gap-0.5 text-foreground-muted transition-colors hover:text-foreground"
         >
           View Full Hadith

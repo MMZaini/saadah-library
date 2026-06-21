@@ -25,7 +25,7 @@ export default function NarratorsPage() {
         <div>
           <h1 className="text-xl font-bold text-foreground sm:text-2xl">Narrators</h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            Search al-Khoei’s Muʿjam Rijāl al-Ḥadīth by narrator name or alias.
+            Search al-Khoei’s Muʿjam Rijāl al-Ḥadīth by narrator name.
           </p>
         </div>
         {metadata && (

@@ -1,13 +1,23 @@
 'use client'
 
 import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import Link from 'next/link'
-import { Copy, ExternalLink, FileText, Loader2 } from 'lucide-react'
+import {
+  Bookmark,
+  BookOpen,
+  Copy,
+  ExternalLink,
+  FileText,
+  Highlighter,
+  Loader2,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { getHighlightSegments } from '@/lib/search-utils'
 import { cleanNarratorName } from '@/lib/data/rijal-display'
+import { getKhoeiRijalScanUrl, getKhoeiRijalViewerUrl } from '@/lib/rijal-pdfs'
+import { useNarratorBookmarks } from '@/lib/narrator-bookmarks-context'
+import { cn } from '@/lib/utils'
 import type { NarratorEntry } from '@/lib/data/rijal-types'
 
 interface NarratorDetailProps {
@@ -94,6 +104,9 @@ export default function NarratorDetail({
   standalone = false,
 }: NarratorDetailProps) {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
+  const { isNarratorBookmarked, addNarratorBookmark, removeNarratorBookmark } =
+    useNarratorBookmarks()
+  const bookmarked = narrator ? isNarratorBookmarked(narrator.id) : false
 
   const totalBlocks = narrator?.textBlocks.length ?? 0
 
@@ -129,6 +142,8 @@ export default function NarratorDetail({
     return `${narrator.source.title}, ${narrator.source.author}, vol. ${narrator.volumeNumber}, ${pages}`
   }, [narrator])
   const displayEntryNumber = narrator?.entryNumber ?? narrator?.sourceEntryNumber
+  const pdfViewerUrl = narrator ? getKhoeiRijalViewerUrl(narrator.id) : null
+  const scanUrl = narrator ? getKhoeiRijalScanUrl(narrator) : null
 
   const flash = useCallback((message: string) => {
     setCopyFeedback(message)
@@ -146,6 +161,12 @@ export default function NarratorDetail({
     await navigator.clipboard.writeText(sourceText)
     flash('Source copied')
   }, [flash, sourceText])
+
+  const toggleBookmark = useCallback(() => {
+    if (!narrator) return
+    if (isNarratorBookmarked(narrator.id)) removeNarratorBookmark(narrator.id)
+    else addNarratorBookmark(narrator)
+  }, [addNarratorBookmark, isNarratorBookmarked, narrator, removeNarratorBookmark])
 
   const renderHighlighted = useCallback(
     (text: string): ReactNode => highlightToNodes(text, query),
@@ -197,19 +218,46 @@ export default function NarratorDetail({
           </h1>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex flex-wrap items-center justify-end gap-1 sm:shrink-0">
           {!standalone && (
             <Button variant="ghost" size="icon" className="h-8 w-8" title="Open in new tab" asChild>
-              <Link
+              <a
                 href={`/narrators/${narrator.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Open narrator in new tab"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
+              </a>
             </Button>
           )}
+          {pdfViewerUrl && (
+            <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
+              <a href={pdfViewerUrl}>
+                <BookOpen className="h-3.5 w-3.5" />
+                PDF
+              </a>
+            </Button>
+          )}
+          {scanUrl && (
+            <Button variant="outline" size="sm" className="h-8 gap-1.5" asChild>
+              <a href={scanUrl}>
+                <Highlighter className="h-3.5 w-3.5" />
+                Scans
+              </a>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('h-8 gap-1.5', bookmarked && 'text-bookmark hover:text-bookmark')}
+            onClick={toggleBookmark}
+            aria-pressed={bookmarked}
+            title={bookmarked ? 'Remove bookmark' : 'Bookmark this narrator'}
+          >
+            <Bookmark className={cn('h-3.5 w-3.5', bookmarked && 'fill-current')} />
+            {bookmarked ? 'Saved' : 'Save'}
+          </Button>
           <Button variant="ghost" size="sm" className="h-8 gap-1.5" onClick={copyText}>
             <Copy className="h-3.5 w-3.5" />
             {copyFeedback === 'Entry copied' ? 'Copied' : 'Copy'}

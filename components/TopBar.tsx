@@ -7,9 +7,11 @@ import { LuNotebookPen } from 'react-icons/lu'
 import { Settings, ChevronRight, ArrowLeft, Bookmark, UserSearch } from 'lucide-react'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
+import { stripBasePath, withBasePath } from '@/lib/assets'
 import { useSettings } from '@/lib/settings-context'
 import { useChapter } from '@/lib/chapter-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
+import { useNarratorBookmarks } from '@/lib/narrator-bookmarks-context'
 import { useSearch } from '@/lib/search-context'
 import { Button } from '@/components/ui/button'
 import SearchBar from '@/components/SearchBar'
@@ -19,17 +21,37 @@ export default function TopBar() {
   const { toggleSettings } = useSettings()
   const { chapterInfo } = useChapter()
   const { bookmarkCount } = useBookmarks()
+  const { narratorBookmarkCount } = useNarratorBookmarks()
+  const totalBookmarkCount = bookmarkCount + narratorBookmarkCount
   const { query, setQuery, isSearching, placeholder, filtersEnabled, filtersOpen, setFiltersOpen } =
     useSearch()
-  const pathname = usePathname()
+  const pathname = stripBasePath(usePathname() || '/')
   const params = useParams()
   const router = useRouter()
-  const isScansPage =
-    pathname === '/scans' ||
-    pathname.startsWith('/scans/') ||
-    pathname === '/read/scans' ||
-    pathname.startsWith('/read/scans/')
+  const isScansPage = pathname === '/scans' || pathname.startsWith('/scans/')
+  const isNarratorsIndex = pathname === '/narrators'
+  const isNarratorEntryPage = pathname.startsWith('/narrators/')
+  const isNarratorPdfPage = isNarratorEntryPage && pathname.endsWith('/pdf')
   const [scanSourceTitle, setScanSourceTitle] = useState<string | null>(null)
+  const [narratorTitle, setNarratorTitle] = useState<string | null>(null)
+
+  // The narrator entry/PDF pages publish the loaded narrator's name here (an event,
+  // like the scans source title) so the breadcrumb can show it without TopBar
+  // re-fetching the potentially multi-MB entry.
+  useEffect(() => {
+    if (!isNarratorEntryPage) {
+      setNarratorTitle(null)
+      return
+    }
+
+    const handleNarratorTitleChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ title?: string | null }>).detail
+      setNarratorTitle(detail?.title ?? null)
+    }
+
+    window.addEventListener('narratorTitleChange', handleNarratorTitleChange)
+    return () => window.removeEventListener('narratorTitleChange', handleNarratorTitleChange)
+  }, [isNarratorEntryPage])
 
   useEffect(() => {
     if (!isScansPage) {
@@ -139,17 +161,45 @@ export default function TopBar() {
     if (pathname === '/bookmarks')
       return <span className="text-sm text-foreground-muted">Bookmarks</span>
 
-    if (pathname === '/narrators')
-      return <span className="text-sm text-foreground-muted">Narrators</span>
+    if (isNarratorsIndex) return <span className="text-sm text-foreground-muted">Narrators</span>
 
-    if (pathname.startsWith('/narrators/'))
+    if (isNarratorPdfPage)
       return (
-        <div className="flex items-center gap-1 text-sm text-foreground-muted">
-          <Link href="/narrators" className="transition-colors hover:text-foreground">
+        <div className="flex min-w-0 items-center gap-1 text-sm text-foreground-muted">
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/narrators" className="shrink-0 transition-colors hover:text-foreground">
             Narrators
-          </Link>
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-foreground">Entry</span>
+          </a>
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          {narratorTitle ? (
+            <TruncatedTooltip
+              text={narratorTitle}
+              className="max-w-[160px] font-arabic text-foreground"
+            />
+          ) : (
+            <span>Entry</span>
+          )}
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          <span className="shrink-0 text-foreground">PDF</span>
+        </div>
+      )
+
+    if (isNarratorEntryPage)
+      return (
+        <div className="flex min-w-0 items-center gap-1 text-sm text-foreground-muted">
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/narrators" className="shrink-0 transition-colors hover:text-foreground">
+            Narrators
+          </a>
+          <ChevronRight className="h-3 w-3 shrink-0" />
+          {narratorTitle ? (
+            <TruncatedTooltip
+              text={narratorTitle}
+              className="max-w-[220px] font-arabic text-foreground"
+            />
+          ) : (
+            <span className="text-foreground">Entry</span>
+          )}
         </div>
       )
 
@@ -159,11 +209,9 @@ export default function TopBar() {
 
     if (isChapterPage && chapterInfo) {
       const bookName = isAlKafiChapterPage ? 'Al-Kāfi' : displayBookTitle
-      const backHref = isAlKafiChapterPage
-        ? '/al-kafi'
-        : currentBookSlug
-          ? `/${currentBookSlug}`
-          : '/'
+      const backHref = withBasePath(
+        isAlKafiChapterPage ? '/al-kafi' : currentBookSlug ? `/${currentBookSlug}` : '/',
+      )
       return (
         <div className="flex items-center gap-1 text-sm text-foreground-muted">
           <Link href={backHref} className="transition-colors hover:text-foreground">
@@ -183,11 +231,9 @@ export default function TopBar() {
 
     if (isHadithPage && chapterInfo) {
       const bookName = isAlKafiHadithPage ? 'Al-Kāfi' : displayBookTitle
-      const backHref = isAlKafiHadithPage
-        ? '/al-kafi'
-        : currentBookSlug
-          ? `/${currentBookSlug}`
-          : '/'
+      const backHref = withBasePath(
+        isAlKafiHadithPage ? '/al-kafi' : currentBookSlug ? `/${currentBookSlug}` : '/',
+      )
       return (
         <div className="flex items-center gap-1 text-sm text-foreground-muted">
           <Link href={backHref} className="transition-colors hover:text-foreground">
@@ -224,11 +270,11 @@ export default function TopBar() {
             className="h-8 w-8 shrink-0"
             onClick={() => {
               if (isAlKafiChapterPage || isAlKafiHadithPage) {
-                router.push('/al-kafi')
+                router.push(withBasePath('/al-kafi'))
               } else if (currentBookSlug) {
-                router.push(`/${currentBookSlug}`)
+                router.push(withBasePath(`/${currentBookSlug}`))
               } else {
-                router.push('/')
+                router.push(withBasePath('/'))
               }
             }}
           >
@@ -238,7 +284,7 @@ export default function TopBar() {
 
         {/* Title */}
         <Link
-          href="/"
+          href={withBasePath('/')}
           onClick={handleTitleClick}
           className="shrink-0 font-arabic text-lg font-bold tracking-tight sm:text-xl"
         >
@@ -255,7 +301,7 @@ export default function TopBar() {
 
         {/* Persistent search field — behavior is set by the active page */}
         <div className="flex min-w-0 flex-1 justify-end">
-          {!isScansPage && (
+          {!isScansPage && !isNarratorPdfPage && (
             <SearchBar
               variant="topbar"
               value={query}
@@ -272,28 +318,27 @@ export default function TopBar() {
 
         {/* Actions */}
         <div className="flex items-center gap-1">
-          {/* Raw anchor (not next/link) so it targets the bare /scans rather than
-              the basePath-prefixed /read/scans; middleware serves it there. The
-              no-html-link rule is intentionally bypassed for this basePath escape. */}
+          {/* Raw anchors target root-level tools instead of basePath-prefixed routes. */}
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/scans" title="PDF highlighter & export">
+            <a href="/scans" title="Scan maker">
               <LuNotebookPen className="h-4 w-4" />
             </a>
           </Button>
 
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-            <Link href="/narrators" title="Narrators">
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a href="/narrators" title="Narrators">
               <UserSearch className="h-4 w-4" />
-            </Link>
+            </a>
           </Button>
 
           <Button variant="ghost" size="icon" className="relative h-8 w-8" asChild>
-            <Link href="/bookmarks" title={`Bookmarks (${bookmarkCount})`}>
+            <Link href="/bookmarks" title={`Bookmarks (${totalBookmarkCount})`}>
               <Bookmark className="h-4 w-4" />
-              {bookmarkCount > 0 && (
+              {totalBookmarkCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-bookmark text-[10px] font-bold text-background">
-                  {bookmarkCount > 99 ? '99+' : bookmarkCount}
+                  {totalBookmarkCount > 99 ? '99+' : totalBookmarkCount}
                 </span>
               )}
             </Link>

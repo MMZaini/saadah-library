@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
+import { withBasePath } from '@/lib/assets'
 import HadithCard from '@/components/HadithCard'
 import { useChapter } from '@/lib/chapter-context'
 import { usePageSearch } from '@/lib/search-context'
@@ -111,10 +112,12 @@ export default function GenericVolumeHadithPage() {
       hadith?.chapterInCategoryId !== undefined
     ) {
       router.push(
-        `/${urlSlug}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        withBasePath(
+          `/${urlSlug}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`,
+        ),
       )
     } else {
-      router.push(`/${urlSlug}`)
+      router.push(withBasePath(`/${urlSlug}`))
     }
   }
 

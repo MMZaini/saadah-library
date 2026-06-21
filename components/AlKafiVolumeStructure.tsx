@@ -198,7 +198,7 @@ export default function BookStructureExplorer({
   ) => {
     // Save current scroll position before navigation
     navigation.saveScrollPosition(window.scrollY)
-    router.push(buildChapterHref(categoryId, chapterInCategoryId, sourceVolume))
+    router.push(withBasePath(buildChapterHref(categoryId, chapterInCategoryId, sourceVolume)))
   }
 
   // Warm a chapter's Al-Kāfi volume in the background on hover intent so a click

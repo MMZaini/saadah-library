@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { Languages, Loader2, Search, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -71,7 +70,7 @@ export default function NarratorResults({
                 {total === 1 ? 'narrator' : 'narrators'} found
               </>
             ) : (
-              'Search by Arabic name or structured alias.'
+              'Search by Arabic name.'
             )}
           </p>
         </div>
@@ -95,7 +94,7 @@ export default function NarratorResults({
         ) : results.length > 0 ? (
           <div className="space-y-1.5">
             {results.map((result) => (
-              <Link
+              <a
                 key={result.id}
                 href={`/narrators/${result.id}`}
                 onClick={(event) => {
@@ -144,7 +143,7 @@ export default function NarratorResults({
                       : `pp. ${result.startPage}-${result.endPage}`}
                   </span>
                 </div>
-              </Link>
+              </a>
             ))}
           </div>
         ) : trimmed ? (

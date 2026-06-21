@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
 import { getBookIdFromUrlSlug } from '@/lib/books-config'
+import { withBasePath } from '@/lib/assets'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
 import ChapterNavigation from '@/components/ChapterNavigation'
@@ -165,7 +166,7 @@ export default function GenericChapterDetailPage() {
             next={chapterNav.next}
             buildHref={(catId, chId) => `/${bookSlug}/chapter/${catId}/${chId}`}
           />
-          <Button variant="outline" onClick={() => router.push('/')}>
+          <Button variant="outline" onClick={() => router.push(withBasePath('/'))}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back
           </Button>

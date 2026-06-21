@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, Hadith } from '@/lib/api'
+import { withBasePath } from '@/lib/assets'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
@@ -199,7 +200,7 @@ export default function ChapterDetailPage() {
             next={chapterNav.next}
             buildHref={(catId, chId) => `/al-kafi/volume/${volumeId}/chapter/${catId}/${chId}`}
           />
-          <Button variant="outline" onClick={() => router.push('/al-kafi')}>
+          <Button variant="outline" onClick={() => router.push(withBasePath('/al-kafi'))}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Al-Kāfi Explorer
           </Button>

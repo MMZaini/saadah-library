@@ -3,6 +3,12 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { getAllKnownPdfPaths, getPdfPathForVolume } from '../lib/book-pdfs.ts'
+import {
+  getAllKhoeiRijalPdfPaths,
+  getKhoeiRijalPdfPageRange,
+  getKhoeiRijalPdfUrl,
+  getKhoeiRijalScanUrl,
+} from '../lib/rijal-pdfs.ts'
 import { withBasePath } from '../lib/assets.ts'
 
 const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
@@ -57,5 +63,49 @@ describe('book PDF assets', () => {
     )
 
     expect(missing).toEqual([])
+  })
+})
+
+describe('Khoei rijal PDF assets', () => {
+  it('points every registered narrator PDF path at a copied public asset', () => {
+    expect(getAllKhoeiRijalPdfPaths()).toHaveLength(24)
+
+    const missing = getAllKhoeiRijalPdfPaths().filter(
+      (pdfPath) => !existsSync(join(repoRoot, 'public', pdfPath.replace(/^\//, ''))),
+    )
+
+    expect(missing).toEqual([])
+  })
+
+  it('maps source page ranges to physical PDF pages with volume offsets', () => {
+    // Vol. 8 carries a verified +1 offset (one extra leading page in the scan).
+    expect(
+      getKhoeiRijalPdfPageRange({ volumeNumber: 8, startPage: 179, endPage: 179 }),
+    ).toMatchObject({
+      volumeNumber: 8,
+      sourceStartPage: 179,
+      sourceEndPage: 179,
+      pdfStartPage: 180,
+      pdfEndPage: 180,
+    })
+
+    // Vol. 24 has no offset; the end page clamps to the volume length.
+    expect(
+      getKhoeiRijalPdfPageRange({ volumeNumber: 24, startPage: 350, endPage: 999 }),
+    ).toMatchObject({
+      sourceStartPage: 350,
+      sourceEndPage: 352,
+      pdfStartPage: 350,
+      pdfEndPage: 352,
+    })
+  })
+
+  it('builds base-path-safe PDF and scan-maker URLs', () => {
+    process.env.NEXT_PUBLIC_BASE_PATH = '/read'
+
+    expect(getKhoeiRijalPdfUrl(1, 24)).toBe('/read/pdfs/rijal/khoei/volume-01.pdf#page=24')
+    expect(getKhoeiRijalScanUrl({ volumeNumber: 1, startPage: 131, endPage: 131 })).toBe(
+      '/scans?source=rijal-khoei&volume=1&pages=132-132',
+    )
   })
 })

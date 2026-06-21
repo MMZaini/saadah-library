@@ -330,7 +330,7 @@ export default function VolumeStructure({
     // Save current scroll position before navigation
     navigation.saveScrollPosition(window.scrollY)
     const href = buildChapterHref(categoryId, chapterInCategoryId, sourceBookId, sourceVolume)
-    if (href) router.push(href)
+    if (href) router.push(withBasePath(href))
   }
 
   const getChapterKey = (categoryId: string, chapterInCategoryId: number) =>

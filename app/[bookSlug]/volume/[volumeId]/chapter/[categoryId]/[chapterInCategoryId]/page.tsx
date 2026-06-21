@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
+import { withBasePath } from '@/lib/assets'
 import { removeHarakat } from '@/lib/utils'
 import HadithCard from '@/components/HadithCard'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
@@ -209,7 +210,7 @@ export default function GenericVolumeChapterPage() {
               `/${bookSlug}/volume/${volumeParam}/chapter/${catId}/${chId}`
             }
           />
-          <Button variant="outline" onClick={() => router.push(`/${bookSlug}`)}>
+          <Button variant="outline" onClick={() => router.push(withBasePath(`/${bookSlug}`))}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to Explorer
           </Button>
