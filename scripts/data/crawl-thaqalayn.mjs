@@ -1,10 +1,10 @@
 #!/usr/bin/env node
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
   DATA_ROOT,
   PUBLIC_CURRENT_ROOT,
   THAQALAYN_ORIGIN,
-  copyDir,
   emptyDir,
   fetchWithRetry,
   listFiles,
@@ -355,15 +355,18 @@ async function loadCurrentBooksById() {
   }
 }
 
-async function fetchTextCached(url, cacheDir) {
-  const safeName = url
-    .replace(/^https?:\/\//, '')
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-  const filePath = path.join(cacheDir, `${safeName}.html`)
+async function fetchTextCached(url, cacheDir = null) {
   const response = await fetchWithRetry(url, { headers: { Accept: 'text/html' } })
   const text = await response.text()
-  await writeText(filePath, text)
+
+  if (cacheDir) {
+    const safeName = url
+      .replace(/^https?:\/\//, '')
+      .replace(/[^a-zA-Z0-9._-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+    await writeText(path.join(cacheDir, `${safeName}.html`), text)
+  }
+
   return text
 }
 
@@ -392,11 +395,12 @@ function buildBookInfoFromFallback(bookId, sample, currentBooksById) {
 async function main() {
   const dryRun = hasFlag('--dry-run')
   const generateRelease = hasFlag('--generate-release')
+  const keepRaw = hasFlag('--keep-raw')
   const limit = Number(getArg('--limit', '0'))
   const concurrency = Number(getArg('--concurrency', '2'))
   const runId = getArg('--run-id', todayRunId())
   const crawlDir = path.join(DATA_ROOT, 'crawls', runId)
-  const rawDir = path.join(crawlDir, 'raw')
+  const rawDir = keepRaw || !generateRelease ? path.join(crawlDir, 'raw') : null
 
   await emptyDir(crawlDir)
   const robots = await assertRobotsAllowsSearch()
@@ -573,7 +577,10 @@ async function main() {
       : 'Auto-publish disabled: generated a candidate release without changing the served dataset.\n',
   )
 
-  await copyDir(crawlDir, path.join(releaseDir, 'crawl'))
+  if (!keepRaw) {
+    await fs.rm(crawlDir, { recursive: true, force: true })
+  }
+
   process.stdout.write(
     `Generated ${manifest.version} from website crawl with ${manifest.counts.hadiths} hadiths.\n`,
   )

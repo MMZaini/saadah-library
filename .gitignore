@@ -22,6 +22,10 @@ package-lock.json
 # production
 /build
 
+# generated data diagnostics
+/data/thaqalayn/crawls/
+/data/thaqalayn/releases/*/crawl/
+
 # misc
 .DS_Store
 *.pem

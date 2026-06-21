@@ -42,16 +42,72 @@ jobs:
       - run: yarn tsc --noEmit
       - run: yarn build
 
+      - name: Push data update branch
+        id: data-branch
+        env:
+          BRANCH: data/thaqalayn-update
+        run: |
+          git add data/thaqalayn/current.json data/thaqalayn/releases
+
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No Thaqalayn data changes were generated." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update Thaqalayn data snapshot"
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" || true
+          git push --force-with-lease origin "HEAD:refs/heads/$BRANCH"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "Pushed data update branch \`$BRANCH\`." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Open data update PR
-        uses: peter-evans/create-pull-request@v8.1.1
-        with:
-          branch: data/thaqalayn-update
-          delete-branch: true
-          title: 'Update Thaqalayn data snapshot'
-          commit-message: 'Update Thaqalayn data snapshot'
-          body: |
-            Automated Thaqalayn data update.
+        if: steps.data-branch.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DATA_UPDATE_TOKEN || github.token }}
+          BRANCH: data/thaqalayn-update
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          body_file="$RUNNER_TEMP/thaqalayn-data-pr-body.md"
+          cat > "$body_file" <<'BODY'
+          Automated Thaqalayn data update.
 
-            This PR was generated only after crawler, data validation, tests, lint, typecheck, build, and runtime dependency checks completed successfully.
+          This PR was generated only after crawler, data validation, tests, lint, typecheck, build, and runtime dependency checks completed successfully.
 
-            Auto-publish is intentionally disabled by default. Review the manifest and diff before merging.
+          Auto-publish is intentionally disabled by default. Review the manifest and diff before merging.
+          BODY
+
+          existing_pr="$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // empty' 2>/dev/null || true)"
+          if [ -n "$existing_pr" ]; then
+            echo "Data update PR already open: $existing_pr" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          error_file="$RUNNER_TEMP/thaqalayn-pr-error.txt"
+          set +e
+          pr_url="$(gh pr create --head "$BRANCH" --base "$BASE_BRANCH" --title "Update Thaqalayn data snapshot" --body-file "$body_file" 2>"$error_file")"
+          status=$?
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            echo "Opened data update PR: $pr_url" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          cat "$error_file"
+          if grep -Eqi "not permitted to create or approve pull requests|Resource not accessible by integration" "$error_file"; then
+            {
+              echo "Data update branch was pushed, but GitHub blocked automatic PR creation."
+              echo ""
+              echo "Branch: \`$BRANCH\`"
+              echo "Compare URL: https://github.com/${{ github.repository }}/compare/$BASE_BRANCH...$BRANCH?expand=1"
+              echo ""
+              echo "To auto-open PRs, enable the repository Actions setting \"Allow GitHub Actions to create and approve pull requests\" or add a \`DATA_UPDATE_TOKEN\` secret with pull request write access."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          exit "$status"
