@@ -40,6 +40,24 @@ const nextConfig: NextConfig = {
         permanent: true,
         basePath: false as const,
       },
+      // Fallback for the bare /scans entry point. In production an edge rewrite
+      // (vercel.json) serves /read/scans at /scans and keeps the clean URL, so
+      // this redirect never fires there. Locally (next dev/start) there is no
+      // edge layer and Next's basePath gate blocks internal cross-basePath
+      // rewrites, so /scans can only redirect to the real route — this keeps the
+      // /scans link working in local dev instead of 404ing.
+      {
+        source: '/scans',
+        destination: '/read/scans',
+        permanent: false,
+        basePath: false as const,
+      },
+      {
+        source: '/scans/:path*',
+        destination: '/read/scans/:path*',
+        permanent: false,
+        basePath: false as const,
+      },
     ]
   },
   async headers() {

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from './OptimizedImage'
 import Link from 'next/link'
 import { getBookUrlSlug } from '@/lib/books-config'
+import { BOOK_ID_BY_NUMERIC_ID } from '@/lib/books'
 import { cn } from '@/lib/utils'
 
 type Book = {
@@ -16,32 +17,9 @@ type Book = {
   bookId?: string
 }
 
-const bookIdMap: Record<number, string> = {
-  1: 'Al-Kafi-Volume-1-Kulayni',
-  2: 'Uyun-akhbar-al-Rida-Volume-1-Saduq',
-  3: 'Al-Amali-Mufid',
-  4: 'Al-Amali-Saduq',
-  5: 'Man-La-Yahduruh-al-Faqih',
-  6: 'Al-Tawhid-Saduq',
-  7: 'Kitab-al-Ghayba-Numani',
-  8: 'Kitab-al-Ghayba-Tusi',
-  9: 'Nahj-al-Balagha-Radi',
-  10: 'Sifat-al-Shia-Saduq',
-  11: 'Fadail-al-Shia-Saduq',
-  12: 'Kitab-al-Mumin-Ahwazi',
-  13: 'Kitab-al-Zuhd-Ahwazi',
-  14: 'Risalat-al-Huquq-Abidin',
-  15: 'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
-  16: 'Al-Khisal-Saduq',
-  17: 'Kamil-al-Ziyarat-Qummi',
-  18: 'Kitab-al-Duafa-Ghadairi',
-  19: 'Maani-al-Akhbar-Saduq',
-  20: 'Mujam-al-Ahadith-al-Mutabara-Muhsini',
-}
-
 export default function BookCard({ book }: { book: Book }) {
   const [hovered, setHovered] = useState(false)
-  const bookId = book.bookId || bookIdMap[book.id]
+  const bookId = book.bookId || BOOK_ID_BY_NUMERIC_ID[book.id]
   const href = book.id === 1 ? '/al-kafi' : bookId ? `/${getBookUrlSlug(bookId)}` : '#'
 
   const card = (

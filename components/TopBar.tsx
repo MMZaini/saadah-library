@@ -1,8 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
-import { Settings, ChevronRight, ArrowLeft, Bookmark } from 'lucide-react'
+import { Settings, ChevronRight, ArrowLeft, Bookmark, Highlighter } from 'lucide-react'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
@@ -22,6 +23,27 @@ export default function TopBar() {
   const pathname = usePathname()
   const params = useParams()
   const router = useRouter()
+  const isScansPage =
+    pathname === '/scans' ||
+    pathname.startsWith('/scans/') ||
+    pathname === '/read/scans' ||
+    pathname.startsWith('/read/scans/')
+  const [scanSourceTitle, setScanSourceTitle] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isScansPage) {
+      setScanSourceTitle(null)
+      return
+    }
+
+    const handleScanSourceChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ title?: string | null }>).detail
+      setScanSourceTitle(detail?.title ?? null)
+    }
+
+    window.addEventListener('scanSourceChange', handleScanSourceChange)
+    return () => window.removeEventListener('scanSourceChange', handleScanSourceChange)
+  }, [isScansPage])
 
   const currentBookSlug =
     pathname !== '/' &&
@@ -98,6 +120,20 @@ export default function TopBar() {
   // Build breadcrumb segments
   const getBreadcrumb = () => {
     if (pathname === '/') return null
+
+    if (isScansPage) {
+      return (
+        <div className="flex min-w-0 items-center gap-1 text-sm text-foreground-muted">
+          <span>Scan Creator</span>
+          {scanSourceTitle && (
+            <>
+              <ChevronRight className="h-3 w-3 shrink-0" />
+              <TruncatedTooltip text={scanSourceTitle} className="max-w-[260px] text-foreground" />
+            </>
+          )}
+        </div>
+      )
+    }
 
     if (pathname === '/bookmarks')
       return <span className="text-sm text-foreground-muted">Bookmarks</span>
@@ -204,21 +240,33 @@ export default function TopBar() {
 
         {/* Persistent search field — behavior is set by the active page */}
         <div className="flex min-w-0 flex-1 justify-end">
-          <SearchBar
-            variant="topbar"
-            value={query}
-            onChange={setQuery}
-            placeholder={placeholder}
-            isSearching={isSearching}
-            showFilterButton={filtersEnabled}
-            filtersOpen={filtersOpen}
-            onFilterClick={() => setFiltersOpen(!filtersOpen)}
-            className="w-full max-w-xs sm:max-w-sm md:max-w-md"
-          />
+          {!isScansPage && (
+            <SearchBar
+              variant="topbar"
+              value={query}
+              onChange={setQuery}
+              placeholder={placeholder}
+              isSearching={isSearching}
+              showFilterButton={filtersEnabled}
+              filtersOpen={filtersOpen}
+              onFilterClick={() => setFiltersOpen(!filtersOpen)}
+              className="w-full max-w-xs sm:max-w-sm md:max-w-md"
+            />
+          )}
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-1">
+          {/* Raw anchor (not next/link) so it targets the bare /scans rather than
+              the basePath-prefixed /read/scans; middleware serves it there. The
+              no-html-link rule is intentionally bypassed for this basePath escape. */}
+          <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a href="/scans" title="PDF highlighter & export">
+              <Highlighter className="h-4 w-4" />
+            </a>
+          </Button>
+
           <Button variant="ghost" size="icon" className="relative h-8 w-8" asChild>
             <Link href="/bookmarks" title={`Bookmarks (${bookmarkCount})`}>
               <Bookmark className="h-4 w-4" />

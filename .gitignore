@@ -19,6 +19,9 @@ package-lock.json
 /.next-build/
 /out/
 
+# pdf.js runtime assets copied from node_modules (see scripts/copy-pdf-assets.mjs)
+/public/pdf/
+
 # production
 /build
 

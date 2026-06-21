@@ -133,3 +133,41 @@ export const books: Book[] = [
     image: '/covers/9-round.jpeg',
   },
 ]
+
+// Maps a homepage `books` numeric id to the dataset bookId used for routing and
+// asset lookup. Single source of truth — consumed by BookCard and the /scans
+// source list (lib/scan-sources.ts). For multi-volume books this points at the
+// book's primary volume / base id.
+export const BOOK_ID_BY_NUMERIC_ID: Record<number, string> = {
+  1: 'Al-Kafi-Volume-1-Kulayni',
+  2: 'Uyun-akhbar-al-Rida-Volume-1-Saduq',
+  3: 'Al-Amali-Mufid',
+  4: 'Al-Amali-Saduq',
+  5: 'Man-La-Yahduruh-al-Faqih',
+  6: 'Al-Tawhid-Saduq',
+  7: 'Kitab-al-Ghayba-Numani',
+  8: 'Kitab-al-Ghayba-Tusi',
+  9: 'Nahj-al-Balagha-Radi',
+  10: 'Sifat-al-Shia-Saduq',
+  11: 'Fadail-al-Shia-Saduq',
+  12: 'Kitab-al-Mumin-Ahwazi',
+  13: 'Kitab-al-Zuhd-Ahwazi',
+  14: 'Risalat-al-Huquq-Abidin',
+  15: 'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
+  16: 'Al-Khisal-Saduq',
+  17: 'Kamil-al-Ziyarat-Qummi',
+  18: 'Kitab-al-Duafa-Ghadairi',
+  19: 'Maani-al-Akhbar-Saduq',
+  20: 'Mujam-al-Ahadith-al-Mutabara-Muhsini',
+}
+
+const coverByBookId: Record<string, string> = Object.fromEntries(
+  books
+    .map((b) => [BOOK_ID_BY_NUMERIC_ID[b.id], b.image] as const)
+    .filter(([bookId]) => Boolean(bookId)),
+)
+
+// Round cover image path for a dataset bookId, if one is known.
+export function getCoverForBookId(bookId: string): string | undefined {
+  return coverByBookId[bookId]
+}
