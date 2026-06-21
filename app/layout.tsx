@@ -46,7 +46,7 @@ const spaceMono = Space_Mono({
 
 export const metadata = {
   title: 'Saadah Library',
-  description: 'Comprehensive Shia Library – UI recreation',
+  description: 'Saadah Library - The Comprehensive Shia Library',
   robots: { index: true, follow: true },
 }
 
