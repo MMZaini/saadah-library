@@ -95,23 +95,35 @@
   }
 }
 
-/* Radix Dialog/Sheet locks body scroll through react-remove-scroll, which
-   compensates for the "removed" classic scrollbar by adding a body margin/
-   padding equal to its width. But `html` above already reserves that space
-   permanently via `scrollbar-gutter: stable`, so the scrollbar never actually
-   collapses and that compensation only pushes centered content sideways. The
-   runtime style is injected outside Tailwind layers, so this override must also
-   stay unlayered. Neutralize the horizontal compensation only.
+/* Radix Dialog/Sheet locks body scroll through react-remove-scroll, which sets
+   `overflow: hidden` plus a margin/padding equal to the "removed" classic
+   scrollbar width on <body>. In this app `html` (not `body`) is the real scroll
+   container, which breaks two things we fix here:
 
-   Do NOT force `overflow-y: scroll` on the body here: `html` is the real scroll
-   container (its `overflow-x: hidden` stops body overflow from propagating to
-   the viewport), so a scroll value on the body spawns a second, redundant
-   scrollbar that shrinks the content width and shifts it left. Leaving the
-   library's own `overflow: hidden` in place is fine — the stable gutter holds
-   the width and the library still blocks background wheel/touch interaction. */
+   1. Horizontal shift — `html` already reserves the scrollbar space permanently
+      via `scrollbar-gutter: stable`, so the bar never actually collapses and the
+      library's margin/padding compensation only pushes centered content
+      sideways. Zero it out.
+
+   2. Sticky header vanishing when scrolled down — `overflow: hidden` turns
+      <body> into its own scroll container sitting at scrollTop 0 (the page is
+      scrolled on <html>, so the body's own offset is always 0). The sticky
+      TopBar then resolves against <body> instead of the viewport and snaps to
+      the body's top edge — off-screen above the fold once you've scrolled down.
+      `overflow: clip` clips identically but is NOT a scroll container, so the
+      sticky header keeps resolving against <html> and stays pinned. Background
+      scroll is still blocked by react-remove-scroll's wheel/touch handlers, and
+      the <html> scrollbar (held open by the stable gutter) is unchanged.
+
+   The runtime style is injected outside Tailwind layers, so this override must
+   also stay unlayered, and its selector must out-specify `body[data-scroll-locked]`.
+
+   Do NOT force `overflow-y: scroll` on the body here: a scroll value spawns a
+   second, redundant scrollbar that shrinks the content width and shifts it left. */
 html body[data-scroll-locked] {
   margin-right: 0 !important;
   padding-right: 0 !important;
+  overflow: clip !important;
 }
 
 /* ── Backward-compat utility classes (used across existing components) ── */
