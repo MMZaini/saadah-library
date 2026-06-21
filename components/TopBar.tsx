@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
 import { LuNotebookPen } from 'react-icons/lu'
-import { Settings, ChevronRight, ArrowLeft, Bookmark } from 'lucide-react'
+import { Settings, ChevronRight, ArrowLeft, Bookmark, UserSearch } from 'lucide-react'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
@@ -139,6 +139,20 @@ export default function TopBar() {
     if (pathname === '/bookmarks')
       return <span className="text-sm text-foreground-muted">Bookmarks</span>
 
+    if (pathname === '/narrators')
+      return <span className="text-sm text-foreground-muted">Narrators</span>
+
+    if (pathname.startsWith('/narrators/'))
+      return (
+        <div className="flex items-center gap-1 text-sm text-foreground-muted">
+          <Link href="/narrators" className="transition-colors hover:text-foreground">
+            Narrators
+          </Link>
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-foreground">Entry</span>
+        </div>
+      )
+
     if (pathname === '/al-kafi' && !isAlKafiChapterPage && !isAlKafiHadithPage) {
       return <span className="text-sm text-foreground-muted">Al-Kāfi</span>
     }
@@ -266,6 +280,12 @@ export default function TopBar() {
             <a href="/scans" title="PDF highlighter & export">
               <LuNotebookPen className="h-4 w-4" />
             </a>
+          </Button>
+
+          <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+            <Link href="/narrators" title="Narrators">
+              <UserSearch className="h-4 w-4" />
+            </Link>
           </Button>
 
           <Button variant="ghost" size="icon" className="relative h-8 w-8" asChild>

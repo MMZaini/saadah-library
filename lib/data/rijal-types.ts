@@ -1,0 +1,133 @@
+export interface RijalManifest {
+  schemaVersion: number
+  version: string
+  generatedAt: string
+  source: {
+    kind: string
+    primaryUrl: string
+    grpcHost: string
+    title: string
+    author: string
+    notes?: string[]
+  }
+  generation?: {
+    discoveredVolumes: number
+    expectedPages: number
+    fetchedPages: number
+    unavailablePages: number
+    omittedPages: number
+    parser: {
+      entries: number
+      boundaryErrors: number
+      classifiedPages: number
+    }
+  }
+  counts: {
+    volumes: number
+    pages: number
+    narrators: number
+    narratorShards: number
+    searchEntries: number
+  }
+  artifactHash: string
+  checksums: {
+    runtime: Record<string, string>
+  }
+}
+
+export interface NarratorSourceVolume {
+  volumeNumber: number
+  rawVolumeNumber?: number
+  bookId: string
+  title: string
+  pageCount: number
+}
+
+export interface RijalMetadata {
+  schemaVersion: number
+  title: string
+  author: string
+  version: string
+  generatedAt: string
+  counts: {
+    narrators: number
+    volumes: number
+    pages: number
+  }
+  source: {
+    primary: string
+    grpcHost: string
+    volumes: NarratorSourceVolume[]
+  }
+}
+
+export interface NarratorSourceRef {
+  pageId: string
+  pageNumber: number
+  pageLabel?: string
+  contentId?: string
+}
+
+export interface NarratorTextBlock {
+  kind: string
+  text: string
+  pageNumber: number
+  pageLabel?: string
+  contentId?: string
+}
+
+export interface NarratorEntry {
+  id: string
+  entryNumber?: number
+  sourceEntryNumber?: number
+  primaryName: string
+  normalizedName: string
+  aliases: string[]
+  volumeNumber: number
+  startPage: number
+  endPage: number
+  textBlocks: NarratorTextBlock[]
+  plainText: string
+  sourceRefs: NarratorSourceRef[]
+  source: {
+    title: string
+    author: string
+    sourceBookId: string
+    sourceBookTitle: string
+  }
+}
+
+export interface NarratorIndexEntry {
+  id: string
+  entryNumber?: number
+  sourceEntryNumber?: number
+  primaryName: string
+  normalizedName: string
+  aliases: string[]
+  volumeNumber: number
+  startPage: number
+  endPage: number
+  sourceBookId: string
+}
+
+export interface NarratorSearchEntry {
+  id: string
+  normalizedName: string
+  normalizedAliases: string[]
+  searchText: string
+  entryNumber?: number
+  sourceEntryNumber?: number
+  volumeNumber: number
+  startPage: number
+}
+
+export interface NarratorSearchResult extends NarratorIndexEntry {
+  matchType: 'exact' | 'startsWith' | 'contains' | 'words'
+  matchedAlias?: string
+}
+
+export interface NarratorSearchResponse {
+  results: NarratorSearchResult[]
+  total: number
+  metadata: Pick<RijalMetadata, 'title' | 'author' | 'version' | 'counts'>
+}

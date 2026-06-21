@@ -17,10 +17,12 @@
     "data:update": "node scripts/data/crawl-thaqalayn.mjs --generate-release",
     "data:validate": "node scripts/data/validate.mjs",
     "data:check-runtime": "node scripts/data/check-runtime.mjs",
+    "data:rijal:update": "node tools/rijal/update-khoei.mjs",
+    "data:rijal:validate": "node tools/rijal/validate.mjs",
     "fix:check": "node scripts/check-fix-scope.mjs",
     "lint:fix": "eslint --fix app components lib",
-    "format:check": "prettier --check \"{app,components,lib,scripts,tests}/**/*.{ts,tsx,js,jsx,mjs,json,css,md}\" \"*.{js,mjs,json,ts,md}\" \".github/workflows/*.{yml,yaml}\"",
-    "format": "prettier --write \"{app,components,lib,scripts,tests}/**/*.{ts,tsx,js,jsx,mjs,json,css,md}\" \"*.{js,mjs,json,ts,md}\" \".github/workflows/*.{yml,yaml}\"",
+    "format:check": "prettier --check \"{app,components,lib,scripts,tests,tools}/**/*.{ts,tsx,js,jsx,mjs,json,css,md}\" \"*.{js,mjs,json,ts,md}\" \".github/workflows/*.{yml,yaml}\"",
+    "format": "prettier --write \"{app,components,lib,scripts,tests,tools}/**/*.{ts,tsx,js,jsx,mjs,json,css,md}\" \"*.{js,mjs,json,ts,md}\" \".github/workflows/*.{yml,yaml}\"",
     "fix": "yarn fix:check && yarn format && yarn lint:fix"
   },
   "dependencies": {
@@ -47,6 +49,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@bufbuild/protobuf": "^2.12.0",
     "@eslint/eslintrc": "^3.3.5",
     "@types/node": "^22",
     "@types/react": "^19",

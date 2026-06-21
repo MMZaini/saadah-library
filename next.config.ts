@@ -24,6 +24,13 @@ const nextConfig: NextConfig = {
   compress: true,
   // Power off source maps in production for better performance
   productionBrowserSourceMaps: false,
+  // Narrator APIs read local JSON from data/ rather than public/. Include the
+  // one-time dataset in traced server bundles so deployment does not depend on
+  // static public assets.
+  outputFileTracingIncludes: {
+    '/api/narrators/[id]': ['./data/rijal/khoei/**/*'],
+    '/api/narrators/search': ['./data/rijal/khoei/**/*'],
+  },
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
     onDemandEntries: {
