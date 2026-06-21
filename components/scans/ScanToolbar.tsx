@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { normalizeExportLayout } from '@/lib/scan-layout'
 import {
   HIGHLIGHT_COLORS,
   type ExportLayout,
@@ -63,6 +64,8 @@ const LAYOUT_OPTIONS: { value: ExportLayout; label: string; hint: string }[] = [
   { value: 'all-cover', label: 'All pages + cover', hint: 'One wide image: pages then cover' },
 ]
 
+const SINGLE_PAGE_LAYOUT_OPTIONS = LAYOUT_OPTIONS.filter((opt) => opt.value !== 'all-cover')
+
 function Seg<T extends string>({
   options,
   value,
@@ -104,11 +107,13 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
     exporting,
     onClose,
   } = props
-  const coverRelevant = settings.layout !== 'each'
+  const effectiveLayout = normalizeExportLayout(settings.layout, selectedCount)
+  const layoutOptions = selectedCount > 1 ? LAYOUT_OPTIONS : SINGLE_PAGE_LAYOUT_OPTIONS
+  const coverRelevant = effectiveLayout !== 'each'
   const multiFile =
-    selectedCount > 1 && (settings.layout === 'each' || settings.layout === 'page-cover')
+    selectedCount > 1 && (effectiveLayout === 'each' || effectiveLayout === 'page-cover')
   const exportLabel =
-    settings.layout === 'all-cover'
+    effectiveLayout === 'all-cover'
       ? 'Export page'
       : selectedCount > 0
         ? `Export ${selectedCount} ${selectedCount === 1 ? 'page' : 'pages'}`
@@ -122,14 +127,14 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
           Layout
         </p>
         <div className="space-y-1.5">
-          {LAYOUT_OPTIONS.map((opt) => (
+          {layoutOptions.map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => onSettingsChange({ layout: opt.value })}
               className={cn(
                 'flex w-full flex-col rounded-md border px-3 py-2 text-left transition-colors',
-                settings.layout === opt.value
+                effectiveLayout === opt.value
                   ? 'bg-accent/10 border-accent'
                   : 'border-border hover:bg-surface-2',
               )}

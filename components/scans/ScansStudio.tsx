@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, FileText, AlertTriangle } from 'lucide-react'
 import { withBasePath } from '@/lib/assets'
 import { loadPdf, type PDFDocumentProxy } from '@/lib/pdf-engine'
+import { normalizeExportLayout } from '@/lib/scan-layout'
 import { exportPages, HIGHLIGHT_COLORS, type ExportCover, type Highlight } from '@/lib/scan-export'
 import type { ScanBook, ScanVolume } from '@/lib/scan-sources'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
@@ -72,6 +73,7 @@ export default function ScansStudio() {
   const loadHandleRef = useRef<ReturnType<typeof loadPdf> | null>(null)
   const docRef = useRef<PDFDocumentProxy | null>(null)
   const lastSelectedPageRef = useRef<number | null>(null)
+  const selectedCount = selectedPages.size
 
   // Tear down the active document + any in-flight load when leaving the studio.
   // Destroying the loading task also destroys its document proxy and worker.
@@ -229,10 +231,27 @@ export default function ScansStudio() {
     setCurrentPage(n)
   }, [])
 
+  const selectPageFromHighlight = useCallback((pageNum: number) => {
+    lastSelectedPageRef.current = pageNum
+    setSelectedPages((prev) => {
+      if (prev.has(pageNum)) return prev
+      const next = new Set(prev)
+      next.add(pageNum)
+      return next
+    })
+  }, [])
+
   useEffect(() => {
-    if (selectedPages.size === 0 || selectedPages.has(currentPage)) return
+    setSettings((current) => {
+      const layout = normalizeExportLayout(current.layout, selectedCount)
+      return layout === current.layout ? current : { ...current, layout }
+    })
+  }, [selectedCount])
+
+  useEffect(() => {
+    if (selectedCount === 0 || selectedPages.has(currentPage)) return
     setCurrentPage(Math.min(...selectedPages))
-  }, [currentPage, selectedPages])
+  }, [currentPage, selectedCount, selectedPages])
 
   const openPage = useCallback(
     (n: number, extendRange = false) => {
@@ -248,12 +267,13 @@ export default function ScansStudio() {
 
   const addHighlight = useCallback(
     (pageNum: number, rect: { x: number; y: number; w: number; h: number }) => {
+      selectPageFromHighlight(pageNum)
       setHighlights((prev) => [
         ...prev,
         { id: crypto.randomUUID(), page: pageNum, color: activeColor, ...rect },
       ])
     },
-    [activeColor],
+    [activeColor, selectPageFromHighlight],
   )
 
   const deleteHighlight = useCallback((id: string) => {
@@ -265,6 +285,7 @@ export default function ScansStudio() {
     setExporting(true)
     try {
       const pageNumbers = Array.from(selectedPages).sort((a, b) => a - b)
+      const layout = normalizeExportLayout(settings.layout, pageNumbers.length)
       const byPage = new Map<number, Highlight[]>()
       for (const h of highlights) {
         const list = byPage.get(h.page)
@@ -272,7 +293,7 @@ export default function ScansStudio() {
         else byPage.set(h.page, [h])
       }
       let cover: ExportCover | null = null
-      if (settings.coverEnabled && settings.layout !== 'each' && source) {
+      if (settings.coverEnabled && layout !== 'each' && source) {
         if (source.kind === 'library') {
           cover = { kind: 'image', src: withBasePath(source.cover) }
         } else {
@@ -283,7 +304,7 @@ export default function ScansStudio() {
         }
       }
       await exportPages(docRef.current, pageNumbers, byPage, {
-        layout: settings.layout,
+        layout,
         format: settings.format,
         delivery: settings.delivery,
         showBadge: settings.showBadge,
@@ -387,7 +408,7 @@ export default function ScansStudio() {
           canNext={canNext}
           onPrev={goPrev}
           onNext={goNext}
-          selectedCount={selectedPages.size}
+          selectedCount={selectedCount}
           settings={settings}
           onSettingsChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
           onExport={handleExport}
