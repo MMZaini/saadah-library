@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
-import { Settings, ChevronRight, ArrowLeft, Bookmark, Highlighter } from 'lucide-react'
+import { CgFileDocument } from 'react-icons/cg'
+import { Settings, ChevronRight, ArrowLeft, Bookmark } from 'lucide-react'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { books } from '@/lib/books'
 import { useSettings } from '@/lib/settings-context'
@@ -263,7 +264,7 @@ export default function TopBar() {
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/scans" title="PDF highlighter & export">
-              <Highlighter className="h-4 w-4" />
+              <CgFileDocument className="h-4 w-4" />
             </a>
           </Button>
 
