@@ -49,11 +49,34 @@ const COVER_HEIGHT_RATIO = 0.55 // cover height as a fraction of page height
 const GAP_RATIO = 0.035 // gap between page and cover / between pages
 const PANEL_PAD_RATIO = 0.05 // horizontal padding inside the cover panel
 
+// Browsers cap canvas size; exceeding it yields a blank/failed canvas (which is
+// how the "all pages + cover" collage used to crash for ~11+ pages). Keep both
+// the longest side and the total area within a conservative cross-browser bound.
+const MAX_CANVAS_DIM = 16384
+const MAX_CANVAS_AREA = MAX_CANVAS_DIM * MAX_CANVAS_DIM
+
+/** Largest scale ≤ 1 that keeps a width×height canvas within browser limits. */
+function fitCanvasScale(width: number, height: number): number {
+  if (width <= 0 || height <= 0) return 1
+  return Math.min(
+    1,
+    MAX_CANVAS_DIM / width,
+    MAX_CANVAS_DIM / height,
+    Math.sqrt(MAX_CANVAS_AREA / (width * height)),
+  )
+}
+
 function createCanvas(width: number, height: number): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(width))
   canvas.height = Math.max(1, Math.round(height))
   return canvas
+}
+
+/** Releases a canvas's backing store so large intermediates don't pile up. */
+function freeCanvas(canvas: HTMLCanvasElement): void {
+  canvas.width = 0
+  canvas.height = 0
 }
 
 function context2d(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
@@ -171,20 +194,30 @@ function drawCoverPanel(
   ctx.drawImage(cover, dx, dy, drawW, drawH)
 }
 
-/** [ page | cover ] side-by-side. */
+/** [ page | cover ] side-by-side. Downscales if the result exceeds canvas limits. */
 function composeCollage(pageCanvas: HTMLCanvasElement, cover: CoverPanelSource): HTMLCanvasElement {
   const gap = Math.round(pageCanvas.width * GAP_RATIO)
   const panelW = coverPanelWidth(pageCanvas.height, cover)
-  const out = createCanvas(pageCanvas.width + gap + panelW, pageCanvas.height)
+  const totalW = pageCanvas.width + gap + panelW
+  const totalH = pageCanvas.height
+  const scale = fitCanvasScale(totalW, totalH)
+
+  const out = createCanvas(totalW * scale, totalH * scale)
   const ctx = context2d(out)
+  if (scale !== 1) ctx.scale(scale, scale)
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, out.width, out.height)
+  ctx.fillRect(0, 0, totalW, totalH)
   ctx.drawImage(pageCanvas, 0, 0)
-  drawCoverPanel(ctx, pageCanvas.width + gap, panelW, out.height, cover)
+  drawCoverPanel(ctx, pageCanvas.width + gap, panelW, totalH, cover)
   return out
 }
 
-/** All pages in a left-to-right row, with an optional cover panel at the end. */
+/**
+ * All pages in a left-to-right row, with an optional cover panel at the end.
+ * Downscales the whole row to stay within browser canvas limits, and **consumes**
+ * (frees) each page canvas as it is drawn so a large collage never holds every
+ * full-resolution page in memory at once.
+ */
 function composeRow(
   pageCanvases: HTMLCanvasElement[],
   cover: CoverPanelSource | null,
@@ -195,16 +228,19 @@ function composeRow(
     pageCanvases.reduce((sum, c) => sum + c.width, 0) + gap * (pageCanvases.length - 1)
   const panelW = cover ? coverPanelWidth(maxH, cover) : 0
   const totalW = pagesWidth + (cover ? gap + panelW : 0)
+  const scale = fitCanvasScale(totalW, maxH)
 
-  const out = createCanvas(totalW, maxH)
+  const out = createCanvas(totalW * scale, maxH * scale)
   const ctx = context2d(out)
+  if (scale !== 1) ctx.scale(scale, scale)
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, out.width, out.height)
+  ctx.fillRect(0, 0, totalW, maxH)
 
   let x = 0
   for (const c of pageCanvases) {
     ctx.drawImage(c, x, 0)
     x += c.width + gap
+    freeCanvas(c) // input no longer needed — keep peak memory bounded
   }
   if (cover) drawCoverPanel(ctx, x, panelW, maxH, cover)
   return out
@@ -287,6 +323,11 @@ export async function exportPages(
   const badgeFor = (index: number): string | null =>
     options.showBadge && total > 1 ? `${index + 1}/${total}` : null
 
+  // A page-rendered cover is reused across pages; free it once at the end.
+  const releaseCover = () => {
+    if (cover instanceof HTMLCanvasElement) freeCanvas(cover)
+  }
+
   if (options.layout === 'all-cover') {
     const canvases: HTMLCanvasElement[] = []
     for (let i = 0; i < pageNumbers.length; i++) {
@@ -295,8 +336,10 @@ export async function exportPages(
         await buildPageCanvas(doc, pageNum, highlightsByPage.get(pageNum) ?? [], badgeFor(i)),
       )
     }
-    const composed = composeRow(canvases, cover)
+    const composed = composeRow(canvases, cover) // frees each page canvas as it draws
     const blob = await canvasToBlob(composed, options.format)
+    freeCanvas(composed)
+    releaseCover()
     triggerDownload(blob, `${options.fileBaseName}-collage.${ext}`)
     return
   }
@@ -313,11 +356,14 @@ export async function exportPages(
     if (options.layout === 'page-cover' && cover) {
       const collage = composeCollage(pageCanvas, cover)
       const blob = await canvasToBlob(collage, options.format)
+      freeCanvas(collage)
       items.push({ blob, filename: `${options.fileBaseName}-p${pageNum}-cover.${ext}` })
     } else {
       const blob = await canvasToBlob(pageCanvas, options.format)
       items.push({ blob, filename: `${options.fileBaseName}-p${pageNum}.${ext}` })
     }
+    freeCanvas(pageCanvas)
   }
+  releaseCover()
   await deliver(items, options)
 }

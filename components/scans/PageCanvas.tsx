@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFPageProxy, RenderTask, PDFDocumentProxy } from '@/lib/pdf-engine'
 import { renderPage, pageDimensions } from '@/lib/pdf-engine'
+import { pdfRenderScheduler, RENDER_PRIORITY } from '@/lib/pdf-render-queue'
 import type { Highlight } from '@/lib/scan-export'
 import { cn } from '@/lib/utils'
 
@@ -10,6 +11,8 @@ const CONTAINER_PADDING = 48 // px breathing room around the page
 const MAX_FIT_WIDTH = 1100 // cap page width at zoom = 1 on large screens
 const DISPLAY_BASE_SCALE = 0.8 // 100% now matches the old 80% view.
 const MIN_DRAW_PX = 6 // ignore tiny accidental drags
+const FALLBACK_ASPECT = 1.4 // assumed page height/width before real dims load
+const RENDER_ROOT_MARGIN = '700px 0px' // render pages this far outside the viewport
 
 export type ScanTool = 'draw' | 'erase'
 
@@ -25,7 +28,8 @@ interface PageViewProps {
   pageNum: number
   isActive: boolean
   containerWidth: number
-  zoom: number
+  displayZoom: number
+  renderZoom: number
   tool: ScanTool
   activeColor: string
   highlights: Highlight[]
@@ -54,7 +58,8 @@ function PageView({
   pageNum,
   isActive,
   containerWidth,
-  zoom,
+  displayZoom,
+  renderZoom,
   tool,
   activeColor,
   highlights,
@@ -62,54 +67,102 @@ function PageView({
   onAddHighlight,
   onDeleteHighlight,
 }: PageViewProps) {
+  const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  const taskRef = useRef<RenderTask | null>(null)
   const drawStartRef = useRef<{ x: number; y: number } | null>(null)
+  const isActiveRef = useRef(isActive)
+  isActiveRef.current = isActive
 
-  const [display, setDisplay] = useState<{ w: number; h: number } | null>(null)
+  const [dims, setDims] = useState<{ width: number; height: number } | null>(null)
+  const [inView, setInView] = useState(false)
   const [draft, setDraft] = useState<DraftRect | null>(null)
 
+  // Cheap structural pass — learn the page's intrinsic size so its scroll space
+  // can be reserved immediately. No image is decoded here.
   useEffect(() => {
-    if (!containerWidth) return
     let cancelled = false
-    let page: PDFPageProxy | null = null
-
     void (async () => {
-      page = await doc.getPage(pageNum)
-      const canvas = canvasRef.current
-      if (cancelled || !canvas) {
-        page.cleanup()
-        return
-      }
-      const { width: baseW, height: baseH } = pageDimensions(page)
-      const fitWidth = Math.max(1, Math.min(containerWidth - CONTAINER_PADDING, MAX_FIT_WIDTH))
-      const displayScale = (fitWidth / baseW) * zoom * DISPLAY_BASE_SCALE
-      const dpr = window.devicePixelRatio || 1
-
-      taskRef.current?.cancel()
-      const cssW = displayScale * baseW
-      const cssH = displayScale * baseH
-      canvas.style.width = `${cssW}px`
-      canvas.style.height = `${cssH}px`
-      setDisplay({ w: cssW, h: cssH })
-
-      const task = renderPage(page, canvas, displayScale * dpr)
-      taskRef.current = task
+      const page = await doc.getPage(pageNum)
       try {
-        await task.promise
-      } catch {
-        // Cancelled by a newer render — expected.
+        if (!cancelled) setDims(pageDimensions(page))
       } finally {
-        page?.cleanup()
+        page.cleanup()
       }
     })()
-
     return () => {
       cancelled = true
-      taskRef.current?.cancel()
     }
-  }, [doc, pageNum, zoom, containerWidth])
+  }, [doc, pageNum])
+
+  const fitWidth = containerWidth
+    ? Math.max(1, Math.min(containerWidth - CONTAINER_PADDING, MAX_FIT_WIDTH))
+    : 0
+
+  // CSS size follows the live zoom so the page reflows instantly while zooming.
+  const display = useMemo(() => {
+    if (!dims || !fitWidth) return null
+    const scale = (fitWidth / dims.width) * displayZoom * DISPLAY_BASE_SCALE
+    return { w: scale * dims.width, h: scale * dims.height }
+  }, [dims, fitWidth, displayZoom])
+
+  // Reserve realistic space before the real dimensions arrive so the viewport
+  // observer stays accurate (collapsed pages would all read as "in view").
+  const reserved =
+    display ?? (fitWidth ? { w: fitWidth * displayZoom * DISPLAY_BASE_SCALE, h: 0 } : null)
+  const reservedHeight = display ? display.h : reserved ? reserved.w * FALLBACK_ASPECT : 0
+
+  // Only decode/render pages near the viewport.
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) setInView(entry.isIntersecting)
+      },
+      { root: el.closest('[data-page-scroll]'), rootMargin: RENDER_ROOT_MARGIN },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  // Paint the page (at the debounced render zoom) once it is near the viewport.
+  useEffect(() => {
+    if (!inView || !dims || !fitWidth) return
+    const controller = new AbortController()
+    let task: RenderTask | null = null
+
+    pdfRenderScheduler
+      .run(
+        async (signal) => {
+          let page: PDFPageProxy | null = await doc.getPage(pageNum)
+          const canvas = canvasRef.current
+          if (signal?.aborted || !canvas) {
+            page.cleanup()
+            return
+          }
+          const displayScale = (fitWidth / dims.width) * renderZoom * DISPLAY_BASE_SCALE
+          const dpr = window.devicePixelRatio || 1
+          try {
+            task = renderPage(page, canvas, displayScale * dpr)
+            signal?.addEventListener('abort', () => task?.cancel(), { once: true })
+            await task.promise
+          } finally {
+            page?.cleanup()
+            page = null
+          }
+        },
+        {
+          priority: isActiveRef.current ? RENDER_PRIORITY.activePage : RENDER_PRIORITY.visiblePage,
+          signal: controller.signal,
+        },
+      )
+      .catch(() => {
+        // Cancelled by a newer render / scroll-away — expected.
+      })
+
+    return () => controller.abort()
+  }, [inView, dims, doc, pageNum, renderZoom, fitWidth])
 
   const localPoint = (e: React.PointerEvent) => {
     const rect = overlayRef.current!.getBoundingClientRect()
@@ -159,14 +212,19 @@ function PageView({
 
   return (
     <section
+      ref={sectionRef}
       className={cn(
         'relative h-fit transition-shadow',
         isActive && 'ring-2 ring-zinc-500/70 ring-offset-4 ring-offset-surface-1',
       )}
-      style={display ? { width: display.w, height: display.h } : undefined}
+      style={reserved ? { width: reserved.w, height: reservedHeight } : undefined}
       aria-label={`Page ${pageNum}`}
     >
-      <canvas ref={canvasRef} className="block rounded-sm shadow-xl" />
+      <canvas
+        ref={canvasRef}
+        className="block rounded-sm shadow-xl"
+        style={display ? { width: display.w, height: display.h } : undefined}
+      />
       <div
         ref={overlayRef}
         className="absolute inset-0"
@@ -240,6 +298,7 @@ export default function PageCanvas({
 }: PageCanvasProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const [renderZoom, setRenderZoom] = useState(zoom)
 
   // Track the available width so pages can fit-to-width and reflow on resize.
   useEffect(() => {
@@ -252,8 +311,15 @@ export default function PageCanvas({
     return () => ro.disconnect()
   }, [])
 
+  // Debounce the zoom used for the (expensive) re-render; the CSS size tracks
+  // `zoom` instantly, so zooming feels immediate and only sharpens once settled.
+  useEffect(() => {
+    const id = setTimeout(() => setRenderZoom(zoom), 140)
+    return () => clearTimeout(id)
+  }, [zoom])
+
   return (
-    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto bg-surface-1 p-6">
+    <div ref={scrollRef} data-page-scroll className="min-h-0 flex-1 overflow-auto bg-surface-1 p-6">
       <div className="flex w-full flex-col items-center gap-8">
         {pageNums.map((pageNum) => (
           <PageView
@@ -262,7 +328,8 @@ export default function PageCanvas({
             pageNum={pageNum}
             isActive={pageNum === activePage}
             containerWidth={containerWidth}
-            zoom={zoom}
+            displayZoom={zoom}
+            renderZoom={renderZoom}
             tool={tool}
             activeColor={activeColor}
             highlights={highlightsByPage.get(pageNum) ?? []}
