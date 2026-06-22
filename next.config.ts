@@ -34,23 +34,17 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/narrators/[id]': ['./data/rijal/khoei/**/*'],
     '/api/narrators/search': ['./data/rijal/khoei/**/*'],
-    // The scan-page rasterizer renders with pdf.js in Node, which loads several
-    // assets dynamically that @vercel/nft can't follow (so they ship missing and
-    // the route either 500s or returns blank pages on Vercel — invisible locally
-    // since `next start` still has node_modules). Force-include them all:
+    // The scan-page rasterizer renders with pdf.js in Node, which loads assets via
+    // dynamic imports @vercel/nft can't follow — so they ship missing and the route
+    // 500s or returns blank pages on Vercel (invisible locally, where `next start`
+    // still has node_modules). Force-include them:
     //   - pdf.worker.mjs: pdf.js' fake-worker, loaded via dynamic import().
-    //   - wasm/: the JBIG2 (+ openjpeg/qcms) decoders the scans need, loaded from
-    //     pdf.js' own package dir via require.resolve (cwd-independent — see
-    //     scan-raster). Without these, JBIG2 can't init and pages render white.
-    //   - cmaps/ + standard_fonts/: harmless for these image-only scans, included
-    //     so any text PDF also renders.
+    //   - public/pdf/**: the wasm/cmap/font decoders (with the {"type":"module"}
+    //     marker copy-pdf-assets writes into wasm/ so the JBIG2 .js decoder loads as
+    //     ESM — see scan-raster). Without these, JBIG2 can't init → blank pages.
     '/api/scan-page': [
       './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
       './node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs',
-      './node_modules/pdfjs-dist/wasm/**',
-      './node_modules/pdfjs-dist/cmaps/**',
-      './node_modules/pdfjs-dist/standard_fonts/**',
-      // Same decoders under public/ as a second probe location (see scan-raster).
       './public/pdf/**',
     ],
   },

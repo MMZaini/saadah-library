@@ -48,6 +48,18 @@ async function main() {
     if (!result) console.warn(`pdfjs asset dir missing (skipped): ${dir}`)
   }
 
+  // pdf.js' `*_nowasm_fallback.js` decoders (e.g. JBIG2) are ESM files that use
+  // `import.meta`, but pdfjs-dist's package.json has no `"type": "module"`. The
+  // server rasterizer ([lib/data/scan-raster.ts]) loads them via `import()` in the
+  // Node runtime; without an explicit ESM marker, older Node (e.g. Vercel's) treats
+  // the `.js` as CommonJS → "Cannot use 'import.meta' outside a module" → the decoder
+  // silently fails and scanned pages render blank. Mark the copied wasm dir as ESM so
+  // they load on any Node version.
+  const wasmDir = path.join(DEST_ROOT, 'wasm')
+  if (await fs.stat(wasmDir).catch(() => null)) {
+    await fs.writeFile(path.join(wasmDir, 'package.json'), '{ "type": "module" }\n')
+  }
+
   console.log(`Copied pdf.js assets to ${path.relative(REPO_ROOT, DEST_ROOT)}`)
 }
 

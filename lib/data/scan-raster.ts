@@ -52,25 +52,30 @@ const safeExists = (p: string): boolean => {
   }
 }
 
+// `public/pdf` is preferred: copy-pdf-assets writes a `{"type":"module"}` marker
+// into its `wasm/` dir so the decoders load as ESM on every Node version. The
+// raw `node_modules/pdfjs-dist` has no such marker, so its `.js` decoders fail to
+// import on Vercel's Node ("Cannot use 'import.meta' outside a module").
 function assetCandidates(): string[] {
   const cwd = process.cwd()
   return [
-    path.join(cwd, 'node_modules', 'pdfjs-dist'),
     path.join(cwd, 'public', 'pdf'),
-    // Vercel can run the function from a nested dir; the traced node_modules then
-    // sits a couple levels up. Probe those too rather than assume cwd.
+    path.join(cwd, '..', 'public', 'pdf'),
+    path.join(cwd, 'node_modules', 'pdfjs-dist'),
     path.join(cwd, '..', 'node_modules', 'pdfjs-dist'),
-    path.join(cwd, '..', '..', 'node_modules', 'pdfjs-dist'),
   ]
 }
+
+const hasDecoder = (c: string): boolean =>
+  safeExists(path.join(c, 'wasm', 'jbig2_nowasm_fallback.js'))
+const hasEsmMarker = (c: string): boolean => safeExists(path.join(c, 'wasm', 'package.json'))
 
 let cachedAssetDir: string | null = null
 function pdfjsAssetDir(): string {
   if (cachedAssetDir) return cachedAssetDir
-  const found = assetCandidates().find((c) =>
-    safeExists(path.join(c, 'wasm', 'jbig2_nowasm_fallback.js')),
-  )
-  cachedAssetDir = found ?? assetCandidates()[0]
+  const cands = assetCandidates()
+  cachedAssetDir =
+    cands.find((c) => hasDecoder(c) && hasEsmMarker(c)) ?? cands.find(hasDecoder) ?? cands[0]
   return cachedAssetDir
 }
 
@@ -82,8 +87,9 @@ function fileDirUrl(...segments: string[]): string {
 export async function getAssetDiagnostics(): Promise<Record<string, unknown>> {
   const candidates = assetCandidates().map((c) => ({
     dir: c,
-    fallback: safeExists(path.join(c, 'wasm', 'jbig2_nowasm_fallback.js')),
+    fallback: hasDecoder(c),
     wasm: safeExists(path.join(c, 'wasm', 'jbig2.wasm')),
+    esmMarker: hasEsmMarker(c),
   }))
   const chosen = pdfjsAssetDir()
   const fbUrl = pathToFileURL(path.join(chosen, 'wasm', 'jbig2_nowasm_fallback.js')).href
