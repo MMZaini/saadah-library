@@ -37,6 +37,10 @@ export async function GET(request: NextRequest) {
   const page = Math.floor(pageRaw)
   const width = snapScanImageWidth(Number.isFinite(widthRaw) && widthRaw > 0 ? widthRaw : 1240)
   const origin = resolveOrigin(request)
+  // `?debug=1` surfaces the underlying error in the response so a production-only
+  // failure (e.g. a serverless file-tracing gap) can be read with one request
+  // instead of a deploy cycle. The message is an internal error string, not data.
+  const debug = params.get('debug') === '1'
 
   try {
     const webp = await rasterizePageToWebp({
@@ -57,7 +61,11 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('scan-page rasterize failed', { pdf, page, width, err })
-    return NextResponse.json({ error: 'Could not render page' }, { status: 500 })
+    const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    console.error(`scan-page rasterize failed: ${detail}`, { pdf, page, width })
+    return NextResponse.json(
+      debug ? { error: 'Could not render page', detail } : { error: 'Could not render page' },
+      { status: 500 },
+    )
   }
 }

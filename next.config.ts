@@ -36,8 +36,16 @@ const nextConfig: NextConfig = {
     '/api/narrators/search': ['./data/rijal/khoei/**/*'],
     // The scan-page rasterizer reads the pdf.js wasm/cmap/font decoders from disk
     // (file:// — see scan-raster). Small (~5MB); the big PDFs stay static and are
-    // fetched at runtime, never bundled.
-    '/api/scan-page': ['./public/pdf/**/*'],
+    // fetched at runtime, never bundled. We must ALSO force-include pdf.js's worker
+    // build: in Node, pdf.js loads `pdf.worker.mjs` via a dynamic import that nft
+    // can't follow, so it ships missing and every render throws "Cannot find module
+    // …pdf.worker.mjs" on Vercel (it only "works" locally because node_modules is
+    // present). `serverExternalPackages` keeps pdfjs unbundled, so trace it here.
+    '/api/scan-page': [
+      './public/pdf/**/*',
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+    ],
   },
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
