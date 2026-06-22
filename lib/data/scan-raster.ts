@@ -4,20 +4,20 @@
 // Why this exists: large JBIG2 scans can't be rendered by client pdf.js on mobile
 // (see [[narrators-pdf-mobile-white]]). Rendering them once on the server and
 // letting the CDN cache the immutable result gives phones a plain <img> that
-// always paints. The big PDFs stay static assets (never bundled into the
-// function — they exceed the size limit); we fetch only the bytes we need.
+// always paints. The big PDFs stay static assets (never bundled into the function —
+// they exceed the size limit); the function fetches each volume's PDF over HTTP and
+// caches the parsed document so adjacent pages don't re-fetch it.
 import 'server-only'
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { createCanvas, GlobalFonts, DOMMatrix, Path2D, ImageData } from '@napi-rs/canvas'
+import { createCanvas, DOMMatrix, Path2D, ImageData } from '@napi-rs/canvas'
 
 // pdf.js expects a few DOM globals; @napi-rs/canvas provides compatible ones.
 const g = globalThis as Record<string, unknown>
 g.DOMMatrix ??= DOMMatrix
 g.Path2D ??= Path2D
 g.ImageData ??= ImageData
-void GlobalFonts
 
 type PdfjsModule = typeof import('pdfjs-dist/legacy/build/pdf.mjs')
 type PdfLoadingTask = ReturnType<PdfjsModule['getDocument']>
