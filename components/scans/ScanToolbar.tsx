@@ -122,7 +122,7 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden />
-      <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-surface-1 p-4 shadow-xl">
+      <div className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] rounded-lg border border-border bg-surface-1 p-4 shadow-xl">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-faint">
           Layout
         </p>
@@ -267,151 +267,220 @@ export default function ScanToolbar(props: ScanToolbarProps) {
   const [exportOpen, setExportOpen] = useState(false)
 
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-2 sm:px-3">
-      {/* Left: tools */}
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 md:hidden"
-          onClick={onOpenSidebar}
-          title="Browse PDFs"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-
-        <div className="inline-flex rounded-md border border-border p-0.5">
-          <button
-            type="button"
-            disabled={!hasDoc}
-            onClick={() => onToolChange('draw')}
-            title="Highlight (drag)"
-            className={cn(
-              'rounded p-1.5 transition-colors disabled:opacity-40',
-              tool === 'draw'
-                ? 'bg-accent text-accent-foreground'
-                : 'text-foreground-muted hover:text-foreground',
-            )}
+    <>
+      <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-2 sm:px-3">
+        {/* Left: tools */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 md:hidden"
+            onClick={onOpenSidebar}
+            title="Browse PDFs"
           >
-            <Highlighter className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            disabled={!hasDoc}
-            onClick={() => onToolChange('erase')}
-            title="Erase (click a highlight)"
-            className={cn(
-              'rounded p-1.5 transition-colors disabled:opacity-40',
-              tool === 'erase'
-                ? 'bg-accent text-accent-foreground'
-                : 'text-foreground-muted hover:text-foreground',
-            )}
-          >
-            <Eraser className="h-4 w-4" />
-          </button>
-        </div>
+            <Menu className="h-4 w-4" />
+          </Button>
 
-        <div className="ml-1 hidden items-center gap-1 sm:flex">
-          {HIGHLIGHT_COLORS.map((color) => (
+          <div className="inline-flex rounded-md border border-border p-0.5">
             <button
-              key={color.value}
               type="button"
               disabled={!hasDoc}
-              onClick={() => {
-                onColorChange(color.value)
-                onToolChange('draw')
-              }}
-              title={color.name}
+              onClick={() => onToolChange('draw')}
+              title="Highlight (drag)"
               className={cn(
-                'h-5 w-5 rounded-full border border-black/20 transition-transform disabled:opacity-40',
-                activeColor === color.value && tool === 'draw'
-                  ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
-                  : 'hover:scale-110',
+                'rounded p-1.5 transition-colors disabled:opacity-40',
+                tool === 'draw'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground-muted hover:text-foreground',
               )}
-              style={{ backgroundColor: color.value }}
-            />
-          ))}
+            >
+              <Highlighter className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={!hasDoc}
+              onClick={() => onToolChange('erase')}
+              title="Erase (click a highlight)"
+              className={cn(
+                'rounded p-1.5 transition-colors disabled:opacity-40',
+                tool === 'erase'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground-muted hover:text-foreground',
+              )}
+            >
+              <Eraser className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="ml-1 hidden items-center gap-1 sm:flex">
+            {HIGHLIGHT_COLORS.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                disabled={!hasDoc}
+                onClick={() => {
+                  onColorChange(color.value)
+                  onToolChange('draw')
+                }}
+                title={color.name}
+                className={cn(
+                  'h-5 w-5 rounded-full border border-black/20 transition-transform disabled:opacity-40',
+                  activeColor === color.value && tool === 'draw'
+                    ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
+                    : 'hover:scale-110',
+                )}
+                style={{ backgroundColor: color.value }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Center: page nav */}
+        {hasDoc && (
+          <div className="hidden items-center gap-1 sm:flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onPrev}
+              disabled={!canPrev}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[72px] text-center text-sm text-foreground-muted">
+              {currentPage} / {numPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onNext}
+              disabled={!canNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Right: zoom + export */}
+        <div className="flex items-center gap-1">
+          <div className="hidden items-center gap-0.5 sm:flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              disabled={!hasDoc}
+              onClick={onZoomOut}
+              title="Zoom out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span
+              className={cn(
+                'min-w-[3rem] px-1 text-center text-xs text-foreground-muted',
+                !hasDoc && 'opacity-40',
+              )}
+            >
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              disabled={!hasDoc}
+              onClick={onZoomIn}
+              title="Zoom in"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="relative">
+            <Button
+              size="sm"
+              className="h-8 gap-1.5"
+              disabled={!hasDoc}
+              onClick={() => setExportOpen((v) => !v)}
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+              {selectedCount > 0 && (
+                <span className="bg-accent-foreground/20 rounded-full px-1.5 text-[11px]">
+                  {selectedCount}
+                </span>
+              )}
+            </Button>
+            {exportOpen && <ExportPanel {...props} onClose={() => setExportOpen(false)} />}
+          </div>
         </div>
       </div>
 
-      {/* Center: page nav */}
+      {/* Mobile-only secondary row: page nav, highlight colors and zoom are hidden
+          in the row above on phones, so they're surfaced here (scrolls if tight). */}
       {hasDoc && (
-        <div className="hidden items-center gap-1 sm:flex">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onPrev}
-            disabled={!canPrev}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-[72px] text-center text-sm text-foreground-muted">
-            {currentPage} / {numPages}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onNext}
-            disabled={!canNext}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-border bg-background px-2 py-1.5 sm:hidden">
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onPrev}
+              disabled={!canPrev}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[60px] text-center text-xs tabular-nums text-foreground-muted">
+              {currentPage} / {numPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onNext}
+              disabled={!canNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="h-5 w-px shrink-0 bg-border" />
+
+          <div className="flex shrink-0 items-center gap-2">
+            {HIGHLIGHT_COLORS.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => {
+                  onColorChange(color.value)
+                  onToolChange('draw')
+                }}
+                title={color.name}
+                className={cn(
+                  'h-6 w-6 shrink-0 rounded-full border border-black/20 transition-transform',
+                  activeColor === color.value && tool === 'draw'
+                    ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
+                    : '',
+                )}
+                style={{ backgroundColor: color.value }}
+              />
+            ))}
+          </div>
+
+          <div className="h-5 w-px shrink-0 bg-border" />
+
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onZoomOut}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[3rem] text-center text-xs tabular-nums text-foreground-muted">
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onZoomIn}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
-
-      {/* Right: zoom + export */}
-      <div className="flex items-center gap-1">
-        <div className="hidden items-center gap-0.5 sm:flex">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            disabled={!hasDoc}
-            onClick={onZoomOut}
-            title="Zoom out"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span
-            className={cn(
-              'min-w-[3rem] px-1 text-center text-xs text-foreground-muted',
-              !hasDoc && 'opacity-40',
-            )}
-          >
-            {Math.round(zoom * 100)}%
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            disabled={!hasDoc}
-            onClick={onZoomIn}
-            title="Zoom in"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="relative">
-          <Button
-            size="sm"
-            className="h-8 gap-1.5"
-            disabled={!hasDoc}
-            onClick={() => setExportOpen((v) => !v)}
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
-            {selectedCount > 0 && (
-              <span className="bg-accent-foreground/20 rounded-full px-1.5 text-[11px]">
-                {selectedCount}
-              </span>
-            )}
-          </Button>
-          {exportOpen && <ExportPanel {...props} onClose={() => setExportOpen(false)} />}
-        </div>
-      </div>
-    </div>
+    </>
   )
 }

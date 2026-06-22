@@ -186,7 +186,7 @@ function GradingBadge({
             setIsOpen((prev) => !prev)
           }}
           onBlur={() => setIsOpen(false)}
-          className="transition-transform hover:scale-[1.02] focus:outline-none active:scale-[0.98]"
+          className="py-1 transition-transform hover:scale-[1.02] focus:outline-none active:scale-[0.98]"
         >
           <Badge variant={gradingVariant(grading)} className="cursor-pointer text-[11px] shadow-sm">
             {author}: {grading}
@@ -453,7 +453,7 @@ const HadithCard = ({
       {arabicOverflow && (
         <button
           onClick={() => setArabicExpanded(!arabicExpanded)}
-          className="mt-1 text-xs font-medium text-accent transition-colors hover:underline"
+          className="mt-1 py-1 text-xs font-medium text-accent transition-colors hover:underline"
         >
           {arabicExpanded ? 'اعرض أقل' : 'اقرأ المزيد'}
         </button>
@@ -487,7 +487,7 @@ const HadithCard = ({
         {isLongText && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="ml-1 text-xs font-medium text-accent transition-colors hover:underline"
+            className="ml-1 inline-block py-1 text-xs font-medium text-accent transition-colors hover:underline"
           >
             {expanded ? 'Show less' : 'Read more'}
           </button>
@@ -506,7 +506,7 @@ const HadithCard = ({
             <Button
               variant="ghost"
               size="icon"
-              className={cn('h-7 w-7', bookmarked && 'text-bookmark')}
+              className={cn('h-9 w-9 sm:h-7 sm:w-7', bookmarked && 'text-bookmark')}
               onClick={handleBookmarkToggle}
             >
               {bookmarked ? (
@@ -525,7 +525,7 @@ const HadithCard = ({
               <Button
                 variant={showArabic ? 'default' : 'ghost'}
                 size="icon"
-                className="h-7 w-7"
+                className="h-9 w-9 sm:h-7 sm:w-7"
                 onClick={() => setShowArabic(!showArabic)}
               >
                 <Languages className="h-3.5 w-3.5" />
@@ -537,7 +537,12 @@ const HadithCard = ({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleOpenNewTab}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 sm:h-7 sm:w-7"
+              onClick={handleOpenNewTab}
+            >
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
@@ -612,7 +617,7 @@ const HadithCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 gap-1 px-2 text-xs text-foreground-muted"
+                className="h-9 gap-1 px-2 text-xs text-foreground-muted sm:h-7"
               >
                 <Copy className="h-3 w-3" />
                 {copyFeedback || 'Copy'}
@@ -668,7 +673,7 @@ const HadithCard = ({
               variant="ghost"
               size="sm"
               className={cn(
-                'h-7 gap-1 px-2 text-xs',
+                'h-9 gap-1 px-2 text-xs sm:h-7',
                 notesVisible ? 'text-accent' : 'text-foreground-muted',
               )}
               onClick={onToggleNotes}
@@ -691,7 +696,7 @@ const HadithCard = ({
               href={withBasePath(chapterUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-0.5 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+              className="flex items-center gap-0.5 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
             >
               View Chapter
               <ChevronRight className="h-3 w-3" />

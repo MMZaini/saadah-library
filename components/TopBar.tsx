@@ -267,7 +267,7 @@ export default function TopBar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0"
+            className="h-10 w-10 shrink-0 md:h-8 md:w-8"
             onClick={() => {
               if (isAlKafiChapterPage || isAlKafiHadithPage) {
                 router.push(withBasePath('/al-kafi'))
@@ -316,8 +316,8 @@ export default function TopBar() {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1">
+        {/* Actions — moved to the bottom tab bar on mobile (see BottomNav). */}
+        <div className="hidden items-center gap-1 md:flex">
           {/* Raw anchors target root-level tools instead of basePath-prefixed routes. */}
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}

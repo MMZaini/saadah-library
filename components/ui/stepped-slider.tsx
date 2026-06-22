@@ -81,8 +81,10 @@ export function SteppedSlider({
 
   return (
     <div
-      className={cn('relative flex w-full touch-none select-none items-center', className)}
-      style={{ height: 28 }}
+      className={cn(
+        'relative flex h-9 w-full touch-none select-none items-center sm:h-7',
+        className,
+      )}
       onPointerDown={handlePointerDown}
       role="slider"
       aria-valuemin={min}
@@ -129,7 +131,7 @@ export function SteppedSlider({
         <div
           className={cn(
             'absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2',
-            'h-3.5 w-2.5 rounded-[2px] border border-zinc-500 bg-zinc-300 shadow-sm',
+            'h-5 w-3.5 rounded-[2px] border border-zinc-500 bg-zinc-300 shadow-sm sm:h-3.5 sm:w-2.5',
             draggingRef.current && 'scale-110 bg-zinc-200',
           )}
           style={{ left: `${fraction * 100}%` }}

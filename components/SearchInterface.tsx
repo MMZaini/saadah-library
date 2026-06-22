@@ -507,7 +507,7 @@ export default function SearchInterface({
                         key={book.key}
                         onClick={() => toggleScopeBook(book.key)}
                         className={cn(
-                          'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                          'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors sm:py-1',
                           isActive
                             ? 'bg-accent/10 border-accent text-accent'
                             : 'border-border text-foreground-muted hover:bg-surface-2',
@@ -539,7 +539,7 @@ export default function SearchInterface({
                               key={volNum}
                               onClick={() => toggleScopeVolume(bookKey, volNum)}
                               className={cn(
-                                'rounded border px-1.5 py-0.5 text-[11px] font-medium transition-colors',
+                                'rounded border px-2 py-1 text-[11px] font-medium transition-colors sm:px-1.5 sm:py-0.5',
                                 isVolumeActive
                                   ? 'bg-accent/10 border-accent text-accent'
                                   : 'border-border text-foreground-muted hover:bg-surface-2',
@@ -575,7 +575,7 @@ export default function SearchInterface({
                         )
                       }
                       className={cn(
-                        'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                        'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors sm:py-1',
                         active
                           ? 'bg-accent/10 border-accent text-accent'
                           : 'border-border text-foreground-muted hover:bg-surface-2',
@@ -666,7 +666,7 @@ export default function SearchInterface({
                         else handleGradingChange(opt.value, !active)
                       }}
                       className={cn(
-                        'rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                        'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors sm:py-1',
                         active
                           ? 'bg-accent/10 border-accent text-accent'
                           : 'border-border text-foreground-muted hover:bg-surface-2',
@@ -850,7 +850,12 @@ export default function SearchInterface({
                     key={p}
                     variant={currentPage === p ? 'default' : 'ghost'}
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className={cn(
+                      'h-9 w-9 p-0 sm:h-8 sm:w-8',
+                      // Keep the row from overflowing narrow screens: on mobile show
+                      // only the current page and its immediate neighbours.
+                      Math.abs(p - currentPage) > 1 && 'hidden sm:inline-flex',
+                    )}
                     onClick={() => goToPage(p)}
                   >
                     {p}

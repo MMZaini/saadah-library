@@ -2,6 +2,7 @@ import './globals.css'
 import { Inter, Lora, Merriweather, Noto_Sans_Arabic, Space_Mono } from 'next/font/google'
 import ClientProviders from '@/components/ClientProviders'
 import TopBar from '@/components/TopBar'
+import BottomNav from '@/components/BottomNav'
 import SettingsSidebar from '@/components/SettingsSidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import favicon from './favicon.ico'
@@ -55,6 +56,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  themeColor: '#0b0b0b',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -81,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex min-h-screen flex-col">
               <TopBar />
               <main className="flex-1">{children}</main>
+              <BottomNav />
               <SettingsSidebar />
             </div>
           </TooltipProvider>

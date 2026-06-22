@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { bookApi, Hadith } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import HadithCard from '@/components/HadithCard'
-import { Book, ChevronDown, ChevronRight } from 'lucide-react'
+import { Book, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 import type { SelectedVolume } from '@/lib/volume-utils'
@@ -393,8 +393,9 @@ export default function GenericBookBrowser({
 
       {!loading && !error && Object.keys(volumeSummary).length > 0 && (
         <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-          {/* Chapter Navigation */}
-          <div className="lg:col-span-1">
+          {/* Chapter Navigation — on mobile this swaps out for the hadith panel
+              once a chapter is picked (see the back button below). */}
+          <div className={cn('lg:col-span-1', selectedChapter && 'hidden lg:block')}>
             <div className="border-theme bg-card shadow-soft max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border sm:max-h-[70vh] lg:max-h-[80vh]">
               <div className="border-theme bg-card sticky top-0 z-10 border-b p-3 sm:p-4">
                 <h4 className="text-primary text-sm font-semibold sm:text-base">
@@ -505,9 +506,21 @@ export default function GenericBookBrowser({
           </div>
 
           {/* Hadith Display */}
-          <div className="lg:col-span-2">
+          <div className={cn('lg:col-span-2', !selectedChapter && 'hidden lg:block')}>
             {selectedChapter ? (
               <div className="space-y-4">
+                {/* Back to the chapter list (mobile only — desktop keeps both panes). */}
+                <button
+                  onClick={() => {
+                    setSelectedChapter(null)
+                    setChapterHadiths([])
+                  }}
+                  className="flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-foreground lg:hidden"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  {showDirectChapterList ? 'Chapters' : 'Categories'}
+                </button>
+
                 {/* Chapter Header */}
                 <div className="mb-8 rounded-xl border border-border bg-surface-1 p-6">
                   <div className="flex items-center justify-between">
