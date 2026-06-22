@@ -34,17 +34,24 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/narrators/[id]': ['./data/rijal/khoei/**/*'],
     '/api/narrators/search': ['./data/rijal/khoei/**/*'],
-    // The scan-page rasterizer reads the pdf.js wasm/cmap/font decoders from disk
-    // (file:// — see scan-raster). Small (~5MB); the big PDFs stay static and are
-    // fetched at runtime, never bundled. We must ALSO force-include pdf.js's worker
-    // build: in Node, pdf.js loads `pdf.worker.mjs` via a dynamic import that nft
-    // can't follow, so it ships missing and every render throws "Cannot find module
-    // …pdf.worker.mjs" on Vercel (it only "works" locally because node_modules is
-    // present). `serverExternalPackages` keeps pdfjs unbundled, so trace it here.
+    // The scan-page rasterizer renders with pdf.js in Node, which loads several
+    // assets dynamically that @vercel/nft can't follow (so they ship missing and
+    // the route either 500s or returns blank pages on Vercel — invisible locally
+    // since `next start` still has node_modules). Force-include them all:
+    //   - pdf.worker.mjs: pdf.js' fake-worker, loaded via dynamic import().
+    //   - wasm/: the JBIG2 (+ openjpeg/qcms) decoders the scans need, loaded from
+    //     pdf.js' own package dir via require.resolve (cwd-independent — see
+    //     scan-raster). Without these, JBIG2 can't init and pages render white.
+    //   - cmaps/ + standard_fonts/: harmless for these image-only scans, included
+    //     so any text PDF also renders.
     '/api/scan-page': [
-      './public/pdf/**/*',
       './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
       './node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+      './node_modules/pdfjs-dist/wasm/**',
+      './node_modules/pdfjs-dist/cmaps/**',
+      './node_modules/pdfjs-dist/standard_fonts/**',
+      // Same decoders under public/ as a second probe location (see scan-raster).
+      './public/pdf/**',
     ],
   },
   // Development optimizations

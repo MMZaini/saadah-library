@@ -7,6 +7,7 @@
 // always paints. The big PDFs stay static assets (never bundled into the
 // function — they exceed the size limit); we fetch only the bytes we need.
 import 'server-only'
+import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createCanvas, GlobalFonts, DOMMatrix, Path2D, ImageData } from '@napi-rs/canvas'
@@ -32,19 +33,70 @@ function getPdfjs(): Promise<PdfjsModule> {
 export interface RasterizeOptions {
   /** Absolute URL of the source PDF (a same-origin static asset). */
   pdfUrl: string
-  /** Filesystem dir holding the pdf.js asset subdirs (cmaps/, standard_fonts/, wasm/). */
-  assetDir: string
   /** 1-based page number. */
   page: number
   /** Target image width in pixels. */
   width: number
 }
 
-// pdf.js resolves its asset/decoder URLs in Node via the ESM loader + fetch, which
-// only accept file:// (not http://) — so these must be local filesystem URLs with
-// a trailing slash. The JBIG2 decoder these scans need is loaded this way.
+// pdf.js' Node asset loader resolves the JBIG2 decoder via the ESM loader, which
+// only accepts file:// URLs (trailing slash). `require.resolve` can't be used (the
+// bundler rewrites it to a numeric module id), so we locate pdf.js' bundled
+// `wasm/` (+ cmaps/standard_fonts) by probing the paths where the traced files land
+// at runtime. These are force-included via next.config `outputFileTracingIncludes`.
+const safeExists = (p: string): boolean => {
+  try {
+    return fs.existsSync(p)
+  } catch {
+    return false
+  }
+}
+
+function assetCandidates(): string[] {
+  const cwd = process.cwd()
+  return [
+    path.join(cwd, 'node_modules', 'pdfjs-dist'),
+    path.join(cwd, 'public', 'pdf'),
+    // Vercel can run the function from a nested dir; the traced node_modules then
+    // sits a couple levels up. Probe those too rather than assume cwd.
+    path.join(cwd, '..', 'node_modules', 'pdfjs-dist'),
+    path.join(cwd, '..', '..', 'node_modules', 'pdfjs-dist'),
+  ]
+}
+
+let cachedAssetDir: string | null = null
+function pdfjsAssetDir(): string {
+  if (cachedAssetDir) return cachedAssetDir
+  const found = assetCandidates().find((c) =>
+    safeExists(path.join(c, 'wasm', 'jbig2_nowasm_fallback.js')),
+  )
+  cachedAssetDir = found ?? assetCandidates()[0]
+  return cachedAssetDir
+}
+
 function fileDirUrl(...segments: string[]): string {
   return pathToFileURL(path.join(...segments) + path.sep).href
+}
+
+/** Diagnostics for `?debug=1`: confirms the decoder file is present AND importable. */
+export async function getAssetDiagnostics(): Promise<Record<string, unknown>> {
+  const candidates = assetCandidates().map((c) => ({
+    dir: c,
+    fallback: safeExists(path.join(c, 'wasm', 'jbig2_nowasm_fallback.js')),
+    wasm: safeExists(path.join(c, 'wasm', 'jbig2.wasm')),
+  }))
+  const chosen = pdfjsAssetDir()
+  const fbUrl = pathToFileURL(path.join(chosen, 'wasm', 'jbig2_nowasm_fallback.js')).href
+  let importTest: string
+  try {
+    // Mirrors how pdf.js loads the JS decoder in Node; webpackIgnore keeps the
+    // bundler from trying to resolve the runtime file:// URL at build time.
+    await import(/* webpackIgnore: true */ fbUrl)
+    importTest = 'ok'
+  } catch (err) {
+    importTest = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+  }
+  return { cwd: process.cwd(), chosen, fbUrl, importTest, candidates }
 }
 
 interface DocEntry {
@@ -63,7 +115,7 @@ const docCache = new Map<string, DocEntry>()
 const MAX_PAGE_CACHE = 48
 const pageCache = new Map<string, Buffer>()
 
-async function loadDocument(pdfUrl: string, assetDir: string): Promise<PDFDocumentProxy> {
+async function loadDocument(pdfUrl: string): Promise<PDFDocumentProxy> {
   const cached = docCache.get(pdfUrl)
   if (cached) {
     cached.used = Date.now()
@@ -77,6 +129,7 @@ async function loadDocument(pdfUrl: string, assetDir: string): Promise<PDFDocume
     if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status}) from ${pdfUrl}`)
     const data = new Uint8Array(await res.arrayBuffer())
     const pdfjs = await getPdfjs()
+    const assetDir = pdfjsAssetDir()
     return pdfjs.getDocument({
       data,
       cMapUrl: fileDirUrl(assetDir, 'cmaps'),
@@ -117,7 +170,6 @@ async function loadDocument(pdfUrl: string, assetDir: string): Promise<PDFDocume
 
 export async function rasterizePageToWebp({
   pdfUrl,
-  assetDir,
   page,
   width,
 }: RasterizeOptions): Promise<Buffer> {
@@ -130,7 +182,7 @@ export async function rasterizePageToWebp({
     return hit
   }
 
-  const doc = await loadDocument(pdfUrl, assetDir)
+  const doc = await loadDocument(pdfUrl)
   const pageNum = Math.min(Math.max(1, Math.floor(page)), doc.numPages)
   const pdfPage = await doc.getPage(pageNum)
   try {

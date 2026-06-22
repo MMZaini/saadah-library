@@ -1,6 +1,5 @@
-import path from 'node:path'
 import { NextRequest, NextResponse } from 'next/server'
-import { rasterizePageToWebp } from '@/lib/data/scan-raster'
+import { getAssetDiagnostics, rasterizePageToWebp } from '@/lib/data/scan-raster'
 import { isAllowedScanPdfPath, snapScanImageWidth } from '@/lib/scan-image'
 
 // Native canvas + pdf.js need the Node runtime (not Edge).
@@ -37,20 +36,16 @@ export async function GET(request: NextRequest) {
   const page = Math.floor(pageRaw)
   const width = snapScanImageWidth(Number.isFinite(widthRaw) && widthRaw > 0 ? widthRaw : 1240)
   const origin = resolveOrigin(request)
-  // `?debug=1` surfaces the underlying error in the response so a production-only
-  // failure (e.g. a serverless file-tracing gap) can be read with one request
-  // instead of a deploy cycle. The message is an internal error string, not data.
+  // `?debug=1` reports the server-side asset/error state so a production-only
+  // failure (a serverless file-tracing gap, a blank decode) can be read with one
+  // request instead of a deploy cycle. It exposes only internal paths/error text.
   const debug = params.get('debug') === '1'
+  if (debug) {
+    return NextResponse.json({ ok: true, ...(await getAssetDiagnostics()) })
+  }
 
   try {
-    const webp = await rasterizePageToWebp({
-      pdfUrl: `${origin}${pdf}`,
-      // pdf.js' Node decoders must load from the local filesystem (file://), so the
-      // small pdf.js asset dir is read from disk; only the big PDF is fetched.
-      assetDir: path.join(process.cwd(), 'public', 'pdf'),
-      page,
-      width,
-    })
+    const webp = await rasterizePageToWebp({ pdfUrl: `${origin}${pdf}`, page, width })
 
     return new NextResponse(new Uint8Array(webp), {
       headers: {
@@ -63,9 +58,6 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
     console.error(`scan-page rasterize failed: ${detail}`, { pdf, page, width })
-    return NextResponse.json(
-      debug ? { error: 'Could not render page', detail } : { error: 'Could not render page' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Could not render page' }, { status: 500 })
   }
 }
