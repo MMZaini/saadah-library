@@ -6,12 +6,18 @@ import { isAllowedScanPdfPath, snapScanImageWidth } from '@/lib/scan-image'
 // Native canvas + pdf.js need the Node runtime (not Edge).
 export const runtime = 'nodejs'
 
-// Resolve the origin used to fetch this deployment's own static PDF. We trust the
-// Vercel-provided deployment URL (never client headers — those are spoofable and
-// would let a request point the fetch at an arbitrary host), and fall back to the
-// request origin only for local dev.
+// Resolve the origin to fetch this deployment's own static PDF over HTTP.
+//
+// Must be a PUBLIC production alias. NOT `VERCEL_URL`: that is the per-deployment
+// `*.vercel.app` URL, which Vercel Deployment Protection guards — a server-side
+// self-fetch there returns 401 ("Failed to fetch PDF"), which is what made every
+// page 500 in production. `VERCEL_PROJECT_PRODUCTION_URL` is the public production
+// domain (any redirect to the canonical host is followed by fetch). It is a Vercel
+// system value, not a client header, so there is no SSRF surface. Falls back to the
+// request origin for local dev (where neither env var is set).
 function resolveOrigin(request: NextRequest): string {
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (productionHost) return `https://${productionHost}`
   return request.nextUrl.origin
 }
 

@@ -71,8 +71,10 @@ async function loadDocument(pdfUrl: string, assetDir: string): Promise<PDFDocume
   }
 
   const taskPromise = (async () => {
-    const res = await fetch(pdfUrl)
-    if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`)
+    // `redirect: 'follow'` lets an apex→www production redirect resolve; the timeout
+    // stops a stuck fetch from holding the function open until the platform kills it.
+    const res = await fetch(pdfUrl, { redirect: 'follow', signal: AbortSignal.timeout(20000) })
+    if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status}) from ${pdfUrl}`)
     const data = new Uint8Array(await res.arrayBuffer())
     const pdfjs = await getPdfjs()
     return pdfjs.getDocument({
