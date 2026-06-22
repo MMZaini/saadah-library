@@ -5,6 +5,7 @@ import TopBar from '@/components/TopBar'
 import SettingsSidebar from '@/components/SettingsSidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import favicon from './favicon.ico'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </TooltipProvider>
         </ClientProviders>
+        <SpeedInsights />
       </body>
     </html>
   )
