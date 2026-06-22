@@ -5,9 +5,11 @@ import { Check } from 'lucide-react'
 import type { PDFDocumentProxy } from '@/lib/pdf-engine'
 import { renderPage, scaleForWidth } from '@/lib/pdf-engine'
 import { pdfRenderScheduler, RENDER_PRIORITY } from '@/lib/pdf-render-queue'
+import { buildScanPageImageUrl } from '@/lib/scan-image'
 import { cn } from '@/lib/utils'
 
 const THUMB_WIDTH = 132 // render target width in CSS px (DPR-independent; small = fast)
+const THUMB_IMAGE_WIDTH = 280 // server image width for the mobile <img> thumbnail path
 const COLS = 2
 const GRID_GAP = 10 // matches gap-2.5 (0.625rem)
 const THUMB_ASPECT = 0.72 // width / height of each tile
@@ -19,6 +21,8 @@ interface ThumbnailProps {
   height: number
   isCurrent: boolean
   isSelected: boolean
+  /** When set, render an <img> from the server instead of pdf.js (mobile path). */
+  imagePdfPath: string | null
   onOpen: (n: number, extendRange?: boolean) => void
   onToggleSelect: (n: number, extendRange?: boolean) => void
 }
@@ -29,6 +33,7 @@ function Thumbnail({
   height,
   isCurrent,
   isSelected,
+  imagePdfPath,
   onOpen,
   onToggleSelect,
 }: ThumbnailProps) {
@@ -38,7 +43,9 @@ function Thumbnail({
   // Only mounted tiles (i.e. near the viewport) render, and they go through the
   // shared scheduler so the single pdf.js worker is never flooded. Unmounting on
   // scroll-away aborts the queued/in-flight render and frees the canvas bitmap.
+  // Skipped entirely on the image path (no pdf.js).
   useEffect(() => {
+    if (imagePdfPath) return
     setRendered(false)
     const controller = new AbortController()
     let renderTask: ReturnType<typeof renderPage> | null = null
@@ -68,7 +75,7 @@ function Thumbnail({
       })
 
     return () => controller.abort()
-  }, [doc, pageNum])
+  }, [doc, pageNum, imagePdfPath])
 
   return (
     <div className="relative" style={{ height }}>
@@ -84,8 +91,20 @@ function Thumbnail({
         )}
         title={`Page ${pageNum}`}
       >
-        <canvas ref={canvasRef} className="h-full w-full object-contain" />
-        {!rendered && (
+        {imagePdfPath ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={buildScanPageImageUrl(imagePdfPath, pageNum, THUMB_IMAGE_WIDTH)}
+            alt={`Page ${pageNum}`}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <canvas ref={canvasRef} className="h-full w-full object-contain" />
+        )}
+        {!rendered && !imagePdfPath && (
           <span className="absolute inset-0 flex items-center justify-center text-xs text-foreground-faint">
             {pageNum}
           </span>
@@ -119,6 +138,8 @@ interface PageThumbnailsProps {
   numPages: number
   currentPage: number
   selectedPages: Set<number>
+  /** When set, thumbnails are server images (mobile) rather than pdf.js canvases. */
+  imagePdfPath?: string | null
   onOpenPage: (n: number, extendRange?: boolean) => void
   onToggleSelectPage: (n: number, extendRange?: boolean) => void
 }
@@ -128,6 +149,7 @@ export default function PageThumbnails({
   numPages,
   currentPage,
   selectedPages,
+  imagePdfPath = null,
   onOpenPage,
   onToggleSelectPage,
 }: PageThumbnailsProps) {
@@ -207,6 +229,7 @@ export default function PageThumbnails({
                 height={layout.itemHeight}
                 isCurrent={pageNum === currentPage}
                 isSelected={selectedPages.has(pageNum)}
+                imagePdfPath={imagePdfPath}
                 onOpen={onOpenPage}
                 onToggleSelect={onToggleSelectPage}
               />

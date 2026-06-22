@@ -9,9 +9,12 @@ import { getKhoeiRijalPdf, KHOEI_RIJAL_TITLE } from '@/lib/rijal-pdfs'
 import { normalizeExportLayout } from '@/lib/scan-layout'
 import { exportPages, HIGHLIGHT_COLORS, type ExportCover, type Highlight } from '@/lib/scan-export'
 import type { ScanBook, ScanVolume } from '@/lib/scan-sources'
+import { isConstrainedDevice } from '@/lib/device'
+import { isAllowedScanPdfPath } from '@/lib/scan-image'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import ScanSidebar from './ScanSidebar'
 import PageCanvas, { type ScanTool } from './PageCanvas'
+import ScanImageView from './ScanImageView'
 import ScanToolbar, { type ExportSettings } from './ScanToolbar'
 
 const ZOOM_MIN = 0.4
@@ -75,6 +78,10 @@ function slugify(...parts: (string | undefined)[]): string {
 
 export default function ScansStudio() {
   const searchParams = useSearchParams()
+  // Phones/tablets can't render these scans with client pdf.js (white pages), so
+  // the main viewer falls back to server-rasterized images for library/narrator
+  // sources. Uploads stay on pdf.js (a local file can't be server-rendered).
+  const constrained = isConstrainedDevice()
   const [source, setSource] = useState<Source | null>(null)
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null)
   const [numPages, setNumPages] = useState(0)
@@ -463,6 +470,11 @@ export default function ScansStudio() {
     return byPage
   }, [highlights])
 
+  const imagePdfPath =
+    constrained && source && source.kind !== 'upload' && isAllowedScanPdfPath(source.path)
+      ? source.path
+      : null
+
   const sidebar = (
     <ScanSidebar
       activePath={source?.kind === 'library' ? source.path : null}
@@ -472,6 +484,7 @@ export default function ScansStudio() {
       numPages={numPages}
       currentPage={currentPage}
       selectedPages={selectedPages}
+      imagePdfPath={imagePdfPath}
       onUploadPdf={loadUploadedPdf}
       onSelectVolume={loadSource}
       onChangePdf={handleChangePdf}
@@ -527,18 +540,33 @@ export default function ScansStudio() {
             <Loader2 className="h-5 w-5 animate-spin" /> Loading PDF…
           </div>
         ) : doc ? (
-          <PageCanvas
-            doc={doc}
-            pageNums={visiblePages}
-            activePage={currentPage}
-            zoom={zoom}
-            tool={tool}
-            activeColor={activeColor}
-            highlightsByPage={highlightsByPage}
-            onActivatePage={setCurrentPage}
-            onAddHighlight={addHighlight}
-            onDeleteHighlight={deleteHighlight}
-          />
+          imagePdfPath ? (
+            <ScanImageView
+              pdfPath={imagePdfPath}
+              pageNums={visiblePages}
+              activePage={currentPage}
+              zoom={zoom}
+              tool={tool}
+              activeColor={activeColor}
+              highlightsByPage={highlightsByPage}
+              onActivatePage={setCurrentPage}
+              onAddHighlight={addHighlight}
+              onDeleteHighlight={deleteHighlight}
+            />
+          ) : (
+            <PageCanvas
+              doc={doc}
+              pageNums={visiblePages}
+              activePage={currentPage}
+              zoom={zoom}
+              tool={tool}
+              activeColor={activeColor}
+              highlightsByPage={highlightsByPage}
+              onActivatePage={setCurrentPage}
+              onAddHighlight={addHighlight}
+              onDeleteHighlight={deleteHighlight}
+            />
+          )
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
             <FileText className="h-10 w-10 text-foreground-faint" />

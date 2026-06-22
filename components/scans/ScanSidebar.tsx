@@ -15,6 +15,8 @@ interface ScanSidebarProps {
   numPages: number
   currentPage: number
   selectedPages: Set<number>
+  /** When set, thumbnails render as server images (mobile path). */
+  imagePdfPath?: string | null
   onUploadPdf: (file: File) => void
   onSelectVolume: (book: ScanBook, volume: ScanVolume) => void
   onChangePdf: () => void
@@ -184,6 +186,7 @@ export default function ScanSidebar(props: ScanSidebarProps) {
     numPages,
     currentPage,
     selectedPages,
+    imagePdfPath = null,
     onUploadPdf,
     onSelectVolume,
     onChangePdf,
@@ -226,6 +229,7 @@ export default function ScanSidebar(props: ScanSidebarProps) {
         numPages={numPages}
         currentPage={currentPage}
         selectedPages={selectedPages}
+        imagePdfPath={imagePdfPath}
         onOpenPage={onOpenPage}
         onToggleSelectPage={onToggleSelectPage}
       />

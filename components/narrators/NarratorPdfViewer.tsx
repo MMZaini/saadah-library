@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import PageCanvas from '@/components/scans/PageCanvas'
+import ScanImageView from '@/components/scans/ScanImageView'
+import { isConstrainedDevice } from '@/lib/device'
 import type { Highlight } from '@/lib/scan-export'
 import { loadPdf, type PDFDocumentProxy } from '@/lib/pdf-engine'
 import {
@@ -49,6 +51,11 @@ function rangePages(range: PdfPageRange): number[] {
 export default function NarratorPdfViewer() {
   const params = useParams()
   const id = Array.isArray(params.id) ? (params.id[0] ?? '') : (params.id ?? '')
+
+  // On phones/tablets, pdf.js whites-out on these huge JBIG2 scans, so render
+  // server-rasterized page images instead (see [[narrators-pdf-mobile-white]]).
+  // This component is mounted client-only (ssr:false), so the check is stable.
+  const constrained = isConstrainedDevice()
 
   const [narrator, setNarrator] = useState<NarratorIndexEntry | null>(null)
   const [status, setStatus] = useState<LoadStatus>('loading')
@@ -100,8 +107,16 @@ export default function NarratorPdfViewer() {
     : null
   const scanUrl = narrator ? getKhoeiRijalScanUrl(narrator) : null
 
+  // Open each narrator at the first page of its range, at 100%.
   useEffect(() => {
-    if (!pdfRange) {
+    if (!pdfRange) return
+    setCurrentPage(pdfRange.pdfStartPage)
+    setZoom(1)
+  }, [pdfRange])
+
+  useEffect(() => {
+    // Constrained devices use the image viewer and never touch pdf.js.
+    if (!pdfRange || constrained) {
       setDoc(null)
       return
     }
@@ -112,8 +127,6 @@ export default function NarratorPdfViewer() {
     setDoc(null)
     setDocLoading(true)
     setDocError(null)
-    setCurrentPage(pdfRange.pdfStartPage)
-    setZoom(1)
 
     const handle = loadPdf(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}${pdfRange.path}`)
     loadHandleRef.current = handle
@@ -136,7 +149,7 @@ export default function NarratorPdfViewer() {
       cancelled = true
       handle.destroy()
     }
-  }, [pdfRange])
+  }, [pdfRange, constrained])
 
   useEffect(() => {
     return () => {
@@ -296,7 +309,20 @@ export default function NarratorPdfViewer() {
         </div>
       </div>
 
-      {docError ? (
+      {constrained ? (
+        <ScanImageView
+          pdfPath={pdfRange.path}
+          pageNums={pageNums}
+          activePage={currentPage}
+          zoom={zoom}
+          tool="erase"
+          activeColor="#ffe600"
+          highlightsByPage={NO_HIGHLIGHTS}
+          onActivatePage={setCurrentPage}
+          onAddHighlight={() => {}}
+          onDeleteHighlight={() => {}}
+        />
+      ) : docError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
           <AlertTriangle className="h-8 w-8 text-destructive" />
           <p className="max-w-sm text-sm text-foreground-muted">{docError}</p>

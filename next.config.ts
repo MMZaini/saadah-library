@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['clsx'],
   },
+  // The /api/scan-page route rasterizes PDF pages with the native @napi-rs/canvas
+  // binding and the pdf.js legacy build. Keep them out of the bundler so the
+  // native .node addon is required at runtime (and traced into the function)
+  // rather than (incorrectly) bundled.
+  serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
   // Enable gzip compression
   compress: true,
   // Power off source maps in production for better performance
@@ -29,6 +34,10 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/narrators/[id]': ['./data/rijal/khoei/**/*'],
     '/api/narrators/search': ['./data/rijal/khoei/**/*'],
+    // The scan-page rasterizer reads the pdf.js wasm/cmap/font decoders from disk
+    // (file:// — see scan-raster). Small (~5MB); the big PDFs stay static and are
+    // fetched at runtime, never bundled.
+    '/api/scan-page': ['./public/pdf/**/*'],
   },
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
