@@ -12,6 +12,13 @@ import { withBasePath } from './assets'
 import { getAllKnownPdfPaths } from './book-pdfs'
 import { getAllKhoeiRijalPdfPaths } from './rijal-pdfs'
 
+// Bump whenever the server rendering changes so old cache entries are bypassed.
+// Page images are served `immutable, max-age=1y`, so without this a page that ever
+// rendered wrong (e.g. the blank images produced before the Vercel decoder fix)
+// would stay cached — in the CDN AND in each visitor's browser — effectively
+// forever. Versioning the URL makes the fix take effect without manual purges.
+const SCAN_IMAGE_VERSION = 2
+
 // Discrete render widths. Requests snap to one of these so every page has only a
 // handful of cacheable variants rather than a unique image per viewport/zoom.
 // 280 serves the sidebar thumbnails; the rest serve the main viewer at 1×–3× zoom.
@@ -46,6 +53,7 @@ export function buildScanPageImageUrl(pdfPath: string, page: number, width: numb
     pdf: pdfPath,
     page: String(Math.max(1, Math.floor(page))),
     w: String(snapScanImageWidth(width)),
+    v: String(SCAN_IMAGE_VERSION),
   })
   return `${withBasePath('/api/scan-page')}?${params.toString()}`
 }
