@@ -189,7 +189,7 @@ export default function NarratorPdfViewer() {
 
   if (status === 'loading') {
     return (
-      <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center gap-2 text-foreground-muted">
+      <div className="flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] items-center justify-center gap-2 text-foreground-muted md:h-[calc(100dvh-3.5rem)]">
         <Loader2 className="h-5 w-5 animate-spin" />
         Loading narrator PDF…
       </div>
@@ -198,7 +198,7 @@ export default function NarratorPdfViewer() {
 
   if (status === 'notfound' || status === 'error' || !narrator) {
     return (
-      <div className="flex h-[calc(100dvh-3.5rem)] flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] flex-col items-center justify-center gap-3 p-8 text-center md:h-[calc(100dvh-3.5rem)]">
         <AlertTriangle className="h-8 w-8 text-destructive" />
         <h1 className="text-base font-semibold text-foreground">
           {status === 'notfound' ? 'Narrator not found' : 'Could not load this narrator'}
@@ -213,7 +213,7 @@ export default function NarratorPdfViewer() {
 
   if (!pdfRange) {
     return (
-      <div className="flex h-[calc(100dvh-3.5rem)] flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] flex-col items-center justify-center gap-3 p-8 text-center md:h-[calc(100dvh-3.5rem)]">
         <AlertTriangle className="h-8 w-8 text-destructive" />
         <h1 className="text-base font-semibold text-foreground">PDF volume unavailable</h1>
         <p className="max-w-sm text-sm text-foreground-muted">
@@ -227,7 +227,7 @@ export default function NarratorPdfViewer() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden">
+    <div className="flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] flex-col overflow-hidden md:h-[calc(100dvh-3.5rem)]">
       <div className="flex shrink-0 flex-col gap-3 border-b border-border bg-background px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 text-xs text-foreground-faint">

@@ -27,11 +27,13 @@ export default function BottomNav() {
   const { narratorBookmarkCount } = useNarratorBookmarks()
   const totalBookmarkCount = bookmarkCount + narratorBookmarkCount
 
-  // Hide on the full-screen tools (matches TopBar's predicates) so it never
-  // overlaps the scan studio / narrator PDF viewer chrome.
+  // The full-screen tools (scan studio / narrator PDF viewer) size themselves to
+  // sit above this bar — see their `100dvh - 7.5rem` height — so on those routes
+  // we keep the bar for navigation but skip the in-flow spacer (the tool already
+  // reserves the room). The 4rem here must stay in sync with the nav's h-16.
   const isScansPage = pathname === '/scans' || pathname.startsWith('/scans/')
   const isNarratorPdfPage = pathname.startsWith('/narrators/') && pathname.endsWith('/pdf')
-  if (isScansPage || isNarratorPdfPage) return null
+  const selfManagedBottomSpace = isScansPage || isNarratorPdfPage
 
   const isHome = pathname === '/'
   const isBookmarks = pathname === '/bookmarks'
@@ -46,8 +48,14 @@ export default function BottomNav() {
   return (
     <>
       {/* In-flow spacer so page content can scroll clear of the fixed bar
-          (includes the safe-area inset the nav itself adds on notched phones). */}
-      <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-bottom))] shrink-0 md:hidden" />
+          (includes the safe-area inset the nav itself adds on notched phones).
+          Skipped on the full-screen tools, which reserve the room themselves. */}
+      {!selfManagedBottomSpace && (
+        <div
+          aria-hidden
+          className="h-[calc(4rem+env(safe-area-inset-bottom))] shrink-0 md:hidden"
+        />
+      )}
 
       <nav
         aria-label="Primary"

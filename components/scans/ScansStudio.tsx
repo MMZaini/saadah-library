@@ -494,7 +494,7 @@ export default function ScansStudio() {
   )
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] overflow-hidden">
+    <div className="flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] overflow-hidden md:h-[calc(100dvh-3.5rem)]">
       <aside className="hidden w-[340px] shrink-0 flex-col bg-background pt-2 md:flex md:border-r md:border-border">
         {sidebar}
       </aside>
