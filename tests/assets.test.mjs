@@ -9,7 +9,7 @@ import {
   getKhoeiRijalPdfUrl,
   getKhoeiRijalScanUrl,
 } from '../lib/rijal-pdfs.ts'
-import { withBasePath } from '../lib/assets.ts'
+import { stripBasePath, withBasePath } from '../lib/assets.ts'
 
 const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -40,6 +40,28 @@ describe('withBasePath', () => {
 
     expect(withBasePath('https://example.com/cover.jpeg')).toBe('https://example.com/cover.jpeg')
     expect(withBasePath('//example.com/cover.jpeg')).toBe('//example.com/cover.jpeg')
+  })
+})
+
+describe('stripBasePath', () => {
+  it('removes the configured base path prefix', () => {
+    process.env.NEXT_PUBLIC_BASE_PATH = '/read'
+
+    expect(stripBasePath('/read/al-kafi/volume/1')).toBe('/al-kafi/volume/1')
+    expect(stripBasePath('/read')).toBe('/')
+  })
+
+  it('leaves unprefixed paths and lookalikes untouched', () => {
+    process.env.NEXT_PUBLIC_BASE_PATH = '/read'
+
+    expect(stripBasePath('/al-kafi')).toBe('/al-kafi')
+    expect(stripBasePath('/reads/scans')).toBe('/reads/scans')
+  })
+
+  it('is a no-op when no base path is configured', () => {
+    delete process.env.NEXT_PUBLIC_BASE_PATH
+
+    expect(stripBasePath('/read/al-kafi')).toBe('/read/al-kafi')
   })
 })
 

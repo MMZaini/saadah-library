@@ -1,0 +1,77 @@
+name: CI
+
+# Runs the full quality gate on every pull request (and on pushes to main) so
+# a change that breaks any main feature — search, routing, data access,
+# bookmarks/scan helpers, lint, types, or the production build — fails the PR.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit & data tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Unit tests (vitest)
+        run: yarn test
+
+      - name: Dataset validation
+        run: yarn data:validate
+
+      - name: Runtime dependency guard (no external API calls)
+        run: yarn data:check-runtime
+
+  quality:
+    name: Lint, format & types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - name: ESLint
+        run: yarn lint
+
+      - name: Prettier check
+        run: yarn format:check
+
+      - name: TypeScript
+        run: yarn tsc --noEmit
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn build
