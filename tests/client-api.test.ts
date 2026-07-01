@@ -284,10 +284,34 @@ describe('chapter structure building', () => {
     installFetch({
       [MANIFEST_URL]: { version: 'v-test' },
       '/volumes/Book-A.json': [
-        makeHadith({ id: 1, category: 'Faith', categoryId: '1', chapter: 'B', chapterInCategoryId: 2 }),
-        makeHadith({ id: 2, category: 'Faith', categoryId: '1', chapter: 'A', chapterInCategoryId: 1 }),
-        makeHadith({ id: 3, category: 'Faith', categoryId: '1', chapter: 'A', chapterInCategoryId: 1 }),
-        makeHadith({ id: 4, category: 'Deeds', categoryId: '2', chapter: 'C', chapterInCategoryId: 1 }),
+        makeHadith({
+          id: 1,
+          category: 'Faith',
+          categoryId: '1',
+          chapter: 'B',
+          chapterInCategoryId: 2,
+        }),
+        makeHadith({
+          id: 2,
+          category: 'Faith',
+          categoryId: '1',
+          chapter: 'A',
+          chapterInCategoryId: 1,
+        }),
+        makeHadith({
+          id: 3,
+          category: 'Faith',
+          categoryId: '1',
+          chapter: 'A',
+          chapterInCategoryId: 1,
+        }),
+        makeHadith({
+          id: 4,
+          category: 'Deeds',
+          categoryId: '2',
+          chapter: 'C',
+          chapterInCategoryId: 1,
+        }),
       ],
     })
 
