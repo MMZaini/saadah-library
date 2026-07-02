@@ -236,13 +236,38 @@ export function parseBookPage(html, sourceUrl = null) {
   }
 }
 
-export function parseSitemap(xmlText) {
-  const urls = [...xmlText.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1])
+export function classifySitemapUrls(urls) {
   return {
     urls,
     bookUrls: urls.filter((url) => /\/book\/[^/]+$/.test(url)),
     chapterUrls: urls.filter((url) => /\/chapter\/[^/]+\/[^/]+\/[^/]+$/.test(url)),
   }
+}
+
+export function parseSitemap(xmlText) {
+  return classifySitemapUrls([...xmlText.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]))
+}
+
+/**
+ * Sitemap URLs declared via `Sitemap:` directives in robots.txt. The site
+ * replaced its single /sitemap.xml (now a 404) with split per-content
+ * sitemaps that are only discoverable through these directives.
+ */
+export function parseRobotsSitemapUrls(robotsText, origin) {
+  const urls = new Set()
+  for (const match of String(robotsText || '').matchAll(/^\s*sitemap:\s*(\S+)/gim)) {
+    try {
+      urls.add(new URL(match[1], origin).href)
+    } catch {
+      // Ignore malformed directives.
+    }
+  }
+  return [...urls]
+}
+
+/** True for a <sitemapindex> document (whose <loc> entries are more sitemaps). */
+export function isSitemapIndex(xmlText) {
+  return /<sitemapindex[\s>]/i.test(String(xmlText || ''))
 }
 
 export function websiteHadithToLegacyShape({ hadith, meta, sourceUrl, legacyRef, fallbackBookId }) {
