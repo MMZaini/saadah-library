@@ -5,6 +5,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(process.cwd()),
+      // The `server-only` marker package refuses to load outside a React Server
+      // context; stub it so server modules can be unit-tested in Node.
+      'server-only': path.resolve(process.cwd(), 'tests/helpers/server-only-stub.mjs'),
     },
   },
   test: {
