@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { thaqalaynApi, Hadith } from '@/lib/api'
+import { fetchRandomHadith, thaqalaynApi, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { cn } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
@@ -43,19 +43,27 @@ export default function GenericVolumeExplorer({
     setRandomHadith(null)
 
     try {
-      let hadith: Hadith | null = null
+      let bookId: string
       if (volume === 'all') {
         const candidates = (volumesList || []).filter(Boolean)
         if (candidates.length === 0) throw new Error('No volumes available')
-        const randomBook = candidates[Math.floor(Math.random() * candidates.length)]
-        hadith = await thaqalaynApi.getRandomHadithFromBook(randomBook)
+        bookId = candidates[Math.floor(Math.random() * candidates.length)]
       } else {
-        hadith = await thaqalaynApi.getRandomHadithFromBook(String(volume))
+        bookId = String(volume)
+      }
+
+      let hadith: Hadith
+      try {
+        // Tiny API response instead of downloading the whole volume JSON.
+        hadith = await fetchRandomHadith(bookId)
+      } catch {
+        // Fallback: pick locally from the (cached) volume payload.
+        hadith = await thaqalaynApi.getRandomHadithFromBook(bookId)
       }
 
       setRandomHadith(hadith)
-    } catch {
-      // Error logging removed
+    } catch (err) {
+      console.warn('Failed to load random hadith:', err)
       setError('Failed to load hadith from this volume')
     } finally {
       setLoading(false)
@@ -189,8 +197,8 @@ export default function GenericVolumeExplorer({
 
       {/* Hadith Display */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/20">
-          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+        <div className="border-destructive/30 bg-destructive/10 rounded-xl border p-4">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 

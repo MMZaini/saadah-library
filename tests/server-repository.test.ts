@@ -102,7 +102,7 @@ describe('book structures', () => {
 describe('searchLocalHadiths', () => {
   it('returns nothing for a blank query', async () => {
     const response = await searchLocalHadiths('   ', [SMALL_BOOK])
-    expect(response).toEqual({ results: [], total: 0 })
+    expect(response).toEqual({ results: [], total: 0, truncated: false })
   })
 
   it('finds English matches scoped to the given books', async () => {
@@ -134,8 +134,16 @@ describe('searchLocalHadiths', () => {
 
 describe('filterLocalHadiths (grading filter)', () => {
   it('returns nothing when neither scope nor gradings are given', async () => {
-    expect(await filterLocalHadiths(undefined, [])).toEqual({ results: [], total: 0 })
-    expect(await filterLocalHadiths([], ['all'])).toEqual({ results: [], total: 0 })
+    expect(await filterLocalHadiths(undefined, [])).toEqual({
+      results: [],
+      total: 0,
+      truncated: false,
+    })
+    expect(await filterLocalHadiths([], ['all'])).toEqual({
+      results: [],
+      total: 0,
+      truncated: false,
+    })
   })
 
   it('returns the whole scoped book when no grading filter is active', async () => {

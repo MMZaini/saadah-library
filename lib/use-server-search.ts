@@ -5,6 +5,7 @@ import { Hadith } from '@/lib/api'
 import { debounce } from '@/lib/performance'
 import { useSearch } from '@/lib/search-context'
 import { useNavigation } from '@/lib/navigation-context'
+import { saveSearchToHistory } from '@/lib/use-search-shortcuts'
 import type { SearchMode } from '@/lib/search-utils'
 
 interface UseServerSearchOptions {
@@ -28,6 +29,10 @@ export interface ServerSearchFilterCriteria {
 interface UseServerSearchResult {
   query: string
   results: Hadith[]
+  /** Full server-side match count (may exceed results.length when capped). */
+  totalMatches: number
+  /** True when the server capped the result list. */
+  truncated: boolean
   error: string | null
   isSearching: boolean
   filtersOpen: boolean
@@ -36,11 +41,38 @@ interface UseServerSearchResult {
   clear: () => void
 }
 
+/** Reflect the active query in the URL (?q=) so searches are shareable and
+ * survive a refresh. Uses history.replaceState (supported shallow routing in
+ * the App Router) to avoid re-rendering the route. */
+function syncQueryToUrl(query: string) {
+  if (typeof window === 'undefined') return
+  try {
+    const url = new URL(window.location.href)
+    const current = url.searchParams.get('q') ?? ''
+    if (current === query || (!current && !query)) return
+    if (query) url.searchParams.set('q', query)
+    else url.searchParams.delete('q')
+    window.history.replaceState(window.history.state, '', url)
+  } catch {
+    // URL sync is best-effort; never let it break the search itself.
+  }
+}
+
+function readQueryFromUrl(): string {
+  if (typeof window === 'undefined') return ''
+  try {
+    return new URLSearchParams(window.location.search).get('q') ?? ''
+  } catch {
+    return ''
+  }
+}
+
 /**
  * Drives a server-backed hadith search from the persistent TopBar field for the
  * home, Al-Kāfi, and generic book pages. The query lives in the global search
  * context (so the input can sit in the TopBar); results, scoping and debounced
- * fetching live here. Per-route search state is restored via navigation-context.
+ * fetching live here. Per-route search state is restored via navigation-context,
+ * with a ?q= URL param taking priority (shared/refreshed links).
  */
 export function useServerSearch({
   placeholder,
@@ -60,6 +92,8 @@ export function useServerSearch({
   const { getSearchState, saveSearchState } = useNavigation()
 
   const [results, setResults] = useState<Hadith[]>([])
+  const [totalMatches, setTotalMatches] = useState(0)
+  const [truncated, setTruncated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filterCriteria, setFilterCriteria] = useState<ServerSearchFilterCriteria>({
     gradings: [],
@@ -75,6 +109,12 @@ export function useServerSearch({
   const filtersOpenRef = useRef(filtersOpen)
   filtersOpenRef.current = filtersOpen
   const requestSeqRef = useRef(0)
+  const abortRef = useRef<AbortController | null>(null)
+
+  const abortInFlight = useCallback(() => {
+    abortRef.current?.abort()
+    abortRef.current = null
+  }, [])
 
   useEffect(() => {
     configurePlaceholder(placeholder)
@@ -82,13 +122,14 @@ export function useServerSearch({
     return () => configureFilters(false)
   }, [placeholder, configurePlaceholder, configureFilters])
 
-  // Restore this route's saved query on mount / route change. The reactive
-  // effect below performs the actual fetch when the query becomes non-empty.
+  // Restore this route's saved query on mount / route change. A ?q= URL param
+  // wins over in-memory state (shared or refreshed links). The reactive effect
+  // below performs the actual fetch when the query becomes non-empty.
   useEffect(() => {
     const saved = getSearchState()
     setFiltersOpen(false)
     setFilterCriteria({ gradings: [], hasBookScope: false, searchModes: [] })
-    setQuery(saved?.query ?? '')
+    setQuery(readQueryFromUrl() || saved?.query || '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey])
 
@@ -102,6 +143,13 @@ export function useServerSearch({
         const requestSeq = ++requestSeqRef.current
         const trimmed = q.trim()
         const criteria = filterCriteriaRef.current
+
+        // A superseded 10+ MB response would keep downloading in the
+        // background without this; the seq guard alone only ignores it.
+        abortRef.current?.abort()
+        const controller = new AbortController()
+        abortRef.current = controller
+
         setIsSearching(true)
         setError(null)
         try {
@@ -118,23 +166,26 @@ export function useServerSearch({
 
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/search?${params.toString()}`,
+            { signal: controller.signal },
           )
           const data = await res.json()
           if (!res.ok || data.error) throw new Error(data.error || 'Search failed')
           if (requestSeq !== requestSeqRef.current) return
           setResults(data.results)
-          saveSearchState(
-            {
-              query: trimmed,
-              results: data.results,
-              page: 1,
-              filters: { grading: 'all', sort: 'relevance' },
-            },
-            path,
-          )
-        } catch {
+          setTotalMatches(typeof data.total === 'number' ? data.total : data.results.length)
+          setTruncated(Boolean(data.truncated))
+          if (trimmed) {
+            saveSearchToHistory(trimmed)
+            syncQueryToUrl(trimmed)
+          }
+          saveSearchState({ query: trimmed }, path)
+        } catch (err) {
           if (requestSeq !== requestSeqRef.current) return
+          if (err instanceof DOMException && err.name === 'AbortError') return
+          console.warn('[search] request failed:', err)
           setResults([])
+          setTotalMatches(0)
+          setTruncated(false)
           setError('Search failed. Please try again.')
           saveSearchState(null, path)
         } finally {
@@ -144,8 +195,14 @@ export function useServerSearch({
     [setIsSearching, saveSearchState],
   )
 
-  // Cancel a pending debounced search when the page unmounts.
-  useEffect(() => () => runSearch.cancel(), [runSearch])
+  // Cancel a pending debounced search (and any in-flight request) on unmount.
+  useEffect(
+    () => () => {
+      runSearch.cancel()
+      abortInFlight()
+    },
+    [runSearch, abortInFlight],
+  )
 
   // Re-run whenever the query or the book scope changes.
   const trimmedQuery = query.trim()
@@ -162,10 +219,14 @@ export function useServerSearch({
 
     if (!trimmedQuery && (!filtersOpen || !hasFilterOnlyCriteria)) {
       runSearch.cancel()
+      abortInFlight()
       requestSeqRef.current += 1
       setResults([])
+      setTotalMatches(0)
+      setTruncated(false)
       setError(null)
       setIsSearching(false)
+      syncQueryToUrl('')
       saveSearchState(null)
       return
     }
@@ -176,19 +237,25 @@ export function useServerSearch({
 
   const clear = useCallback(() => {
     runSearch.cancel()
+    abortInFlight()
     requestSeqRef.current += 1
     setFiltersOpen(false)
     setFilterCriteria({ gradings: [], hasBookScope: false, searchModes: [] })
     setQuery('')
     setResults([])
+    setTotalMatches(0)
+    setTruncated(false)
     setError(null)
     setIsSearching(false)
+    syncQueryToUrl('')
     saveSearchState(null)
-  }, [runSearch, setFiltersOpen, setQuery, setIsSearching, saveSearchState])
+  }, [runSearch, abortInFlight, setFiltersOpen, setQuery, setIsSearching, saveSearchState])
 
   return {
     query,
     results,
+    totalMatches,
+    truncated,
     error,
     isSearching,
     filtersOpen,

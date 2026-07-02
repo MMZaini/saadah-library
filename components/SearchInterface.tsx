@@ -3,7 +3,12 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
-import { isArabicQuery, matchesSearchMode, type SearchMode } from '@/lib/search-utils'
+import {
+  isArabicQuery,
+  matchesSearchMode,
+  normalizeArabic,
+  type SearchMode,
+} from '@/lib/search-utils'
 import { cn } from '@/lib/utils'
 import { SEARCHABLE_BOOKS, searchContextHasGradings } from '@/lib/books-config'
 import type { ServerSearchFilterCriteria } from '@/lib/use-server-search'
@@ -15,6 +20,7 @@ import {
   SlidersHorizontal,
   X,
   CornerUpLeft,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
@@ -36,6 +42,10 @@ interface SearchInterfaceProps {
   filtersOpen?: boolean
   onFiltersOpenChange?: (open: boolean) => void
   onFilterCriteriaChange?: (criteria: ServerSearchFilterCriteria) => void
+  /** Full server-side match count (results may be capped below this). */
+  totalMatches?: number
+  /** True when the server capped searchResults. */
+  truncated?: boolean
 }
 
 const RESULTS_PER_PAGE = 10
@@ -92,12 +102,17 @@ export default function SearchInterface({
   filtersOpen,
   onFiltersOpenChange,
   onFilterCriteriaChange,
+  totalMatches,
+  truncated = false,
 }: SearchInterfaceProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedGradings, setSelectedGradings] = useState<string[]>(['all'])
   const [selectedBooks, setSelectedBooks] = useState<string[]>([])
   const [internalShowFilters, setInternalShowFilters] = useState(false)
   const [activeModes, setActiveModes] = useState<Set<SearchMode>>(new Set())
+  // The grading chip row is long; keep it collapsed by default on phones
+  // (CSS keeps it always visible from sm upward).
+  const [gradingsExpanded, setGradingsExpanded] = useState(false)
   const showFilters = filtersOpen ?? internalShowFilters
   const setShowFilters = onFiltersOpenChange ?? setInternalShowFilters
 
@@ -309,17 +324,18 @@ export default function SearchInterface({
       filtered = filtered.filter((h) => bookSet.has(h.bookId))
     }
 
-    // Apply grading filters
+    // Apply grading filters. normalizeArabic folds spelling variants (e.g.
+    // Persian-yeh ḍaʿīf) and strips harakat so keywords match reliably.
     if (shouldShowFilters && showGradingFilter && !selectedGradings.includes('all')) {
       filtered = filtered.filter((hadith) => {
-        const gradingText = [
-          hadith.majlisiGrading,
-          hadith.mohseniGrading,
-          hadith.behbudiGrading,
-          ...(hadith.gradingsFull || []).map((g) => `${g.grade_en} ${g.grade_ar}`),
-        ]
-          .join(' ')
-          .toLowerCase()
+        const gradingText = normalizeArabic(
+          [
+            hadith.majlisiGrading,
+            hadith.mohseniGrading,
+            hadith.behbudiGrading,
+            ...(hadith.gradingsFull || []).map((g) => `${g.grade_en} ${g.grade_ar}`),
+          ].join(' '),
+        )
 
         return selectedGradings.some((sel) => {
           const opt = GRADING_OPTIONS.find((o) => o.value === sel)
@@ -336,15 +352,15 @@ export default function SearchInterface({
             const common = ['صحيح', 'حسن', 'موثق', 'قوي', 'ضعيف', 'مجهول', 'مرسل', 'لم يخرجه']
             return (
               gradingText.trim().length > 0 &&
-              !common.some((c) => gradingText.includes(c.toLowerCase()))
+              !common.some((c) => gradingText.includes(normalizeArabic(c)))
             )
           }
-          return opt.keywords?.some((k) => gradingText.includes(k.toLowerCase())) || false
+          return opt.keywords?.some((k) => gradingText.includes(normalizeArabic(k))) || false
         })
       })
     }
 
-    filtered.sort((a, b) => (a.volume || 0) - (b.volume || 0) || (a.id || 0) - (b.id || 0))
+    // Server results arrive relevance-ranked — preserve that order.
     return filtered
   }, [
     searchResults,
@@ -421,12 +437,25 @@ export default function SearchInterface({
               'Choose filters to find hadith without a search term.'
             ) : (
               <>
-                <span className="font-medium text-accent">{filteredResults.length}</span>{' '}
-                {filteredResults.length === 1 ? 'hadith' : 'hadiths'} found
+                <span className="font-medium text-accent">
+                  {truncated && totalMatches
+                    ? totalMatches.toLocaleString()
+                    : filteredResults.length}
+                </span>{' '}
+                {(truncated && totalMatches ? totalMatches : filteredResults.length) === 1
+                  ? 'hadith'
+                  : 'hadiths'}{' '}
+                found
+                {truncated && (
+                  <span className="text-foreground-faint">
+                    {' '}
+                    — showing the {searchResults.length} best matches
+                  </span>
+                )}
                 {filteredResults.length !== searchResults.length && shouldShowFilters && (
                   <span className="text-foreground-faint">
                     {' '}
-                    (filtered from {searchResults.length})
+                    ({filteredResults.length} after filters)
                   </span>
                 )}
               </>
@@ -654,15 +683,31 @@ export default function SearchInterface({
                     varies by book.
                   </TooltipContent>
                 </Tooltip>
+                {/* Mobile-only expander — the full chip row wraps to 4+ lines on phones. */}
+                <button
+                  type="button"
+                  onClick={() => setGradingsExpanded((open) => !open)}
+                  aria-expanded={gradingsExpanded}
+                  className="ml-auto flex items-center gap-1 text-xs font-normal text-foreground-muted sm:hidden"
+                >
+                  {gradingsExpanded ? 'Hide' : 'Show'}
+                  <ChevronDown
+                    className={cn('h-3 w-3 transition-transform', gradingsExpanded && 'rotate-180')}
+                  />
+                </button>
               </h3>
-              <div className="flex flex-wrap gap-1.5">
+              <div
+                className={cn('flex-wrap gap-1.5', gradingsExpanded ? 'flex' : 'hidden', 'sm:flex')}
+              >
                 {GRADING_OPTIONS.map((opt) => {
                   const active = selectedGradings.includes(opt.value)
                   return (
                     <button
                       key={opt.value}
                       onClick={() => {
-                        if (opt.value === 'all') clearAllFilters()
+                        // "All" only resets the grading selection — never the
+                        // book scope or search modes chosen alongside it.
+                        if (opt.value === 'all') setSelectedGradings(['all'])
                         else handleGradingChange(opt.value, !active)
                       }}
                       className={cn(

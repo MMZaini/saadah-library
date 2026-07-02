@@ -116,48 +116,6 @@ async function idbSet(entry: CacheEntry): Promise<void> {
 
 // ─── Public API ──────────────────────────────────────────────────────────
 
-/** Cache TTLs in milliseconds */
-export const CACHE_TTL = {
-  /** Book metadata (allbooks) – extremely stable */
-  allBooks: 24 * 60 * 60 * 1000, // 24 hours
-  /** Full-volume hadith lists – content is fixed / very stable */
-  bookHadiths: 12 * 60 * 60 * 1000, // 12 hours
-  /** Individual hadith – content is fixed */
-  singleHadith: 24 * 60 * 60 * 1000, // 24 hours
-  /** Search results – brief cache for repeated queries */
-  search: 30 * 60 * 1000, // 30 minutes
-  /** Fallback for unrecognized URLs */
-  default: 5 * 60 * 1000, // 5 minutes
-}
-
-/** Determine the appropriate TTL based on a Thaqalayn API URL */
-export function getTtlForUrl(url: string): number {
-  // Random endpoints should never be cached
-  if (url.includes('/random')) return 0
-  // Book list
-  if (url.includes('/allbooks')) return CACHE_TTL.allBooks
-  // Search results
-  if (url.includes('/query')) return CACHE_TTL.search
-
-  // Extract path after /api/v2/
-  const marker = '/api/v2/'
-  const idx = url.indexOf(marker)
-  if (idx === -1) return CACHE_TTL.default
-  const path = url.slice(idx + marker.length)
-  const segments = path.split('/').filter(Boolean)
-
-  // /{bookId}/{hadithId} – 2 segments, second is numeric
-  if (segments.length === 2 && /^\d+$/.test(segments[1])) {
-    return CACHE_TTL.singleHadith
-  }
-  // /{bookId} – 1 segment (full volume / book)
-  if (segments.length === 1 && !url.includes('/ingredients')) {
-    return CACHE_TTL.bookHadiths
-  }
-
-  return CACHE_TTL.default
-}
-
 /** Get data from the cache (checks memory first, then IndexedDB) */
 export async function cacheGet(key: string): Promise<unknown | null> {
   // Memory first (sync, fastest)
@@ -177,17 +135,15 @@ export async function cacheGet(key: string): Promise<unknown | null> {
   return null
 }
 
-/** Store data in the cache (memory + IndexedDB). TTL auto-detected from URL. */
-export async function cacheSet(key: string, data: unknown, ttl?: number): Promise<void> {
-  const resolvedTtl = ttl ?? getTtlForUrl(key)
-  // TTL of 0 means "don't cache" (e.g. random endpoints)
-  if (resolvedTtl <= 0) return
+/** Store data in the cache (memory + IndexedDB). TTL of 0 means "don't cache". */
+export async function cacheSet(key: string, data: unknown, ttl: number): Promise<void> {
+  if (ttl <= 0) return
 
   const entry: CacheEntry = {
     key,
     data,
     timestamp: Date.now(),
-    ttl: resolvedTtl,
+    ttl,
   }
 
   // Always set in memory (sync)

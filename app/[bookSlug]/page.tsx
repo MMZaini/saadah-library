@@ -63,6 +63,8 @@ export default function BookPage() {
   const {
     query,
     results,
+    totalMatches,
+    truncated,
     error: searchError,
     isSearching,
     filtersOpen,
@@ -215,10 +217,12 @@ export default function BookPage() {
   const coverSrc = bookInfo?.bookCover || findImageFromBooksList(bookId)
   const selectedPdfUrl = getPdfUrlForVolume(bookId, selectedPdfVolume)
 
+  // Labels describe what the reader sees: a chapter grid, a two-pane tree
+  // browser, and a random-hadith picker.
   const VIEW_MODES = [
-    { key: 'structure' as const, label: 'Volume Explorer', short: 'Explorer' },
-    { key: 'chapters' as const, label: 'Chapter Tree', short: 'Tree' },
-    { key: 'explorer' as const, label: 'Random', short: 'Random' },
+    { key: 'structure' as const, label: 'Chapters', short: 'Chapters' },
+    { key: 'chapters' as const, label: 'Tree View', short: 'Tree' },
+    { key: 'explorer' as const, label: 'Random Hadith', short: 'Random' },
   ]
 
   return (
@@ -291,6 +295,8 @@ export default function BookPage() {
         filtersOpen={filtersOpen}
         onFiltersOpenChange={setFiltersOpen}
         onFilterCriteriaChange={setFilterCriteria}
+        totalMatches={totalMatches}
+        truncated={truncated}
       />
 
       {/* Volume Explorer / Chapter Tree */}

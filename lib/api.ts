@@ -163,11 +163,6 @@ export interface ChapterStructure {
   [categoryKey: string]: CategoryInfo
 }
 
-async function getAllBookIds() {
-  const books = await thaqalaynApi.getAllBooks()
-  return books.map((book) => book.bookId)
-}
-
 function searchHadiths(hadiths: Hadith[], query: string): Hadith[] {
   const trimmed = query.trim()
   if (!trimmed) return hadiths
@@ -187,26 +182,29 @@ function getRandomFromList<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)]
 }
 
+/**
+ * Fetch a random hadith from the tiny server endpoint (backed by the
+ * dataset's purpose-built random.json refs) instead of downloading a whole
+ * multi-MB volume client-side just to pick one entry.
+ */
+export async function fetchRandomHadith(bookId?: string): Promise<Hadith> {
+  const params = bookId ? `?book=${encodeURIComponent(bookId)}` : ''
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/random${params}`, {
+    headers: { Accept: 'application/json' },
+  })
+  const data = await response.json()
+  if (!response.ok || data?.error) throw new Error(data?.error || 'Random hadith failed')
+  return data as Hadith
+}
+
 export const thaqalaynApi = {
   async getAllBooks(): Promise<BookInfo[]> {
     return fetchRuntimeJson<BookInfo[]>('/books.json')
   },
 
-  async getRandomHadith(): Promise<Hadith> {
-    const bookIds = await getAllBookIds()
-    return this.getRandomHadithFromBook(getRandomFromList(bookIds))
-  },
-
   async getRandomHadithFromBook(bookId: string): Promise<Hadith> {
     const hadiths = await this.getBookHadiths(bookId)
     return getRandomFromList(hadiths)
-  },
-
-  async searchAllBooks(query: string): Promise<QueryResponse> {
-    const bookIds = await getAllBookIds()
-    const resultsByBook = await Promise.all(bookIds.map((bookId) => this.searchBook(bookId, query)))
-    const results = resultsByBook.flatMap((response) => response.results)
-    return { results, total: results.length }
   },
 
   async searchBook(bookId: string, query: string): Promise<QueryResponse> {
@@ -283,21 +281,9 @@ export const alKafiApi = {
     ]
   },
 
-  async getRandomAlKafiHadith(): Promise<Hadith> {
-    return thaqalaynApi.getRandomHadithFromBook(getRandomFromList(this.getAlKafiVolumes()))
-  },
-
   async getRandomHadithFromVolume(volume: number): Promise<Hadith> {
     if (volume < 1 || volume > 8) throw new Error('Al-Kafi volume must be between 1 and 8')
     return thaqalaynApi.getRandomHadithFromBook(`Al-Kafi-Volume-${volume}-Kulayni`)
-  },
-
-  async searchAlKafi(query: string): Promise<QueryResponse> {
-    const responses = await Promise.all(
-      this.getAlKafiVolumes().map((id) => thaqalaynApi.searchBook(id, query)),
-    )
-    const results = responses.flatMap((response) => response.results)
-    return { results, total: results.length }
   },
 
   async getVolumeHadiths(volume: number): Promise<Hadith[]> {
@@ -325,25 +311,6 @@ export const alKafiApi = {
 export const uyunApi = {
   getUyunVolumes(): string[] {
     return ['Uyun-akhbar-al-Rida-Volume-1-Saduq', 'Uyun-akhbar-al-Rida-Volume-2-Saduq']
-  },
-
-  async getRandomUyunHadith(): Promise<Hadith> {
-    return thaqalaynApi.getRandomHadithFromBook(getRandomFromList(this.getUyunVolumes()))
-  },
-
-  async getRandomHadithFromVolume(volume: number): Promise<Hadith> {
-    if (volume < 1 || volume > 2) {
-      throw new Error('Uyun akhbar al-Rida volume must be between 1 and 2')
-    }
-    return thaqalaynApi.getRandomHadithFromBook(`Uyun-akhbar-al-Rida-Volume-${volume}-Saduq`)
-  },
-
-  async searchUyun(query: string): Promise<QueryResponse> {
-    const responses = await Promise.all(
-      this.getUyunVolumes().map((id) => thaqalaynApi.searchBook(id, query)),
-    )
-    const results = responses.flatMap((response) => response.results)
-    return { results, total: results.length }
   },
 
   async getVolumeHadiths(volume: number): Promise<Hadith[]> {

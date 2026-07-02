@@ -1,13 +1,3 @@
-// Performance monitoring utilities
-
-export const measurePerformance = (_name: string, fn: () => void) => {
-  fn()
-}
-
-export const measureAsyncPerformance = async (_name: string, fn: () => Promise<unknown>) => {
-  return await fn()
-}
-
 // Debounce utility for search (with cancel support)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DebouncedFunction<T extends (...args: any[]) => any> = ((

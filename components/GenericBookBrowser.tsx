@@ -5,7 +5,7 @@ import { bookApi, Hadith } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import HadithCard from '@/components/HadithCard'
 import { Book, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, pluralize } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue } from '@/lib/volume-utils'
 import type { SelectedVolume } from '@/lib/volume-utils'
 import { BookConfig } from '@/lib/books-config'
@@ -190,8 +190,8 @@ export default function GenericBookBrowser({
         }
 
         setVolumeSummary(summary)
-      } catch {
-        // Error logging removed
+      } catch (err) {
+        console.warn('Failed to load book structure:', err)
         setError('Failed to load book structure')
       } finally {
         setLoading(false)
@@ -238,8 +238,8 @@ export default function GenericBookBrowser({
 
       const sorted = hadiths.sort((a, b) => a.id - b.id)
       setChapterHadiths(sorted)
-    } catch {
-      // Error logging removed
+    } catch (err) {
+      console.warn('Failed to load chapter hadiths:', err)
       setChapterHadiths([])
     } finally {
       setLoadingChapter(false)
@@ -346,15 +346,15 @@ export default function GenericBookBrowser({
               <div className="flex items-center gap-2">
                 <div className="shadow-soft h-3 w-3 rounded-full bg-green-500"></div>
                 <span className="text-primary text-sm font-semibold">
-                  {totalHadithsCount.toLocaleString()} hadiths
+                  {pluralize(totalHadithsCount, 'hadith')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="shadow-soft h-3 w-3 rounded-full bg-blue-500"></div>
                 <span className="text-primary text-sm font-semibold">
                   {showDirectChapterList
-                    ? `${totalChapterCount.toLocaleString()} chapters`
-                    : `${categoryEntries.length} categories`}
+                    ? pluralize(totalChapterCount, 'chapter')
+                    : pluralize(categoryEntries.length, 'category', 'categories')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -386,8 +386,8 @@ export default function GenericBookBrowser({
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/20">
-          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+        <div className="border-destructive/30 bg-destructive/10 rounded-xl border p-4">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
@@ -396,8 +396,8 @@ export default function GenericBookBrowser({
           {/* Chapter Navigation — on mobile this swaps out for the hadith panel
               once a chapter is picked (see the back button below). */}
           <div className={cn('lg:col-span-1', selectedChapter && 'hidden lg:block')}>
-            <div className="border-theme bg-card shadow-soft max-h-[60vh] overflow-y-auto overflow-x-visible rounded-xl border sm:max-h-[70vh] lg:max-h-[80vh]">
-              <div className="border-theme bg-card sticky top-0 z-10 border-b p-3 sm:p-4">
+            <div className="border-theme bg-card shadow-soft overflow-x-visible rounded-xl border lg:max-h-[80vh] lg:overflow-y-auto">
+              <div className="border-theme bg-card z-10 border-b p-3 sm:p-4 lg:sticky lg:top-0">
                 <h4 className="text-primary text-sm font-semibold sm:text-base">
                   <span className="sm:hidden">
                     {showDirectChapterList ? 'Chapters' : 'Categories'}
@@ -437,7 +437,7 @@ export default function GenericBookBrowser({
                         >
                           <div className="leading-tight">{chapterInfo.chapter}</div>
                           <div className="text-muted mt-1 text-xs">
-                            {chapterInfo.hadithCount} hadiths
+                            {pluralize(chapterInfo.hadithCount, 'hadith')}
                           </div>
                         </button>
                       ),
@@ -460,8 +460,8 @@ export default function GenericBookBrowser({
                                 {categoryInfo.category}
                               </div>
                               <div className="text-muted mt-1 text-xs">
-                                {categoryInfo.totalHadiths} hadiths •{' '}
-                                {Object.keys(categoryInfo.chapters).length} chapters
+                                {pluralize(categoryInfo.totalHadiths, 'hadith')} •{' '}
+                                {pluralize(Object.keys(categoryInfo.chapters).length, 'chapter')}
                               </div>
                             </div>
                           </button>
@@ -491,7 +491,7 @@ export default function GenericBookBrowser({
                                   >
                                     <div className="leading-tight">{chapterInfo.chapter}</div>
                                     <div className="text-muted mt-1 text-xs">
-                                      {chapterInfo.hadithCount} hadiths
+                                      {pluralize(chapterInfo.hadithCount, 'hadith')}
                                     </div>
                                   </button>
                                 ),
@@ -554,7 +554,7 @@ export default function GenericBookBrowser({
                 </div>
 
                 {/* Hadiths */}
-                <div className="max-h-[80vh] space-y-6 overflow-y-auto overflow-x-visible">
+                <div className="space-y-6 overflow-x-visible lg:max-h-[80vh] lg:overflow-y-auto">
                   {loadingChapter ? (
                     <div className="border-theme bg-card shadow-soft rounded-xl border p-12 text-center">
                       <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>

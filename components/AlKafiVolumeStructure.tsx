@@ -6,7 +6,7 @@ import { alKafiApi } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import { useNavigation } from '@/lib/navigation-context'
 import { withBasePath } from '@/lib/assets'
-import { cn } from '@/lib/utils'
+import { cn, pluralize } from '@/lib/utils'
 import type { SelectedVolume } from '@/lib/volume-utils'
 
 interface ChapterSummary {
@@ -148,7 +148,8 @@ export default function BookStructureExplorer({
         }
 
         setVolumeSummary(summary)
-      } catch {
+      } catch (err) {
+        console.warn('Failed to load volume structure:', err)
         setError(`Failed to load structure for selected volume(s)`)
       } finally {
         setLoading(false)
@@ -262,15 +263,14 @@ export default function BookStructureExplorer({
       }
     },
     onTouchEnd: (e: React.TouchEvent) => {
-      const startTime = touchStartTimeRef.current || Date.now()
-      const duration = Date.now() - startTime
       clearLongPressTimer()
       touchStartPosRef.current = null
       touchStartTimeRef.current = null
 
-      const withinTapThreshold = duration < 250
-      // Only navigate if it wasn't marked as a scroll (ignoreNextClickRef is false)
-      if (!longPressTriggeredRef.current && withinTapThreshold && !ignoreNextClickRef.current) {
+      // Any touch that neither long-pressed (≥250ms preview) nor scrolled is a
+      // tap and must navigate — a duration cutoff here left slow taps doing
+      // nothing at all.
+      if (!longPressTriggeredRef.current && !ignoreNextClickRef.current) {
         e.preventDefault()
         e.stopPropagation()
         ignoreNextClickRef.current = true
@@ -383,13 +383,13 @@ export default function BookStructureExplorer({
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-accent"></div>
               <span className="text-primary text-sm font-semibold">
-                {getTotalHadithsCount().toLocaleString()} hadiths
+                {pluralize(getTotalHadithsCount(), 'hadith')}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
               <span className="text-primary text-sm font-semibold">
-                {Object.keys(volumeSummary).length} categories
+                {pluralize(Object.keys(volumeSummary).length, 'category', 'categories')}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -421,8 +421,8 @@ export default function BookStructureExplorer({
 
       {/* Error State */}
       {error && (
-        <div className="shadow-soft rounded-xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/30 dark:bg-red-900/20">
-          <p className="text-red-800 dark:text-red-300">{error}</p>
+        <div className="border-destructive/30 bg-destructive/10 shadow-soft rounded-xl border p-6">
+          <p className="text-destructive">{error}</p>
         </div>
       )}
 
@@ -466,10 +466,10 @@ export default function BookStructureExplorer({
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-primary text-sm font-semibold">
-                      {category.totalHadiths} hadiths
+                      {pluralize(category.totalHadiths, 'hadith')}
                     </div>
                     <div className="text-secondary text-xs">
-                      {Object.keys(category.chapters).length} chapters
+                      {pluralize(Object.keys(category.chapters).length, 'chapter')}
                     </div>
                   </div>
                   <div className="h-12 w-1 rounded-full bg-zinc-700"></div>
@@ -612,7 +612,7 @@ export default function BookStructureExplorer({
                           <div
                             className={cn(
                               'overflow-hidden pr-4',
-                              'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
+                              'relative z-10 transition-[max-height] duration-300 ease-out md:duration-500',
                               'max-h-24',
                             )}
                             style={{

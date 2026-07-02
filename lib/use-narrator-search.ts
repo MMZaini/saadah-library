@@ -56,7 +56,9 @@ export function useNarratorSearch(): UseNarratorSearchResult {
   const detailSeqRef = useRef(0)
 
   useEffect(() => {
-    configurePlaceholder('Search narrators…')
+    // The rijāl dataset is Arabic-only — say so up front instead of letting
+    // Latin-script queries fail with "not found".
+    configurePlaceholder('Search narrators (Arabic)…')
     configureFilters(false)
     return () => configureFilters(false)
   }, [configurePlaceholder, configureFilters])

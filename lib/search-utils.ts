@@ -353,8 +353,11 @@ export function normalizeArabic(input: string | null | undefined): string {
   // Normalize taa marbuta (ة) to ha (ه) to help matching
   s = s.replace(/\u0629/g, '\u0647')
 
-  // Normalize alef maqsura (ى) to ya (ي)
-  s = s.replace(/\u0649/g, '\u064A')
+  // Normalize alef maqsura (ى) and Persian yeh (ی) to Arabic ya (ي)
+  s = s.replace(/[\u0649\u06CC]/g, '\u064A')
+
+  // Normalize Persian kaf (ک) to Arabic kaf (ك)
+  s = s.replace(/\u06A9/g, '\u0643')
 
   // Normalize hamza forms to bare hamza (ء)
   s = s.replace(/[\u0624\u0626\u0621]/g, '\u0621')
@@ -554,6 +557,26 @@ export function flexibleEnglishMatch(
 export interface HighlightSegment {
   text: string
   highlight: boolean
+}
+
+/**
+ * Character index of the first highlighted match of `query` in `text`, or -1
+ * when nothing matches. Used to center truncation windows on the match
+ * instead of blindly showing the start of a long text.
+ */
+export function findFirstMatchIndex(
+  text: string,
+  query: string,
+  options: { exactMatch?: boolean } = {},
+): number {
+  if (!text || !query?.trim()) return -1
+  const segments = getHighlightSegments(text, query, options)
+  let index = 0
+  for (const segment of segments) {
+    if (segment.highlight) return index
+    index += segment.text.length
+  }
+  return -1
 }
 
 export function getHighlightSegments(

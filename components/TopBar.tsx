@@ -311,7 +311,7 @@ export default function TopBar() {
               showFilterButton={filtersEnabled}
               filtersOpen={filtersOpen}
               onFilterClick={() => setFiltersOpen(!filtersOpen)}
-              className="w-full max-w-xs sm:max-w-sm md:max-w-md"
+              className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
             />
           )}
         </div>
@@ -321,20 +321,24 @@ export default function TopBar() {
           {/* Raw anchors target root-level tools instead of basePath-prefixed routes. */}
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/scans" title="Scan maker">
+            <a href="/scans" title="Scan maker" aria-label="Scan maker">
               <LuNotebookPen className="h-4 w-4" />
             </a>
           </Button>
 
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/narrators" title="Narrators">
+            <a href="/narrators" title="Narrators" aria-label="Narrators">
               <UserSearch className="h-4 w-4" />
             </a>
           </Button>
 
           <Button variant="ghost" size="icon" className="relative h-8 w-8" asChild>
-            <Link href="/bookmarks" title={`Bookmarks (${totalBookmarkCount})`}>
+            <Link
+              href="/bookmarks"
+              title={`Bookmarks (${totalBookmarkCount})`}
+              aria-label={`Bookmarks (${totalBookmarkCount})`}
+            >
               <Bookmark className="h-4 w-4" />
               {totalBookmarkCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-bookmark text-[10px] font-bold text-background">
@@ -350,11 +354,22 @@ export default function TopBar() {
             className="h-8 w-8"
             onClick={toggleSettings}
             title="Settings"
+            aria-label="Settings"
           >
             <Settings className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      {/* Compact breadcrumb row on phones — the inline breadcrumb above is
+          desktop-only, which left mobile readers without any context once the
+          chapter header scrolled away. */}
+      {pathname !== '/' && chapterInfo && (isChapterPage || isHadithPage) && (
+        <div className="flex h-8 items-center gap-1.5 border-t border-border px-4 sm:hidden">
+          <ChevronRight className="h-3 w-3 shrink-0 text-foreground-faint" />
+          <div className="flex min-w-0 items-center">{getBreadcrumb()}</div>
+        </div>
+      )}
     </header>
   )
 }

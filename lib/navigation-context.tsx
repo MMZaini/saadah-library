@@ -2,14 +2,11 @@
 
 import { createContext, useContext, useState, useCallback, useMemo, useRef, ReactNode } from 'react'
 
+// Only the query is persisted: pages re-run the (debounced, cached) search on
+// restore, so storing the full result arrays here would just duplicate
+// megabytes of hadith text in memory for every visited route.
 interface SearchState {
   query: string
-  results: unknown[]
-  page: number
-  filters: {
-    grading: string
-    sort: string
-  }
 }
 
 interface PerPathState {

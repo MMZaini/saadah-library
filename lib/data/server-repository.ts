@@ -1,19 +1,60 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import type { BookInfo, Hadith, QueryResponse } from '@/lib/api'
-import { matchesSearchMode, normalizeSearchModes, type SearchMode } from '@/lib/search-utils'
+import {
+  isArabicQuery,
+  matchesSearchMode,
+  normalizeArabic,
+  normalizeEnglishForSearch,
+  normalizeSearchModes,
+  type SearchMode,
+} from '@/lib/search-utils'
 import type { DatasetManifest, LocalHadithRef, LocalSearchEntry } from '@/lib/data/types'
 
 const DATA_ROOT = path.join(process.cwd(), 'public', 'data', 'thaqalayn', 'current')
 
+// Three cache tiers, sized to what each artifact class costs:
+//  - small artifacts (manifest, books.json, structures) are cached forever
+//  - search shards stay resident too — a global search touches all of them
+//    every request, so evicting any turns every search into disk I/O
+//  - full-volume files (the biggest tier, ~100 MB total) go through a bounded
+//    LRU so grading filters over all books can't pin the whole dataset
 const jsonCache = new Map<string, Promise<unknown>>()
+const volumeCache = new Map<string, Promise<unknown>>()
+const MAX_VOLUME_CACHE_ENTRIES = 12
+
+function isVolumeArtifact(filePath: string): boolean {
+  return filePath.includes(`${path.sep}volumes${path.sep}`)
+}
 
 async function readJson<T>(filePath: string): Promise<T> {
-  const cached = jsonCache.get(filePath)
-  if (cached) return cached as Promise<T>
+  const cache = isVolumeArtifact(filePath) ? volumeCache : jsonCache
+
+  const cached = cache.get(filePath)
+  if (cached) {
+    if (cache === volumeCache) {
+      // Refresh recency (Map preserves insertion order, so re-insert).
+      cache.delete(filePath)
+      cache.set(filePath, cached)
+    }
+    return cached as Promise<T>
+  }
 
   const promise = fs.readFile(filePath, 'utf8').then((text) => JSON.parse(text) as T)
-  jsonCache.set(filePath, promise)
+  // Drop failed reads so a transient error is retried on the next request.
+  promise.catch(() => {
+    if (cache.get(filePath) === promise) cache.delete(filePath)
+  })
+  cache.set(filePath, promise)
+
+  if (cache === volumeCache) {
+    while (cache.size > MAX_VOLUME_CACHE_ENTRIES) {
+      const oldest = cache.keys().next().value
+      if (oldest === undefined) break
+      cache.delete(oldest)
+    }
+  }
+
   return promise
 }
 
@@ -140,12 +181,21 @@ async function hydrateSearchHits(hits: Array<Pick<LocalSearchEntry, 'bookId' | '
     grouped.get(hit.bookId)!.add(hit.id)
   }
 
+  const byKey = new Map<string, Hadith>()
+  await Promise.all(
+    Array.from(grouped, async ([bookId, ids]) => {
+      const hadiths = await getLocalBookHadiths(bookId).catch(() => [] as Hadith[])
+      for (const hadith of hadiths) {
+        if (ids.has(hadith.id)) byKey.set(`${bookId}:${hadith.id}`, hadith)
+      }
+    }),
+  )
+
+  // Preserve the caller's hit order (relevance ranking) in the hydrated list.
   const hydrated: Hadith[] = []
-  for (const [bookId, ids] of grouped) {
-    const hadiths = await getLocalBookHadiths(bookId)
-    for (const hadith of hadiths) {
-      if (ids.has(hadith.id)) hydrated.push(hadith)
-    }
+  for (const hit of hits) {
+    const hadith = byKey.get(`${hit.bookId}:${hit.id}`)
+    if (hadith) hydrated.push(hadith)
   }
   return hydrated
 }
@@ -163,14 +213,16 @@ const GRADING_KEYWORDS: Record<string, string[]> = {
 const COMMON_GRADING_TERMS = ['صحيح', 'حسن', 'موثق', 'قوي', 'ضعيف', 'مجهول', 'مرسل', 'لم يخرجه']
 
 function getHadithGradingText(hadith: Hadith) {
-  return [
-    hadith.majlisiGrading,
-    hadith.mohseniGrading,
-    hadith.behbudiGrading,
-    ...(hadith.gradingsFull || []).map((grading) => `${grading.grade_en} ${grading.grade_ar}`),
-  ]
-    .join(' ')
-    .toLowerCase()
+  // normalizeArabic lowercases and folds letter variants (e.g. Persian yeh in
+  // "ضعیف") so keyword matching is spelling-insensitive.
+  return normalizeArabic(
+    [
+      hadith.majlisiGrading,
+      hadith.mohseniGrading,
+      hadith.behbudiGrading,
+      ...(hadith.gradingsFull || []).map((grading) => `${grading.grade_en} ${grading.grade_ar}`),
+    ].join(' '),
+  )
 }
 
 function hasNoIncludedGrading(hadith: Hadith, gradingText: string) {
@@ -201,13 +253,33 @@ function matchesGrading(hadith: Hadith, grading: string) {
   )
 }
 
+/**
+ * A capped query response. `total` is always the FULL match count; `results`
+ * carries at most `limit` entries and `truncated` says whether a cap applied.
+ */
+export interface CappedQueryResponse extends QueryResponse {
+  truncated: boolean
+}
+
+// A hard ceiling keeps a single broad query ("god", grading-only filters …)
+// from serializing tens of MB of full hadith objects into one response.
+export const DEFAULT_SEARCH_LIMIT = 200
+export const MAX_SEARCH_LIMIT = 500
+
+export function clampSearchLimit(raw: unknown): number {
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_SEARCH_LIMIT
+  return Math.min(Math.floor(parsed), MAX_SEARCH_LIMIT)
+}
+
 export async function filterLocalHadiths(
   bookIds?: string[],
   gradings: string[] = [],
-): Promise<QueryResponse> {
+  limit: number = DEFAULT_SEARCH_LIMIT,
+): Promise<CappedQueryResponse> {
   const activeGradings = gradings.filter((grading) => grading && grading !== 'all')
   if ((!bookIds || bookIds.length === 0) && activeGradings.length === 0) {
-    return { results: [], total: 0 }
+    return { results: [], total: 0, truncated: false }
   }
 
   const scope = bookIds && bookIds.length > 0 ? bookIds : await getAvailableBookIds()
@@ -223,20 +295,66 @@ export async function filterLocalHadiths(
   }
 
   results.sort((a, b) => (a.volume || 0) - (b.volume || 0) || (a.id || 0) - (b.id || 0))
-  return { results, total: results.length }
+  const total = results.length
+  return { results: results.slice(0, limit), total, truncated: total > limit }
+}
+
+/**
+ * Relevance score for a matched search entry. Phrase occurrences dominate
+ * (capped so very long texts don't crowd out focused ones), an early first
+ * occurrence adds a small "the text is about this" bonus, and per-word
+ * presence breaks ties for multi-word queries matched loosely.
+ */
+function scoreSearchEntry(
+  entry: LocalSearchEntry,
+  normQuery: string,
+  queryWords: string[],
+  arabic: boolean,
+): number {
+  // Scoring only needs a representative window — normalizing multi-KB texts
+  // in full for thousands of matches dominates request time otherwise.
+  const raw = (arabic ? entry.arabic : entry.english) || ''
+  const text = arabic
+    ? normalizeArabic(raw.slice(0, 4000))
+    : normalizeEnglishForSearch(raw.slice(0, 4000))
+  if (!text || !normQuery) return 0
+
+  let score = 0
+
+  let index = text.indexOf(normQuery)
+  const firstIndex = index
+  let occurrences = 0
+  while (index !== -1 && occurrences < 5) {
+    occurrences++
+    index = text.indexOf(normQuery, index + normQuery.length)
+  }
+  score += occurrences * 10
+  if (firstIndex !== -1 && firstIndex < 200) score += 3
+
+  if (queryWords.length > 1) {
+    for (const word of queryWords) {
+      if (text.includes(word)) score += 1
+    }
+  }
+
+  return score
 }
 
 export async function searchLocalHadiths(
   query: string,
   bookIds?: string[],
   modes?: SearchMode[],
-): Promise<QueryResponse> {
+  limit: number = DEFAULT_SEARCH_LIMIT,
+): Promise<CappedQueryResponse> {
   const trimmed = query.trim()
-  if (!trimmed) return { results: [], total: 0 }
+  if (!trimmed) return { results: [], total: 0, truncated: false }
 
   const scope = bookIds && bookIds.length > 0 ? bookIds : await getAvailableBookIds()
   const activeModes = normalizeSearchModes(modes)
-  const hits: Array<Pick<LocalSearchEntry, 'bookId' | 'id'>> = []
+  const arabic = isArabicQuery(trimmed)
+  const normQuery = arabic ? normalizeArabic(trimmed) : normalizeEnglishForSearch(trimmed)
+  const queryWords = normQuery.split(' ').filter(Boolean)
+  const hits: Array<{ bookId: string; id: number; score: number }> = []
 
   const shards = await Promise.all(
     scope.map((bookId) => getSearchShard(bookId).catch(() => [] as LocalSearchEntry[])),
@@ -253,10 +371,20 @@ export async function searchLocalHadiths(
         }),
       )
 
-      if (matched) hits.push({ bookId: entry.bookId, id: entry.id })
+      if (matched) {
+        hits.push({
+          bookId: entry.bookId,
+          id: entry.id,
+          score: scoreSearchEntry(entry, normQuery, queryWords, arabic),
+        })
+      }
     }
   }
 
-  const results = await hydrateSearchHits(hits)
-  return { results, total: results.length }
+  // Best matches first; ties keep the stable book/volume reading order.
+  hits.sort((a, b) => b.score - a.score || a.bookId.localeCompare(b.bookId) || a.id - b.id)
+
+  const total = hits.length
+  const results = await hydrateSearchHits(hits.slice(0, limit))
+  return { results, total, truncated: total > limit }
 }

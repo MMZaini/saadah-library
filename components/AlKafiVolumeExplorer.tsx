@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { alKafiApi, Hadith } from '@/lib/api'
+import { alKafiApi, fetchRandomHadith, Hadith } from '@/lib/api'
 import HadithCard from './HadithCard'
 import { cn } from '@/lib/utils'
 import type { SelectedVolume } from '@/lib/volume-utils'
@@ -34,18 +34,20 @@ export default function AlKafiVolumeExplorer({
     setError(null)
 
     try {
-      let hadith
-      if (volume === 'all') {
-        // Get random hadith from a random volume
-        const randomVolume = Math.floor(Math.random() * 8) + 1
-        hadith = await alKafiApi.getRandomHadithFromVolume(randomVolume)
-      } else {
-        hadith = await alKafiApi.getRandomHadithFromVolume(Number(volume))
+      const volumeNumber = volume === 'all' ? Math.floor(Math.random() * 8) + 1 : Number(volume)
+
+      let hadith: Hadith
+      try {
+        // Tiny API response instead of downloading the whole volume JSON.
+        hadith = await fetchRandomHadith(`Al-Kafi-Volume-${volumeNumber}-Kulayni`)
+      } catch {
+        // Fallback: pick locally from the (cached) volume payload.
+        hadith = await alKafiApi.getRandomHadithFromVolume(volumeNumber)
       }
       setRandomHadith(hadith)
-    } catch {
+    } catch (err) {
+      console.warn('Failed to load random hadith:', err)
       setError('Failed to load hadith from this volume')
-      // Error logging removed
     } finally {
       setLoading(false)
     }
@@ -166,8 +168,8 @@ export default function AlKafiVolumeExplorer({
 
       {/* Hadith Display */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/20">
-          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+        <div className="border-destructive/30 bg-destructive/10 rounded-xl border p-4">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
