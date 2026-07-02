@@ -54,8 +54,8 @@ describe('local narrator repository', () => {
     expect(summary?.volumeNumber).toBeGreaterThan(0)
     expect(summary?.startPage).toBeGreaterThan(0)
     // The summary is the index record — it must not carry the multi-KB detail.
-    expect((summary as unknown as Record<string, unknown>).plainText).toBeUndefined()
-    expect((summary as unknown as Record<string, unknown>).textBlocks).toBeUndefined()
+    expect(summary !== null && 'plainText' in summary).toBe(false)
+    expect(summary !== null && 'textBlocks' in summary).toBe(false)
     await expect(getNarratorSummary('../metadata')).resolves.toBeNull()
   })
 })

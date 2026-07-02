@@ -9,6 +9,9 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // Several suites read the real versioned dataset off disk; a cold
+    // filesystem cache (fresh CI runners) can push them past the 5s default.
+    testTimeout: 30_000,
     include: [
       'tests/**/*.test.mjs',
       'tests/**/*.test.ts',

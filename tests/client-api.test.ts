@@ -78,12 +78,19 @@ async function freshApi() {
   return import('../lib/api')
 }
 
+const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
+
 beforeEach(() => {
   delete process.env.NEXT_PUBLIC_BASE_PATH
 })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  if (originalBasePath === undefined) {
+    delete process.env.NEXT_PUBLIC_BASE_PATH
+  } else {
+    process.env.NEXT_PUBLIC_BASE_PATH = originalBasePath
+  }
 })
 
 describe('dataset version resolution', () => {

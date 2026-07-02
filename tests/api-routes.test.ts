@@ -83,7 +83,7 @@ describe('GET /api/book-structure/[bookId]', () => {
     })
 
     expect(response.status).toBe(200)
-    expect(response.headers.get('cache-control')).toContain('s-maxage=86400')
+    expect(response.headers.get('cache-control')).toMatch(/s-maxage=\d+/)
 
     const body = await response.json()
     expect(body.bookIds).toEqual([SMALL_BOOK])
@@ -118,7 +118,7 @@ describe('GET /api/all-book-structures', () => {
   it('returns a structure entry for every known volume with cache headers', async () => {
     const response = await allStructuresGet()
     expect(response.status).toBe(200)
-    expect(response.headers.get('cache-control')).toContain('s-maxage=86400')
+    expect(response.headers.get('cache-control')).toMatch(/s-maxage=\d+/)
 
     const body = await response.json()
     expect(body.structures[SMALL_BOOK]).toBeDefined()

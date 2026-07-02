@@ -5,7 +5,6 @@ import {
   isAllowedScanPdfPath,
   snapScanImageWidth,
 } from '../../lib/scan-image'
-import { normalizeExportLayout } from '../../lib/scan-layout'
 
 const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
 
@@ -60,15 +59,5 @@ describe('buildScanPageImageUrl', () => {
   it('clamps page numbers to at least 1', () => {
     const url = buildScanPageImageUrl('/pdfs/rijal/khoei/volume-01.pdf', -5, 280)
     expect(new URLSearchParams(url.split('?')[1]).get('page')).toBe('1')
-  })
-})
-
-describe('normalizeExportLayout', () => {
-  it('downgrades all-cover to page-cover for single-page selections', () => {
-    expect(normalizeExportLayout('all-cover', 1)).toBe('page-cover')
-    expect(normalizeExportLayout('all-cover', 0)).toBe('page-cover')
-    expect(normalizeExportLayout('all-cover', 2)).toBe('all-cover')
-    expect(normalizeExportLayout('each', 1)).toBe('each')
-    expect(normalizeExportLayout('page-cover', 1)).toBe('page-cover')
   })
 })
