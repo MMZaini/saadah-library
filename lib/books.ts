@@ -25,12 +25,14 @@ export const books: Book[] = [
   {
     id: 3,
     title: 'Al-Amālī',
+    subtitle: 'The Dictations (al-Mufīd)',
     author: 'Shaykh Muḥammad b. Muḥammad al-Mufīd',
     image: '/covers/13-round.jpeg',
   },
   {
     id: 4,
     title: 'Al-Amālī',
+    subtitle: 'The Dictations (al-Ṣadūq)',
     author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
     image: '/covers/29-round.jpeg',
   },
@@ -132,6 +134,13 @@ export const books: Book[] = [
     author: 'Shaykh Muḥammad Āṣif al-Muḥsinī',
     image: '/covers/9-round.jpeg',
   },
+  {
+    id: 21,
+    title: 'Kamāl al-Dīn wa Tamām al-Niʿma',
+    subtitle: 'The Perfection of the Religion',
+    author: 'Shaykh Muḥammad b. ʿAlī al-Ṣaduq',
+    image: '/covers/39-round.jpeg',
+  },
 ]
 
 // Maps a homepage `books` numeric id to the dataset bookId used for routing and
@@ -159,6 +168,7 @@ export const BOOK_ID_BY_NUMERIC_ID: Record<number, string> = {
   18: 'Kitab-al-Duafa-Ghadairi',
   19: 'Maani-al-Akhbar-Saduq',
   20: 'Mujam-al-Ahadith-al-Mutabara-Muhsini',
+  21: 'Kamal-al-Din-wa-Tamam-al-Nima-Saduq',
 }
 
 const coverByBookId: Record<string, string> = Object.fromEntries(

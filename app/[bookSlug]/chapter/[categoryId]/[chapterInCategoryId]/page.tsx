@@ -3,11 +3,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { bookApi, Hadith } from '@/lib/api'
-import { getBookIdFromUrlSlug } from '@/lib/books-config'
+import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { withBasePath } from '@/lib/assets'
 import { removeHarakat } from '@/lib/utils'
+import { recordChapterVisit } from '@/lib/reading-history'
+import { useIncrementalList } from '@/lib/use-incremental-list'
 import HadithCard from '@/components/HadithCard'
 import ChapterNavigation from '@/components/ChapterNavigation'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
 import { useChapter } from '@/lib/chapter-context'
 import { useChapterNavigation } from '@/lib/use-chapter-navigation'
 import { usePageSearch } from '@/lib/search-context'
@@ -69,6 +72,11 @@ export default function GenericChapterDetailPage() {
           chapter: info.chapter,
           hadithCount: info.hadithCount,
         })
+        recordChapterVisit({
+          path: `/${bookSlug}/chapter/${categoryId}/${chapterInCategoryId}`,
+          bookTitle: getBookConfig(bookId)?.englishName || first.book || bookId,
+          chapter: info.chapter,
+        })
 
         chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(chapterHadiths)
@@ -82,7 +90,7 @@ export default function GenericChapterDetailPage() {
     if (bookId && categoryId && !isNaN(chapterInCategoryId)) loadChapter()
 
     return () => setChapterInfo(null)
-  }, [bookId, categoryId, chapterInCategoryId, setChapterInfo])
+  }, [bookId, bookSlug, categoryId, chapterInCategoryId, setChapterInfo])
 
   const filteredHadiths = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
@@ -98,6 +106,11 @@ export default function GenericChapterDetailPage() {
     })
   }, [hadiths, searchQuery])
 
+  // Long chapters render incrementally — mounting hundreds of cards at once
+  // makes the initial paint and every reflow expensive.
+  const { visibleItems, hasMore, remainingCount, sentinelRef, showAll } =
+    useIncrementalList(filteredHadiths)
+
   if (loading) {
     return (
       <main className="min-h-screen">
@@ -108,6 +121,8 @@ export default function GenericChapterDetailPage() {
       </main>
     )
   }
+
+  const displayBookTitle = getBookConfig(bookId)?.englishName || bookSlug?.replace(/-/g, ' ')
 
   if (error) {
     return (
@@ -128,7 +143,9 @@ export default function GenericChapterDetailPage() {
         {chapterInfo && (
           <div className="mb-6 rounded-lg border border-border bg-surface-1 p-5">
             <h2 className="text-xl font-bold text-foreground">{chapterInfo.chapter}</h2>
-            <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            {chapterInfo.category !== chapterInfo.chapter && (
+              <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            )}
             <div className="mt-2 flex gap-1.5">
               <Badge variant="secondary">{chapterInfo.hadithCount} Hadiths</Badge>
             </div>
@@ -147,7 +164,7 @@ export default function GenericChapterDetailPage() {
 
         {/* Hadiths */}
         <div className="space-y-5">
-          {filteredHadiths.map((h, idx) => (
+          {visibleItems.map((h, idx) => (
             <div key={h._id || h.id || idx} className="relative">
               <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {idx + 1}
@@ -159,6 +176,14 @@ export default function GenericChapterDetailPage() {
           ))}
         </div>
 
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-6">
+            <Button variant="outline" size="sm" onClick={showAll}>
+              Show all ({remainingCount} more)
+            </Button>
+          </div>
+        )}
+
         {/* Chapter navigation + back */}
         <div className="mt-10 space-y-6 border-t border-border pt-6">
           <ChapterNavigation
@@ -166,12 +191,13 @@ export default function GenericChapterDetailPage() {
             next={chapterNav.next}
             buildHref={(catId, chId) => `/${bookSlug}/chapter/${catId}/${chId}`}
           />
-          <Button variant="outline" onClick={() => router.push(withBasePath('/'))}>
+          <Button variant="outline" onClick={() => router.push(withBasePath(`/${bookSlug}`))}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            Back
+            Back to {displayBookTitle}
           </Button>
         </div>
       </div>
+      <ScrollToTopButton />
     </main>
   )
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { books } from '@/lib/books'
 import BookCard from '@/components/BookCard'
+import ContinueReading from '@/components/ContinueReading'
+import RandomHadithButton from '@/components/RandomHadithButton'
 import SearchInterface from '@/components/SearchInterface'
 import { useServerSearch } from '@/lib/use-server-search'
 
@@ -13,6 +15,8 @@ export default function Page() {
   const {
     query,
     results,
+    totalMatches,
+    truncated,
     error,
     isSearching,
     filtersOpen,
@@ -51,17 +55,24 @@ export default function Page() {
         filtersOpen={filtersOpen}
         onFiltersOpenChange={setFiltersOpen}
         onFilterCriteriaChange={setFilterCriteria}
+        totalMatches={totalMatches}
+        truncated={truncated}
       />
 
       {/* Book grid */}
       {!query && !filtersOpen && (
         <section className="mx-auto mt-8 max-w-[1800px] px-4 pb-12 sm:mt-12 sm:px-8 sm:pb-16 md:px-16 lg:px-20 xl:px-32">
-          <div className="mb-6 sm:mb-8">
-            <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Browse Books</h2>
-            <p className="text-sm text-foreground-faint">
-              <span className="sm:hidden">Tap any book to explore</span>
-              <span className="hidden sm:inline">Click on any book to explore its hadiths</span>
-            </p>
+          <ContinueReading />
+
+          <div className="mb-6 flex items-end justify-between gap-3 sm:mb-8">
+            <div>
+              <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Browse Books</h2>
+              <p className="text-sm text-foreground-faint">
+                <span className="sm:hidden">Tap any book to explore</span>
+                <span className="hidden sm:inline">Click on any book to explore its hadiths</span>
+              </p>
+            </div>
+            <RandomHadithButton />
           </div>
 
           <div className="grid grid-cols-1 gap-4 gap-y-8 sm:grid-cols-2 sm:gap-8 sm:gap-y-12 md:gap-12 md:gap-y-16 lg:gap-16 xl:grid-cols-3 xl:gap-24">

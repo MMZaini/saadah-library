@@ -334,3 +334,100 @@ PDFs to object storage/release assets; also `data/thaqalayn/releases/<v>/` dupli
 8. `/api/random` for the Random tab (§2.2).
 9. `aria-label`s on icon buttons (§3.12).
 10. Save search history from the debounced search, not Enter (§1.11).
+
+---
+
+## 6. Implementation status (July 2026 follow-up)
+
+Every finding above was either implemented on this branch or explicitly deferred
+with the reason recorded here. Verification: `tsc --noEmit`, `eslint`, all 207
+vitest tests, `test:data`, `next build`, plus a browser walkthrough (desktop
+1440×900 and mobile 390×844) of every changed flow.
+
+### Implemented
+
+**Bugs** — all of §1: Kamāl al-Dīn on the homepage with a generated
+matching-style cover (`/covers/39-round.jpeg`) plus a dataset↔homepage coverage
+test; real `englishName`s for all single-volume books (placeholder/title fix),
+shared with `SEARCHABLE_BOOKS` so they can't drift; both Ghayba books
+registered; "All Gradings" now only resets gradings; quota detection via
+`error.name` (shared `isQuotaExceededError`); generic chapter "Back" goes to
+the book page with its name; `category · chapter` deduped everywhere (shared
+`hadithLocationLabel`); counts pluralized (shared `pluralize`); Persian-yeh
+gradings folded via `normalizeArabic` (badge, server filter, client filter —
+plus Persian yeh/kaf added to `normalizeArabic` itself, which also improves
+Arabic search); clipboard helper with fallback + accurate "Copy failed" flash
+and unmount-safe timers; search history recorded from the live debounced
+search (with on-focus refresh); bookmarks page: Refresh removed, removal no
+longer re-fetches/flashes (per-key incremental fetch), whole-corpus legacy
+fallback removed (previews render instead, mixed lists no longer hide them).
+
+**Performance** — §2.1: `/api/search` capped (default 200, max 500) with
+relevance ranking (phrase frequency + early-position bonus, occurrence cap so
+mega-texts don't dominate, scored over a bounded window), `total`/`truncated`
+metadata surfaced in the UI ("N found — showing the 200 best matches"),
+`Cache-Control: s-maxage=86400`, an in-process response memo (repeat queries
+~20 ms), parallel hit hydration, and a bounded volume LRU + resident shard
+cache replacing the unbounded server cache. Measured: `q=god` 18.2 MB → 2.5 MB.
+§2.2: `/api/random` (4 KB) now backs the Random explorers and a new homepage
+"Random hadith" button, with client fallback. §2.3: the per-card DOM-clone
+overflow probe and per-card resize listeners are gone (length-based rule,
+matching English), and chapter pages render incrementally (40 at a time,
+IntersectionObserver + "Show all"). §2.4: the 3.3 MB structure prefetch is
+skipped on hadith deep links and Save-Data/2G connections. §2.5: pre-generated
+160/360 w WebP cover thumbnails (`scripts/generate-cover-thumbs.mjs`, with a
+test that they exist) served via `srcSet` + lazy loading. §2.6: bookmark
+lookups via a memoized key Set. §2.8: search requests aborted via
+`AbortController`; slug map hoisted; navigation-context no longer stores
+result arrays (query only).
+
+**UX** — §3.1: `?q=` synced to the URL (shareable searches; URL param wins on
+load). §3.2: server-side relevance ranking + match-centered excerpts (the
+collapsed card recenters its 750-char window on the first highlight). §3.4:
+inline ✕ clear button in the search field. §3.5/3.20: "(Ctrl+K)" hint appended
+on pointer devices. §3.6: floating scroll-to-top on chapter pages. §3.8:
+"Hadith N of M in this chapter · #id in volume numbering" clarifier (computed
+from the already-cached volume). §3.9: distinguishing subtitles on the two
+Amālī entries. §3.10/14: side-by-side defaults off below `lg` for new
+visitors (saved settings win). §3.11/15: the dead-tap window is gone — any
+touch that neither long-pressed nor scrolled navigates. §3.12: aria-labels +
+aria-pressed on all icon-only controls. §3.13: error banners unified on
+`destructive` tokens. §3.16: nested pane scrolling (and sticky pane headers)
+are lg-only; phones get full-page flow. §3.17: compact breadcrumb row under
+the TopBar on phones for chapter/hadith pages. §3.18: grading chips collapse
+behind a toggle on phones. §3.19: TopBar search grows to `lg:max-w-lg
+xl:max-w-xl`. §3.21: BookCard hover is pure CSS (`group-hover`). §3.22
+(partial): narrators placeholder states "(Arabic)". §3.23-adjacent quick wins:
+§3.25 "Random hadith" homepage button and §U17 "Continue reading" strip
+(localStorage, last 3 chapters). §U20: silent catches now `console.warn`.
+§U23: Explore modes renamed to Chapters / Tree View / Random Hadith. Reduced
+motion defaults from `prefers-reduced-motion`.
+
+**Code health** — §4.1 (partial): the ~180-line duplicated chapter card inside
+`VolumeStructure` now renders through `renderChapterCard`; all shared fixes
+applied to every copy. §4.3/4.4: removed `searchAllBooks`/`searchAlKafi`/
+`searchUyun`/`getRandomHadith`, the dead `/api/v2/` TTL parser, the
+`measurePerformance` no-ops, and the now-unused `OptimizedImage`; hadith URL
+builders extracted to `lib/hadith-urls.ts`.
+
+### Deferred (with reasons)
+
+- **Full Al-Kāfi ↔ generic component consolidation (§4.1)** — the two families
+  use incompatible volume-value shapes (numeric vs volume-ID strings) shared
+  through the PDF-selection state on the flagship page; merging them safely is
+  its own PR with visual regression testing. All behavioral fixes were applied
+  to both copies in the meantime.
+- **Per-chapter data artifacts (§2.2) and a prebuilt search index (§2.1 item
+  3)** — release-pipeline changes (scripts/data) that alter the dataset
+  format; the cap/rank/cache work above removes the acute pain first.
+- **Git LFS / moving the 975 MB of PDFs (§2.7)** — rewrites repository
+  history; needs the owner's call and coordination with clones/CI.
+- **Light theme (§3.9/15)** — tokens exist but shipping it is a product/design
+  decision; the remaining `zinc-*` hardcodes (§4.2) should be migrated first.
+- **PWA manifest + service worker (§3.10/U16)** — needs brand icon assets and
+  a deliberate SW caching strategy; high-value follow-up.
+- **Narrator transliteration search (§3.22) and sanad → narrator links
+  (§3.23)** — require building a transliteration/name-matching index in the
+  data pipeline.
+- **Chapter list dropdown in the breadcrumb (§3.7), keyboard result navigation
+  (§3.20), chapter export (§3.24)** — nice-to-haves left for a design pass.

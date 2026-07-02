@@ -14,6 +14,21 @@ export default function ClientProviders({ children }: { children: React.ReactNod
   // book is instant.  Uses requestIdleCallback to avoid blocking initial
   // page render.
   useEffect(() => {
+    // The all-structures artifact is ~3 MB raw (~420 KB gzipped). Skip the
+    // eager prefetch when it's least likely to pay off:
+    //  - hadith deep links (share links) rarely lead to book browsing, and
+    //    the chapter pager fetches its single structure on demand anyway
+    //  - connections that ask us to save data
+    const isHadithDeepLink = /\/hadith\//.test(window.location.pathname)
+    const connection = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string }
+      }
+    ).connection
+    const isConstrainedConnection =
+      Boolean(connection?.saveData) || /(^|-)2g$/.test(connection?.effectiveType ?? '')
+    if (isHadithDeepLink || isConstrainedConnection) return
+
     const start = () => {
       void prefetchAllStructures()
     }

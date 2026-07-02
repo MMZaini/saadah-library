@@ -1,12 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import Image from './OptimizedImage'
 import Link from 'next/link'
 import { getBookUrlSlug } from '@/lib/books-config'
 import { BOOK_ID_BY_NUMERIC_ID } from '@/lib/books'
 import { withBasePath } from '@/lib/assets'
 import { cn } from '@/lib/utils'
+
+// Pre-generated WebP thumbnails (scripts/generate-cover-thumbs.mjs) — the
+// source JPEGs are up to ~400 KB but display at 80–144 px wide here.
+function coverThumbBase(image: string): string {
+  return image.replace(/^\/covers\//, '/covers/thumbs/').replace(/\.(jpe?g|png)$/i, '')
+}
 
 type Book = {
   id: number
@@ -19,7 +23,6 @@ type Book = {
 }
 
 export default function BookCard({ book }: { book: Book }) {
-  const [hovered, setHovered] = useState(false)
   const bookId = book.bookId || BOOK_ID_BY_NUMERIC_ID[book.id]
   const href =
     book.id === 1
@@ -28,36 +31,33 @@ export default function BookCard({ book }: { book: Book }) {
         ? withBasePath(`/${getBookUrlSlug(bookId)}`)
         : '#'
 
+  // Hover styling is pure CSS (group-hover) — no per-card React state.
   const card = (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       className={cn(
         'shadow-soft rounded-2xl border border-border bg-surface-1',
         'flex items-center gap-4 p-4 transition-all duration-300 sm:gap-6 sm:p-6',
-        'hover:bg-surface-2',
+        'group-hover:shadow-glow group-hover:-translate-y-0.5 group-hover:bg-surface-2 group-hover:ring-1 group-hover:ring-white/10',
         'cursor-pointer active:scale-95 sm:active:scale-100',
-        hovered && 'shadow-glow ring-1 ring-white/10',
       )}
-      style={{
-        transform: hovered ? 'translateY(-2px) scale(1.01)' : 'translateY(0) scale(1)',
-      }}
     >
-      <Image
-        src={book.image}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={withBasePath(`${coverThumbBase(book.image)}-360w.webp`)}
+        srcSet={`${withBasePath(`${coverThumbBase(book.image)}-160w.webp`)} 160w, ${withBasePath(
+          `${coverThumbBase(book.image)}-360w.webp`,
+        )} 360w`}
+        sizes="(max-width: 640px) 80px, 144px"
         alt={`${book.title} cover`}
         width={180}
         height={240}
+        loading={book.highlighted ? 'eager' : 'lazy'}
+        decoding="async"
         className={cn(
           'shadow-book shrink-0 select-none rounded-lg object-contain transition-transform duration-300',
           'h-28 w-20 sm:h-48 sm:w-36',
-          hovered
-            ? 'translate-x-[-4px] scale-105 sm:translate-x-[-8px]'
-            : 'translate-x-0 scale-100',
+          'group-hover:-translate-x-1 group-hover:scale-105 sm:group-hover:-translate-x-2',
         )}
-        priority={book.highlighted}
-        quality={95}
-        sizes="(max-width: 640px) 80px, (max-width: 1024px) 144px, 180px"
       />
 
       <div className="min-w-0 flex-1 select-none">
@@ -83,11 +83,11 @@ export default function BookCard({ book }: { book: Book }) {
 
   if (href !== '#') {
     return (
-      <Link href={href} className="block">
+      <Link href={href} className="group block">
         {card}
       </Link>
     )
   }
 
-  return card
+  return <div className="group">{card}</div>
 }

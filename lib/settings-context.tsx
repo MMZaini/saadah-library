@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
+import { isQuotaExceededError } from './utils'
 
 // Check localStorage availability
 const isLocalStorageAvailable = () => {
@@ -59,9 +60,24 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     // Mark as hydrated and load settings from localStorage
     setIsHydrated(true)
 
+    // Environment-aware defaults for anything the user hasn't saved yet:
+    //  - side-by-side columns don't fit phones, so default it off below lg
+    //  - honor the OS-level reduced-motion preference out of the box
+    const environmentDefaults: Settings = {
+      ...defaultSettings,
+      sideBySide:
+        typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+          ? window.matchMedia('(min-width: 1024px)').matches
+          : defaultSettings.sideBySide,
+      reduceMotion:
+        typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+          ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          : defaultSettings.reduceMotion,
+    }
+
     // Check if localStorage is available
     if (!isLocalStorageAvailable()) {
-      setSettings(defaultSettings)
+      setSettings(environmentDefaults)
       return
     }
 
@@ -72,7 +88,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
         // Merge with defaults to handle new settings that might not be in saved data
         const mergedSettings = {
-          ...defaultSettings,
+          ...environmentDefaults,
           ...parsed,
           theme: 'dark', // Always force dark mode
           // Clamp font sizes to valid 75-150 range (step 5)
@@ -93,10 +109,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
         setSettings(mergedSettings)
       } else {
-        setSettings(defaultSettings)
+        setSettings(environmentDefaults)
       }
     } catch {
-      setSettings(defaultSettings)
+      setSettings(environmentDefaults)
     }
   }, [])
 
@@ -196,14 +212,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           try {
             localStorage.setItem('siteSettings', JSON.stringify(updated))
           } catch (error) {
-            // Try to clear localStorage if it's full
-            if (error instanceof Error && error.message.includes('QuotaExceededError')) {
+            // Try to clear the stale entry if the quota is full
+            if (isQuotaExceededError(error)) {
               try {
                 localStorage.removeItem('siteSettings')
                 localStorage.setItem('siteSettings', JSON.stringify(updated))
               } catch {
                 // Silent fail
               }
+            } else {
+              console.warn('Failed to persist settings:', error)
             }
           }
         }

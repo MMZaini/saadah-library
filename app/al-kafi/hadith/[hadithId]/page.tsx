@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, thaqalaynApi, Hadith } from '@/lib/api'
 import { withBasePath } from '@/lib/assets'
+import { hadithLocationLabel } from '@/lib/utils'
+import { useHadithChapterPosition } from '@/lib/use-hadith-position'
 import HadithCard from '@/components/HadithCard'
 import { useChapter } from '@/lib/chapter-context'
 import { usePageSearch } from '@/lib/search-context'
@@ -20,6 +22,8 @@ export default function HadithPage() {
   const [hadith, setHadith] = useState<Hadith | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const chapterPosition = useHadithChapterPosition(hadith)
 
   const { query } = usePageSearch({
     placeholder: 'Search within this hadith…',
@@ -134,9 +138,13 @@ export default function HadithPage() {
 
         <div className="mb-6 text-center">
           <h1 className="text-xl font-bold text-foreground">Al-Kāfi Hadith #{hadith.id}</h1>
-          <p className="mt-1 text-sm text-foreground-muted">
-            Volume {hadith.volume} · {hadith.category} · {hadith.chapter}
-          </p>
+          <p className="mt-1 text-sm text-foreground-muted">{hadithLocationLabel(hadith)}</p>
+          {chapterPosition && (
+            <p className="mt-0.5 text-xs text-foreground-faint">
+              Hadith {chapterPosition.index} of {chapterPosition.total} in this chapter · #
+              {hadith.id} in volume numbering
+            </p>
+          )}
         </div>
 
         <div className="relative">

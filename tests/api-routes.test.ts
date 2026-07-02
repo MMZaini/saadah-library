@@ -18,7 +18,7 @@ describe('GET /api/search', () => {
   it('returns an empty result set when no query is given', async () => {
     const response = await searchGet(searchRequest({}))
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ results: [], total: 0 })
+    expect(await response.json()).toEqual({ results: [], total: 0, truncated: false })
   })
 
   it('searches scoped to the requested books', async () => {

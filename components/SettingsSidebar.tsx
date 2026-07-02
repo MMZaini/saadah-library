@@ -112,6 +112,7 @@ export default function SettingsSidebar() {
                     className="h-6 w-6"
                     onClick={resetArabicFontSize}
                     title="Reset Arabic font size"
+                    aria-label="Reset Arabic font size"
                   >
                     <RotateCcw className="h-3 w-3" />
                   </Button>
@@ -140,6 +141,7 @@ export default function SettingsSidebar() {
                     className="h-6 w-6"
                     onClick={resetEnglishFontSize}
                     title="Reset English font size"
+                    aria-label="Reset English font size"
                   >
                     <RotateCcw className="h-3 w-3" />
                   </Button>

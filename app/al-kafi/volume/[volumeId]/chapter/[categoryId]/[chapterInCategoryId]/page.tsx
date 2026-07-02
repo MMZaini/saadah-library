@@ -5,7 +5,10 @@ import { useRouter, useParams } from 'next/navigation'
 import { alKafiApi, Hadith } from '@/lib/api'
 import { withBasePath } from '@/lib/assets'
 import { removeHarakat } from '@/lib/utils'
+import { recordChapterVisit } from '@/lib/reading-history'
+import { useIncrementalList } from '@/lib/use-incremental-list'
 import HadithCard from '@/components/HadithCard'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
 import ChapterNavigation from '@/components/ChapterNavigation'
 import { useChapter } from '@/lib/chapter-context'
@@ -78,6 +81,11 @@ export default function ChapterDetailPage() {
           chapter: info.chapter,
           hadithCount: info.hadithCount,
         })
+        recordChapterVisit({
+          path: `/al-kafi/volume/${volumeId}/chapter/${categoryId}/${chapterInCategoryId}`,
+          bookTitle: 'Al-Kāfi',
+          chapter: info.chapter,
+        })
 
         const sortedHadiths = chapterHadiths.sort((a, b) => a.id - b.id)
         setHadiths(sortedHadiths)
@@ -124,6 +132,11 @@ export default function ChapterDetailPage() {
     return result
   }, [hadiths, gradingFilter, searchQuery])
 
+  // Long chapters render incrementally — mounting hundreds of cards at once
+  // makes the initial paint and every reflow expensive.
+  const { visibleItems, hasMore, remainingCount, sentinelRef, showAll } =
+    useIncrementalList(filteredHadiths)
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [volumeId, categoryId, chapterInCategoryId])
@@ -158,7 +171,9 @@ export default function ChapterDetailPage() {
         {chapterInfo && (
           <div className="mb-6 rounded-lg border border-border bg-surface-1 p-5">
             <h2 className="text-xl font-bold text-foreground">{chapterInfo.chapter}</h2>
-            <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            {chapterInfo.category !== chapterInfo.chapter && (
+              <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            )}
             <div className="mt-2 flex gap-1.5">
               <Badge variant="secondary">Volume {volumeId}</Badge>
               <Badge variant="secondary">{chapterInfo.hadithCount} Hadiths</Badge>
@@ -181,7 +196,7 @@ export default function ChapterDetailPage() {
 
         {/* Hadiths */}
         <div className="space-y-5">
-          {filteredHadiths.map((hadith, index) => (
+          {visibleItems.map((hadith, index) => (
             <div key={hadith._id || hadith.id || index} className="relative">
               <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {index + 1}
@@ -192,6 +207,14 @@ export default function ChapterDetailPage() {
             </div>
           ))}
         </div>
+
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-6">
+            <Button variant="outline" size="sm" onClick={showAll}>
+              Show all ({remainingCount} more)
+            </Button>
+          </div>
+        )}
 
         {/* Chapter navigation + back */}
         <div className="mt-10 space-y-6 border-t border-border pt-6">
@@ -206,6 +229,7 @@ export default function ChapterDetailPage() {
           </Button>
         </div>
       </div>
+      <ScrollToTopButton />
     </main>
   )
 }

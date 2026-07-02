@@ -19,9 +19,12 @@ function getHistory(): string[] {
 }
 
 /**
- * Saves a query to search history (most recent first, deduped, max 10)
+ * Saves a query to search history (most recent first, deduped, max 10).
+ * Exported so the search hooks can record queries when a search actually
+ * runs — the app searches live on debounce, so waiting for an Enter press
+ * would leave the history empty for most users.
  */
-function saveToHistory(query: string) {
+export function saveSearchToHistory(query: string) {
   if (typeof window === 'undefined' || !query.trim()) return
   try {
     const prev = getHistory()
@@ -74,7 +77,13 @@ export function useSearchShortcuts(inputRef: RefObject<HTMLInputElement | null>)
   }, [inputRef])
 
   const addToHistory = useCallback((query: string) => {
-    saveToHistory(query)
+    saveSearchToHistory(query)
+    setHistory(getHistory())
+  }, [])
+
+  // Entries can be written outside this hook instance (the live-search hook
+  // records queries as they run), so callers re-read before showing the list.
+  const refreshHistory = useCallback(() => {
     setHistory(getHistory())
   }, [])
 
@@ -85,5 +94,5 @@ export function useSearchShortcuts(inputRef: RefObject<HTMLInputElement | null>)
     setHistory([])
   }, [])
 
-  return { history, addToHistory, clearHistory }
+  return { history, addToHistory, refreshHistory, clearHistory }
 }

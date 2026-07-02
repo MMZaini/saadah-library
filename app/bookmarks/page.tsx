@@ -9,7 +9,7 @@ import BookmarksNarrators from '@/components/BookmarksNarrators'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Bookmark, Download, Upload, RefreshCw, UserSearch, ScrollText } from 'lucide-react'
+import { Bookmark, Download, Upload, UserSearch, ScrollText } from 'lucide-react'
 
 type Tab = 'narrations' | 'narrators'
 
@@ -132,10 +132,6 @@ export default function BookmarksPage() {
         <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
           <Upload className="mr-1.5 h-3.5 w-3.5" />
           Import
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-          Refresh
         </Button>
         {totalCount > 0 && (
           <Button variant="outline" size="sm" onClick={handleExportBookmarks}>

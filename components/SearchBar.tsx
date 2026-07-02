@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { Search, Loader2, Clock, SlidersHorizontal } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Search, Loader2, Clock, SlidersHorizontal, X } from 'lucide-react'
 import { useSearchShortcuts } from '@/lib/use-search-shortcuts'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +31,7 @@ interface SearchBarProps {
 export default function SearchBar({
   value,
   onChange,
-  placeholder = 'Search hadith… (Ctrl+K)',
+  placeholder = 'Search hadith…',
   isSearching = false,
   showFilterButton = false,
   filtersOpen = false,
@@ -40,10 +40,21 @@ export default function SearchBar({
   variant = 'page',
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { history, addToHistory, clearHistory } = useSearchShortcuts(inputRef)
+  const { history, addToHistory, refreshHistory, clearHistory } = useSearchShortcuts(inputRef)
   const [showHistory, setShowHistory] = useState(false)
+  // Advertise the keyboard shortcut only where a keyboard is likely (pointer
+  // devices). Computed after mount so SSR markup stays stable.
+  const [showShortcutHint, setShowShortcutHint] = useState(false)
+
+  useEffect(() => {
+    if (typeof window.matchMedia === 'function') {
+      setShowShortcutHint(window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+    }
+  }, [])
 
   const isTopbar = variant === 'topbar'
+  const displayPlaceholder =
+    showShortcutHint && !placeholder.includes('Ctrl') ? `${placeholder}  (Ctrl+K)` : placeholder
 
   const handleChange = (next: string) => {
     setShowHistory(false)
@@ -62,11 +73,14 @@ export default function SearchBar({
           <Search className="h-4 w-4 shrink-0 text-foreground-faint" />
           <input
             ref={inputRef}
-            placeholder={placeholder}
+            placeholder={displayPlaceholder}
             value={value}
             onChange={(e) => handleChange(e.target.value)}
             onFocus={() => {
-              if (!value && history.length > 0) setShowHistory(true)
+              if (!value) {
+                refreshHistory()
+                setShowHistory(true)
+              }
             }}
             onBlur={() => setTimeout(() => setShowHistory(false), 200)}
             onKeyDown={(e) => {
@@ -83,6 +97,20 @@ export default function SearchBar({
           />
           {isSearching && (
             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
+          )}
+          {value && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                handleChange('')
+                inputRef.current?.focus()
+              }}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-foreground-faint transition-colors hover:bg-surface-2 hover:text-foreground-muted"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           )}
           {isTopbar && showFilterButton && (
             <button

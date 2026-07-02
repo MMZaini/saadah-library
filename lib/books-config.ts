@@ -64,6 +64,8 @@ export const SINGLE_VOLUME_BOOKS: string[] = [
   'Al-Tawhid-Saduq',
   'Al-Amali-Mufid',
   'Al-Amali-Saduq',
+  'Kitab-al-Ghayba-Numani',
+  'Kitab-al-Ghayba-Tusi',
   'Nahj-al-Balagha-Radi',
   'Sifat-al-Shia-Saduq',
   'Fadail-al-Shia-Saduq',
@@ -78,6 +80,31 @@ export const SINGLE_VOLUME_BOOKS: string[] = [
   'Maani-al-Akhbar-Saduq',
   'Mujam-al-Ahadith-al-Mutabara-Muhsini',
 ]
+
+// Display names for single-volume books, keyed by dataset bookId. Without
+// these, getBookConfig falls back to the raw ID and it leaks into the UI
+// (page titles, search placeholders). Kept in sync with SEARCHABLE_BOOKS'
+// displayName values below.
+export const SINGLE_VOLUME_ENGLISH_NAMES: Record<string, string> = {
+  'Al-Tawhid-Saduq': 'Al-Tawḥīd',
+  'Al-Amali-Mufid': 'Al-Amālī (Mufīd)',
+  'Al-Amali-Saduq': 'Al-Amālī (Ṣaduq)',
+  'Kitab-al-Ghayba-Numani': 'Kitāb al-Ghayba (Nuʿmānī)',
+  'Kitab-al-Ghayba-Tusi': 'Kitāb al-Ghayba (Ṭūsī)',
+  'Nahj-al-Balagha-Radi': 'Nahj al-Balāgha',
+  'Sifat-al-Shia-Saduq': 'Ṣifāt al-Shīʿa',
+  'Fadail-al-Shia-Saduq': 'Faḍāʾil al-Shīʿa',
+  'Kitab-al-Mumin-Ahwazi': 'Kitāb al-Muʾmin',
+  'Kitab-al-Zuhd-Ahwazi': 'Kitāb al-Zuhd',
+  'Risalat-al-Huquq-Abidin': 'Risālat al-Ḥuqūq',
+  'Thawab-al-Amal-wa-iqab-al-Amal-Saduq': 'Thawāb al-Aʿmāl',
+  'Al-Khisal-Saduq': 'Al-Khiṣāl',
+  'Kamal-al-Din-wa-Tamam-al-Nima-Saduq': 'Kamāl al-Dīn',
+  'Kamil-al-Ziyarat-Qummi': 'Kāmil al-Ziyārāt',
+  'Kitab-al-Duafa-Ghadairi': 'Kitāb al-Ḍuʿafāʾ',
+  'Maani-al-Akhbar-Saduq': 'Maʿānī al-Akhbār',
+  'Mujam-al-Ahadith-al-Mutabara-Muhsini': 'Muʿjam al-Aḥādīth al-Muʿtabara',
+}
 
 // URL slug to full book ID mapping for cleaner URLs
 export const URL_TO_BOOK_ID_MAP: Record<string, string> = {
@@ -117,6 +144,12 @@ export const getBookUrlSlug = (bookId: string): string => {
   return slug.toLowerCase()
 }
 
+// Lowercase-keyed lookup for case-insensitive slug resolution. Built once at
+// module load — getBookIdFromUrlSlug runs in render paths (TopBar, pages).
+const LOWERCASE_URL_TO_BOOK_ID_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(URL_TO_BOOK_ID_MAP).map(([k, v]) => [k.toLowerCase(), v]),
+)
+
 // Helper function to get full book ID from URL slug
 export const getBookIdFromUrlSlug = (urlSlug: string): string => {
   if (!urlSlug) return urlSlug
@@ -125,13 +158,7 @@ export const getBookIdFromUrlSlug = (urlSlug: string): string => {
   const exact = URL_TO_BOOK_ID_MAP[urlSlug]
   if (exact) return exact
 
-  const lowerKey = urlSlug.toLowerCase()
-  // Build a lowercase-keyed lookup for efficient case-insensitive mapping
-  const lowercaseMap: Record<string, string> = Object.fromEntries(
-    Object.entries(URL_TO_BOOK_ID_MAP).map(([k, v]) => [k.toLowerCase(), v]),
-  )
-
-  return lowercaseMap[lowerKey] || urlSlug
+  return LOWERCASE_URL_TO_BOOK_ID_MAP[urlSlug.toLowerCase()] || urlSlug
 }
 
 export const isMultiVolumeBook = (bookId: string): boolean => {
@@ -151,7 +178,7 @@ export const getBookConfig = (bookId: string): BookConfig | null => {
     return {
       bookId,
       baseName: bookId,
-      englishName: bookId,
+      englishName: SINGLE_VOLUME_ENGLISH_NAMES[bookId] ?? bookId,
       hasMultipleVolumes: false,
       volumes: [bookId],
       volumeCount: 1,
@@ -169,6 +196,15 @@ export interface SearchableBook {
   volumeCount: number // total number of volumes
 }
 
+// Single-volume entries share their displayName with SINGLE_VOLUME_ENGLISH_NAMES
+// so the search chips and getBookConfig can never drift apart.
+const singleVolumeSearchable = (key: string): SearchableBook => ({
+  key,
+  displayName: SINGLE_VOLUME_ENGLISH_NAMES[key] ?? key,
+  volumeIds: [key],
+  volumeCount: 1,
+})
+
 export const SEARCHABLE_BOOKS: SearchableBook[] = [
   {
     key: 'Al-Kafi',
@@ -182,120 +218,30 @@ export const SEARCHABLE_BOOKS: SearchableBook[] = [
     volumeIds: MULTI_VOLUME_BOOKS['Uyun-akhbar-al-Rida'].volumes!,
     volumeCount: 2,
   },
-  {
-    key: 'Al-Amali-Mufid',
-    displayName: 'Al-Amālī (Mufīd)',
-    volumeIds: ['Al-Amali-Mufid'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Al-Amali-Saduq',
-    displayName: 'Al-Amālī (Ṣaduq)',
-    volumeIds: ['Al-Amali-Saduq'],
-    volumeCount: 1,
-  },
+  singleVolumeSearchable('Al-Amali-Mufid'),
+  singleVolumeSearchable('Al-Amali-Saduq'),
   {
     key: 'Man-La-Yahduruh-al-Faqih',
     displayName: 'Man lā yaḥḍuruh al-Faqīh',
     volumeIds: MULTI_VOLUME_BOOKS['Man-La-Yahduruh-al-Faqih'].volumes!,
     volumeCount: 5,
   },
-  {
-    key: 'Al-Tawhid-Saduq',
-    displayName: 'Al-Tawḥīd',
-    volumeIds: ['Al-Tawhid-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kitab-al-Ghayba-Numani',
-    displayName: 'Kitāb al-Ghayba (Nuʿmānī)',
-    volumeIds: ['Kitab-al-Ghayba-Numani'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kitab-al-Ghayba-Tusi',
-    displayName: 'Kitāb al-Ghayba (Ṭūsī)',
-    volumeIds: ['Kitab-al-Ghayba-Tusi'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Nahj-al-Balagha-Radi',
-    displayName: 'Nahj al-Balāgha',
-    volumeIds: ['Nahj-al-Balagha-Radi'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Sifat-al-Shia-Saduq',
-    displayName: 'Ṣifāt al-Shīʿa',
-    volumeIds: ['Sifat-al-Shia-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Fadail-al-Shia-Saduq',
-    displayName: 'Faḍāʾil al-Shīʿa',
-    volumeIds: ['Fadail-al-Shia-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kitab-al-Mumin-Ahwazi',
-    displayName: 'Kitāb al-Muʾmin',
-    volumeIds: ['Kitab-al-Mumin-Ahwazi'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kitab-al-Zuhd-Ahwazi',
-    displayName: 'Kitāb al-Zuhd',
-    volumeIds: ['Kitab-al-Zuhd-Ahwazi'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Risalat-al-Huquq-Abidin',
-    displayName: 'Risālat al-Ḥuqūq',
-    volumeIds: ['Risalat-al-Huquq-Abidin'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Thawab-al-Amal-wa-iqab-al-Amal-Saduq',
-    displayName: 'Thawāb al-Aʿmāl',
-    volumeIds: ['Thawab-al-Amal-wa-iqab-al-Amal-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Al-Khisal-Saduq',
-    displayName: 'Al-Khiṣāl',
-    volumeIds: ['Al-Khisal-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kamal-al-Din-wa-Tamam-al-Nima-Saduq',
-    displayName: 'Kamāl al-Dīn',
-    volumeIds: ['Kamal-al-Din-wa-Tamam-al-Nima-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kamil-al-Ziyarat-Qummi',
-    displayName: 'Kāmil al-Ziyārāt',
-    volumeIds: ['Kamil-al-Ziyarat-Qummi'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Kitab-al-Duafa-Ghadairi',
-    displayName: 'Kitāb al-Ḍuʿafāʾ',
-    volumeIds: ['Kitab-al-Duafa-Ghadairi'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Maani-al-Akhbar-Saduq',
-    displayName: 'Maʿānī al-Akhbār',
-    volumeIds: ['Maani-al-Akhbar-Saduq'],
-    volumeCount: 1,
-  },
-  {
-    key: 'Mujam-al-Ahadith-al-Mutabara-Muhsini',
-    displayName: 'Muʿjam al-Aḥādīth al-Muʿtabara',
-    volumeIds: ['Mujam-al-Ahadith-al-Mutabara-Muhsini'],
-    volumeCount: 1,
-  },
+  singleVolumeSearchable('Al-Tawhid-Saduq'),
+  singleVolumeSearchable('Kitab-al-Ghayba-Numani'),
+  singleVolumeSearchable('Kitab-al-Ghayba-Tusi'),
+  singleVolumeSearchable('Nahj-al-Balagha-Radi'),
+  singleVolumeSearchable('Sifat-al-Shia-Saduq'),
+  singleVolumeSearchable('Fadail-al-Shia-Saduq'),
+  singleVolumeSearchable('Kitab-al-Mumin-Ahwazi'),
+  singleVolumeSearchable('Kitab-al-Zuhd-Ahwazi'),
+  singleVolumeSearchable('Risalat-al-Huquq-Abidin'),
+  singleVolumeSearchable('Thawab-al-Amal-wa-iqab-al-Amal-Saduq'),
+  singleVolumeSearchable('Al-Khisal-Saduq'),
+  singleVolumeSearchable('Kamal-al-Din-wa-Tamam-al-Nima-Saduq'),
+  singleVolumeSearchable('Kamil-al-Ziyarat-Qummi'),
+  singleVolumeSearchable('Kitab-al-Duafa-Ghadairi'),
+  singleVolumeSearchable('Maani-al-Akhbar-Saduq'),
+  singleVolumeSearchable('Mujam-al-Ahadith-al-Mutabara-Muhsini'),
 ]
 
 // Runtime volume IDs (one per `runtime/volumes/*.json`) that contain at least

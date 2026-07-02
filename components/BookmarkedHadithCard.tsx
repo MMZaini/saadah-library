@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Hadith } from '@/lib/api'
 import { useBookmarks, BookmarkData } from '@/lib/bookmarks-context'
+import { copyTextToClipboard } from '@/lib/utils'
 import HadithCard from './HadithCard'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -52,12 +53,8 @@ export default function BookmarkedHadithCard({
   }
 
   const handleCopyNotes = async () => {
-    if (bookmark.notes) {
-      try {
-        await navigator.clipboard.writeText(bookmark.notes)
-      } catch (err) {
-        console.error('Failed to copy notes:', err)
-      }
+    if (bookmark.notes && !(await copyTextToClipboard(bookmark.notes))) {
+      console.warn('Failed to copy notes')
     }
   }
 

@@ -6,7 +6,7 @@ import { alKafiApi, thaqalaynApi } from '@/lib/api'
 import { fetchBookStructure, fetchMultiVolumeStructure } from '@/lib/book-structure'
 import { useNavigation } from '@/lib/navigation-context'
 import { withBasePath } from '@/lib/assets'
-import { cn } from '@/lib/utils'
+import { cn, pluralize } from '@/lib/utils'
 import { makeVolumeOptions, getVolumeLabelForValue, SelectedVolume } from '@/lib/volume-utils'
 
 interface ChapterSummary {
@@ -150,17 +150,16 @@ export default function VolumeStructure({
               )
               hadiths = allVolumeHadiths.flat()
             } else {
-              const allResponses = await Promise.all(
-                (volumes || []).map((vol) => thaqalaynApi.searchBook(String(vol), '')),
+              const allVolumeHadiths = await Promise.all(
+                (volumes || []).map((vol) => thaqalaynApi.getBookHadiths(String(vol))),
               )
-              hadiths = allResponses.flatMap((r) => (r && r.results ? r.results : []))
+              hadiths = allVolumeHadiths.flat()
             }
           } else {
             if (bookId.includes('Al-Kafi')) {
               hadiths = await alKafiApi.getVolumeHadiths(Number(selectedVolume))
             } else {
-              const response = await thaqalaynApi.searchBook(String(selectedVolume), '')
-              hadiths = response.results || []
+              hadiths = await thaqalaynApi.getBookHadiths(String(selectedVolume))
             }
           }
 
@@ -239,7 +238,8 @@ export default function VolumeStructure({
         })
 
         setVolumeSummary(sortedSummary)
-      } catch {
+      } catch (err) {
+        console.warn('Failed to load volume structure:', err)
         setError(`Failed to load structure for selected volume(s)`)
       } finally {
         setLoading(false)
@@ -386,15 +386,14 @@ export default function VolumeStructure({
       }
     },
     onTouchEnd: (e: React.TouchEvent) => {
-      const startTime = touchStartTimeRef.current || Date.now()
-      const duration = Date.now() - startTime
       clearLongPressTimer()
       touchStartPosRef.current = null
       touchStartTimeRef.current = null
 
-      const withinTapThreshold = duration < 250
-      // If long-press hasn't triggered, it's a quick tap, and we haven't scrolled, navigate now
-      if (!longPressTriggeredRef.current && withinTapThreshold && !ignoreNextClickRef.current) {
+      // Any touch that neither long-pressed (≥250ms preview) nor scrolled is a
+      // tap and must navigate — a duration cutoff here left slow taps doing
+      // nothing at all.
+      if (!longPressTriggeredRef.current && !ignoreNextClickRef.current) {
         e.preventDefault()
         e.stopPropagation()
         ignoreNextClickRef.current = true // swallow the subsequent synthetic click
@@ -556,7 +555,7 @@ export default function VolumeStructure({
         <div
           className={cn(
             'overflow-hidden pr-4',
-            'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
+            'relative z-10 transition-[max-height] duration-300 ease-out md:duration-500',
             'max-h-24',
           )}
           style={{
@@ -580,7 +579,7 @@ export default function VolumeStructure({
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-accent"></div>
               <span className="text-secondary text-sm font-medium">
-                {chapter.hadithCount} {chapter.hadithCount === 1 ? 'hadith' : 'hadiths'}
+                {pluralize(chapter.hadithCount, 'hadith')}
               </span>
             </div>
 
@@ -695,7 +694,7 @@ export default function VolumeStructure({
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-accent"></div>
                 <span className="text-primary text-sm font-semibold">
-                  {totalHadithsCount.toLocaleString()} hadiths
+                  {pluralize(totalHadithsCount, 'hadith')}
                 </span>
               </div>
 
@@ -703,8 +702,8 @@ export default function VolumeStructure({
                 <div className="h-3 w-3 rounded-full bg-foreground-faint"></div>
                 <span className="text-primary text-sm font-semibold">
                   {showDirectChapterGrid
-                    ? `${totalChapterCount.toLocaleString()} chapters`
-                    : `${categoryEntries.length} categories`}
+                    ? pluralize(totalChapterCount, 'chapter')
+                    : pluralize(categoryEntries.length, 'category', 'categories')}
                 </span>
               </div>
 
@@ -741,8 +740,8 @@ export default function VolumeStructure({
 
       {/* Error State */}
       {error && (
-        <div className="shadow-soft rounded-xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/30 dark:bg-red-900/20">
-          <p className="text-red-800 dark:text-red-300">{error}</p>
+        <div className="border-destructive/30 bg-destructive/10 shadow-soft rounded-xl border p-6">
+          <p className="text-destructive">{error}</p>
         </div>
       )}
 
@@ -759,11 +758,10 @@ export default function VolumeStructure({
             </div>
             <div className="text-left sm:text-right">
               <div className="text-primary text-sm font-semibold">
-                {singleGenericCategoryEntry[1].totalHadiths.toLocaleString()} hadiths
+                {pluralize(singleGenericCategoryEntry[1].totalHadiths, 'hadith')}
               </div>
               <div className="text-secondary text-xs">
-                {Object.keys(singleGenericCategoryEntry[1].chapters).length.toLocaleString()}{' '}
-                chapters
+                {pluralize(Object.keys(singleGenericCategoryEntry[1].chapters).length, 'chapter')}
               </div>
             </div>
           </div>
@@ -813,10 +811,10 @@ export default function VolumeStructure({
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-primary text-sm font-semibold">
-                      {category.totalHadiths} hadiths
+                      {pluralize(category.totalHadiths, 'hadith')}
                     </div>
                     <div className="text-secondary text-xs">
-                      {Object.keys(category.chapters).length} chapters
+                      {pluralize(Object.keys(category.chapters).length, 'chapter')}
                     </div>
                   </div>
                   <div className="h-12 w-1 rounded-full bg-zinc-700"></div>
@@ -827,190 +825,9 @@ export default function VolumeStructure({
               {expandedCategories.has(categoryKey) && (
                 <div className="border-theme from-card/50 to-card/30 border-t bg-gradient-to-r p-4 duration-300 animate-in slide-in-from-top-2 sm:p-6">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-                    {Object.entries(category.chapters).map(([chapterKey, chapter]) => {
-                      const key = getChapterKey(category.categoryId, chapter.chapterInCategoryId)
-                      const isExpanded = mobileExpandedKey === key
-                      // "Active" = mobile long-press expansion OR a settled desktop hover.
-                      const isActive = isExpanded || hoveredKey === key
-                      const chapterHref = buildChapterHref(
-                        category.categoryId,
-                        chapter.chapterInCategoryId,
-                        chapter.bookId,
-                        chapter.volume,
-                      )
-                      return (
-                        <a
-                          key={chapterKey}
-                          href={chapterHref ? withBasePath(chapterHref) : undefined}
-                          onClick={(e) => {
-                            if (ignoreNextClickRef.current) {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              ignoreNextClickRef.current = false
-                              return
-                            }
-                            // Let the browser handle open-in-new-tab/window, etc.
-                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
-                              return
-                            e.preventDefault()
-                            handleChapterClick(
-                              category.categoryId,
-                              chapter.chapterInCategoryId,
-                              chapter.bookId,
-                              chapter.volume,
-                            )
-                          }}
-                          {...getTouchHandlers(key, () =>
-                            handleChapterClick(
-                              category.categoryId,
-                              chapter.chapterInCategoryId,
-                              chapter.bookId,
-                              chapter.volume,
-                            ),
-                          )}
-                          aria-expanded={isExpanded}
-                          onMouseEnter={() => {
-                            // Desktop only — touch uses the long-press handlers above.
-                            if (
-                              typeof window !== 'undefined' &&
-                              window.matchMedia &&
-                              !window.matchMedia('(hover: hover)').matches
-                            )
-                              return
-                            // Cancel a pending collapse (cursor crossing the gap from a neighbour).
-                            if (hoverLeaveTimerRef.current) {
-                              window.clearTimeout(hoverLeaveTimerRef.current)
-                              hoverLeaveTimerRef.current = null
-                            }
-                            if (hoveredKey === key) return
-                            // Expand only after a brief dwell so quick fly-overs don't trigger it.
-                            // Warm the chapter's volume in the background once
-                            // the hover settles, so a click loads from cache.
-                            prefetchChapterVolume(chapter)
-                            if (hoverEnterTimerRef.current)
-                              window.clearTimeout(hoverEnterTimerRef.current)
-                            hoverEnterTimerRef.current = window.setTimeout(() => {
-                              setHoveredKey(key)
-                              hoverEnterTimerRef.current = null
-                            }, 120)
-                          }}
-                          onMouseLeave={() => {
-                            // Cancel a not-yet-fired expansion.
-                            if (hoverEnterTimerRef.current) {
-                              window.clearTimeout(hoverEnterTimerRef.current)
-                              hoverEnterTimerRef.current = null
-                            }
-                            // Collapse after a short grace period so crossing the gap to an
-                            // adjacent card hands off smoothly instead of flickering closed.
-                            if (hoverLeaveTimerRef.current)
-                              window.clearTimeout(hoverLeaveTimerRef.current)
-                            hoverLeaveTimerRef.current = window.setTimeout(() => {
-                              setHoveredKey((prev) => (prev === key ? null : prev))
-                              hoverLeaveTimerRef.current = null
-                            }, 160)
-                          }}
-                          onMouseMove={(e) => {
-                            const el = e.currentTarget as HTMLElement
-                            const rect = el.getBoundingClientRect()
-                            const x = e.clientX - rect.left
-                            const y = e.clientY - rect.top
-                            el.style.setProperty('--mx', `${x}px`)
-                            el.style.setProperty('--my', `${y}px`)
-                          }}
-                          className={cn(
-                            'border-theme bg-card group relative block rounded-xl border text-left',
-                            'p-4 transition-all duration-500 ease-out sm:p-5',
-                            'touch-manipulation select-none [-webkit-touch-callout:none]',
-                            'shadow-soft hover:shadow-md',
-                            'hover:border-zinc-600',
-                            isActive &&
-                              'z-10 translate-y-[-2px] border-zinc-600 md:p-5 md:shadow-md md:ring-1 md:ring-zinc-700/30',
-                          )}
-                          style={{
-                            transform: isActive ? 'translateY(-2px)' : undefined,
-                          }}
-                        >
-                          {/* Subtle sliding gradient background (visible on mobile when expanded) */}
-                          <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-xl">
-                            <div
-                              className={cn(
-                                'absolute inset-0 bg-zinc-900/40',
-                                'transition-opacity duration-500 ease-in-out',
-                                isActive ? 'opacity-100' : 'opacity-0',
-                              )}
-                            />
-                            {/* Cursor-following subtle glow — desktop only */}
-                            <div
-                              className={cn(
-                                'absolute inset-0 opacity-0 transition-opacity duration-500 ease-out',
-                                isActive && 'md:opacity-40',
-                              )}
-                              style={{
-                                background:
-                                  'radial-gradient(180px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.035), rgba(0,0,0,0) 60%)',
-                              }}
-                            />
-                          </div>
-                          {/* Chapter number indicator */}
-                          <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs font-bold text-zinc-200">
-                            {chapter.chapterInCategoryId}
-                          </div>
-
-                          {/* Chapter content (expands height smoothly) */}
-                          <div
-                            className={cn(
-                              'overflow-hidden pr-4',
-                              'relative z-10 transition-[max-height] duration-700 ease-smooth-expand md:duration-1100',
-                              'max-h-24',
-                            )}
-                            style={{
-                              willChange: 'max-height',
-                              maxHeight: isActive ? ('500px' as const) : undefined,
-                            }}
-                          >
-                            <h4
-                              className={cn(
-                                'text-primary mb-3 font-semibold leading-snug transition-colors',
-                                'group-hover:text-foreground',
-                                isActive && 'text-foreground',
-                                'line-clamp-2',
-                                isActive && 'line-clamp-none',
-                              )}
-                            >
-                              {chapter.chapter}
-                            </h4>
-
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-accent"></div>
-                                <span className="text-secondary text-sm font-medium">
-                                  {chapter.hadithCount}{' '}
-                                  {chapter.hadithCount === 1 ? 'hadith' : 'hadiths'}
-                                </span>
-                              </div>
-
-                              <div className="text-secondary flex items-center gap-1 transition-colors group-hover:text-foreground-muted">
-                                <svg
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 5l7 7-7 7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Subtle hover gradient overlay */}
-                        </a>
-                      )
-                    })}
+                    {Object.entries(category.chapters).map(([chapterKey, chapter]) =>
+                      renderChapterCard(category, chapterKey, chapter),
+                    )}
                   </div>
                 </div>
               )}

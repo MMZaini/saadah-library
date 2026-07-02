@@ -28,6 +28,8 @@ export default function AlKafiPage() {
   const {
     query,
     results,
+    totalMatches,
+    truncated,
     error,
     isSearching,
     filtersOpen,
@@ -65,10 +67,12 @@ export default function AlKafiPage() {
     }
   }, [saveScrollPosition])
 
+  // Labels describe what the reader sees: a chapter grid, a two-pane tree
+  // browser, and a random-hadith picker.
   const VIEW_MODES = [
-    { key: 'structure' as const, label: 'Volume Explorer', short: 'Explorer' },
-    { key: 'chapters' as const, label: 'Chapter Tree', short: 'Tree' },
-    { key: 'explorer' as const, label: 'Random', short: 'Random' },
+    { key: 'structure' as const, label: 'Chapters', short: 'Chapters' },
+    { key: 'chapters' as const, label: 'Tree View', short: 'Tree' },
+    { key: 'explorer' as const, label: 'Random Hadith', short: 'Random' },
   ]
   const selectedPdfUrl = getPdfUrlForVolume('Al-Kafi', selectedPdfVolume)
 
@@ -137,6 +141,8 @@ export default function AlKafiPage() {
         filtersOpen={filtersOpen}
         onFiltersOpenChange={setFiltersOpen}
         onFilterCriteriaChange={setFilterCriteria}
+        totalMatches={totalMatches}
+        truncated={truncated}
       />
 
       {/* Volume Explorer / Chapter Tree */}

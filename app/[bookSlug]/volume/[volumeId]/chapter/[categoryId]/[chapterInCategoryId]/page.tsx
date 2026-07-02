@@ -6,7 +6,10 @@ import { bookApi, Hadith } from '@/lib/api'
 import { getBookConfig, getBookIdFromUrlSlug } from '@/lib/books-config'
 import { withBasePath } from '@/lib/assets'
 import { removeHarakat } from '@/lib/utils'
+import { recordChapterVisit } from '@/lib/reading-history'
+import { useIncrementalList } from '@/lib/use-incremental-list'
 import HadithCard from '@/components/HadithCard'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
 import GradingFilter, { classifyHadith } from '@/components/GradingFilter'
 import ChapterNavigation from '@/components/ChapterNavigation'
 import { useChapter } from '@/lib/chapter-context'
@@ -103,6 +106,11 @@ export default function GenericVolumeChapterPage() {
           categoryId: first.categoryId,
           chapterInCategoryId: first.chapterInCategoryId,
         })
+        recordChapterVisit({
+          path: `/${bookSlug}/volume/${volumeParam}/chapter/${categoryId}/${chapterInCategoryId}`,
+          bookTitle: getBookConfig(baseBookId)?.englishName || first.book || baseBookId,
+          chapter: info.chapter,
+        })
       } catch {
         setError('Failed to load chapter content')
       } finally {
@@ -113,7 +121,15 @@ export default function GenericVolumeChapterPage() {
     if (volumeBookId && categoryId && !Number.isNaN(chapterInCategoryId)) loadChapter()
 
     return () => setChapterInfo(null)
-  }, [volumeBookId, volumeParam, categoryId, chapterInCategoryId, setChapterInfo])
+  }, [
+    volumeBookId,
+    volumeParam,
+    baseBookId,
+    bookSlug,
+    categoryId,
+    chapterInCategoryId,
+    setChapterInfo,
+  ])
 
   const filteredHadiths = useMemo(() => {
     let result = hadiths
@@ -139,6 +155,13 @@ export default function GenericVolumeChapterPage() {
       )
     })
   }, [hadiths, gradingFilter, searchQuery])
+
+  // Long chapters render incrementally — mounting hundreds of cards at once
+  // makes the initial paint and every reflow expensive.
+  const { visibleItems, hasMore, remainingCount, sentinelRef, showAll } =
+    useIncrementalList(filteredHadiths)
+
+  const displayBookTitle = getBookConfig(baseBookId)?.englishName || bookSlug?.replace(/-/g, ' ')
 
   if (loading) {
     return (
@@ -169,7 +192,9 @@ export default function GenericVolumeChapterPage() {
         {chapterInfo && (
           <div className="mb-6 rounded-lg border border-border bg-surface-1 p-5">
             <h2 className="text-xl font-bold text-foreground">{chapterInfo.chapter}</h2>
-            <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            {chapterInfo.category !== chapterInfo.chapter && (
+              <p className="mt-1 text-sm text-foreground-muted">Category: {chapterInfo.category}</p>
+            )}
             <div className="mt-2 flex gap-1.5">
               <Badge variant="secondary">Volume {chapterInfo.volume}</Badge>
               <Badge variant="secondary">{chapterInfo.hadithCount} Hadiths</Badge>
@@ -190,7 +215,7 @@ export default function GenericVolumeChapterPage() {
         )}
 
         <div className="space-y-5">
-          {filteredHadiths.map((hadith, index) => (
+          {visibleItems.map((hadith, index) => (
             <div key={hadith._id || hadith.id || index} className="relative">
               <div className="absolute -left-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {index + 1}
@@ -202,6 +227,14 @@ export default function GenericVolumeChapterPage() {
           ))}
         </div>
 
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-6">
+            <Button variant="outline" size="sm" onClick={showAll}>
+              Show all ({remainingCount} more)
+            </Button>
+          </div>
+        )}
+
         <div className="mt-10 space-y-6 border-t border-border pt-6">
           <ChapterNavigation
             prev={chapterNav.prev}
@@ -212,10 +245,11 @@ export default function GenericVolumeChapterPage() {
           />
           <Button variant="outline" onClick={() => router.push(withBasePath(`/${bookSlug}`))}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            Back to Explorer
+            Back to {displayBookTitle}
           </Button>
         </div>
       </div>
+      <ScrollToTopButton />
     </main>
   )
 }

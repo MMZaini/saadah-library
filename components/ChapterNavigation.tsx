@@ -45,7 +45,7 @@ export default function ChapterNavigation({
             <span className="mt-0.5 block truncate text-sm font-medium text-foreground">
               {prev.chapterName}
             </span>
-            {prev.isCrossBook && (
+            {prev.isCrossBook && prev.categoryName !== prev.chapterName && (
               <span className="block truncate text-xs text-foreground-muted">
                 {prev.categoryName}
               </span>
@@ -69,7 +69,7 @@ export default function ChapterNavigation({
             <span className="mt-0.5 block truncate text-sm font-medium text-foreground">
               {next.chapterName}
             </span>
-            {next.isCrossBook && (
+            {next.isCrossBook && next.categoryName !== next.chapterName && (
               <span className="block truncate text-xs text-foreground-muted">
                 {next.categoryName}
               </span>

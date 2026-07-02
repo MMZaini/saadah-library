@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { thaqalaynApi, Hadith } from '@/lib/api'
@@ -10,6 +10,8 @@ import BookmarkedHadithCard from '@/components/BookmarkedHadithCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Bookmark, Search, Loader2, StickyNote, ChevronDown, Check } from 'lucide-react'
+
+const bookmarkKey = (bookId: string | undefined, id: number) => `${bookId ?? ''}::${id}`
 
 const FILTER_OPTIONS = [
   { value: 'both' as const, label: 'Both' },
@@ -27,7 +29,10 @@ export default function BookmarksNarrations({
   onClearSearch,
 }: BookmarksNarrationsProps) {
   const { bookmarks, bookmarkCount } = useBookmarks()
-  const [fullHadiths, setFullHadiths] = useState<Hadith[]>([])
+  // Loaded full hadiths keyed by bookId::id. Kept across bookmark changes so
+  // removing (or annotating) one bookmark doesn't refetch — and re-flash —
+  // the whole list.
+  const [hadithsByKey, setHadithsByKey] = useState<Record<string, Hadith>>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchFilter, setSearchFilter] = useState<'both' | 'hadith' | 'notes'>('both')
@@ -45,48 +50,84 @@ export default function BookmarksNarrations({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Identity of the bookmark set — notes edits and reorderings don't change it.
+  const bookmarkIdentityKey = useMemo(
+    () =>
+      bookmarks
+        .map((bookmark) => bookmarkKey(bookmark.bookId, bookmark.id))
+        .sort()
+        .join('|'),
+    [bookmarks],
+  )
+
   useEffect(() => {
-    if (bookmarks.length === 0) {
-      setFullHadiths([])
+    let cancelled = false
+
+    const wanted = bookmarks.filter((bookmark) => Boolean(bookmark.bookId))
+    const missing = wanted.filter(
+      (bookmark) => !(bookmarkKey(bookmark.bookId, bookmark.id) in hadithsByKey),
+    )
+
+    // Legacy bookmarks without a bookId can't be located without scanning the
+    // whole corpus; they render from their stored preview instead.
+    const unresolvable = bookmarks.length - wanted.length
+
+    if (missing.length === 0) {
+      setError(
+        unresolvable > 0
+          ? `${unresolvable} older bookmark(s) could not be matched to a book; showing saved previews.`
+          : null,
+      )
       return
     }
 
-    const fetchHadiths = async () => {
+    const fetchMissing = async () => {
       setLoading(true)
       setError(null)
 
-      try {
-        const hadithPromises = bookmarks.map(async (bookmark) => {
+      const fetched = await Promise.all(
+        missing.map(async (bookmark) => {
           try {
-            if (bookmark.bookId) {
-              return await thaqalaynApi.getSpecificHadith(bookmark.bookId, bookmark.id)
-            } else {
-              const searchResult = await thaqalaynApi.searchAllBooks(`#${bookmark.id}`)
-              return searchResult.results.find((h) => h.id === bookmark.id) || null
-            }
+            const hadith = await thaqalaynApi.getSpecificHadith(bookmark.bookId, bookmark.id)
+            return [bookmarkKey(bookmark.bookId, bookmark.id), hadith] as const
           } catch {
             return null
           }
-        })
+        }),
+      )
 
-        const results = await Promise.all(hadithPromises)
-        const validHadiths = results.filter((h: Hadith | null): h is Hadith => h !== null)
-        setFullHadiths(validHadiths)
+      if (cancelled) return
 
-        if (validHadiths.length < bookmarks.length) {
-          setError(
-            `Could not load ${bookmarks.length - validHadiths.length} bookmark(s). They may no longer exist.`,
-          )
-        }
-      } catch {
-        setError('Failed to load bookmarks. Please check your connection and try again.')
-      } finally {
-        setLoading(false)
+      const additions = fetched.filter((entry): entry is [string, Hadith] => entry !== null)
+      if (additions.length > 0) {
+        setHadithsByKey((prev) => ({ ...prev, ...Object.fromEntries(additions) }))
       }
+
+      const failed = missing.length - additions.length
+      if (failed > 0) {
+        setError(`Could not load ${failed} bookmark(s). They may no longer exist.`)
+      } else if (unresolvable > 0) {
+        setError(
+          `${unresolvable} older bookmark(s) could not be matched to a book; showing saved previews.`,
+        )
+      }
+      setLoading(false)
     }
 
-    fetchHadiths()
-  }, [bookmarks])
+    fetchMissing()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookmarkIdentityKey])
+
+  const fullHadiths = useMemo(
+    () =>
+      bookmarks
+        .map((bookmark) => hadithsByKey[bookmarkKey(bookmark.bookId, bookmark.id)])
+        .filter((hadith): hadith is Hadith => Boolean(hadith)),
+    [bookmarks, hadithsByKey],
+  )
 
   const filteredBookmarks = bookmarks.filter((bookmark) => {
     if (!searchQuery.trim()) return true
@@ -163,7 +204,9 @@ export default function BookmarksNarrations({
     )
   }
 
-  if (loading) {
+  // Full-screen spinner only on the initial load; later fetches (e.g. an
+  // import adding new bookmarks) keep the existing list on screen.
+  if (loading && fullHadiths.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-foreground-muted" />
@@ -258,18 +301,6 @@ export default function BookmarksNarrations({
         </div>
       ) : (
         <>
-          {/* Bookmark previews (fallback when full hadiths failed to load) */}
-          {filteredFullHadiths.length === 0 && filteredBookmarks.length > 0 && (
-            <div className="space-y-4">
-              <p className="text-xs text-foreground-muted">
-                Full content could not be loaded. Here are your bookmark previews:
-              </p>
-              {filteredBookmarks.map((bookmark) => (
-                <BookmarkCard key={bookmark.bookId + ':' + bookmark.id} bookmark={bookmark} />
-              ))}
-            </div>
-          )}
-
           {/* Full hadith cards */}
           {filteredFullHadiths.length > 0 && (
             <div className="space-y-5">
@@ -295,6 +326,28 @@ export default function BookmarksNarrations({
               })}
             </div>
           )}
+
+          {/* Preview cards for bookmarks whose full content isn't available
+              (legacy entries without a bookId, or failed loads) — previously a
+              mixed list silently hid these. */}
+          {(() => {
+            const previewBookmarks = filteredBookmarks.filter(
+              (bookmark) => !hadithsByKey[bookmarkKey(bookmark.bookId, bookmark.id)],
+            )
+            if (previewBookmarks.length === 0) return null
+            return (
+              <div className={cn('space-y-4', filteredFullHadiths.length > 0 && 'mt-6')}>
+                <p className="text-xs text-foreground-muted">
+                  {filteredFullHadiths.length > 0
+                    ? 'Saved previews (full content unavailable for these):'
+                    : 'Full content could not be loaded. Here are your bookmark previews:'}
+                </p>
+                {previewBookmarks.map((bookmark) => (
+                  <BookmarkCard key={bookmark.bookId + ':' + bookmark.id} bookmark={bookmark} />
+                ))}
+              </div>
+            )
+          })()}
         </>
       )}
     </div>

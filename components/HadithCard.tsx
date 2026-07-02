@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback, memo, ReactNode } from 'react'
 import { Hadith } from '@/lib/api'
-import { getHighlightSegments } from '@/lib/search-utils'
+import { findFirstMatchIndex, getHighlightSegments, normalizeArabic } from '@/lib/search-utils'
 import { useSettings } from '@/lib/settings-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
-import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
+import { getHadithUrl, getChapterUrl } from '@/lib/hadith-urls'
 import { withBasePath } from '@/lib/assets'
-import { cn, hasHarakat, removeHarakat } from '@/lib/utils'
+import { cn, copyTextToClipboard, hasHarakat, removeHarakat } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -42,6 +42,9 @@ import {
 // little larger than Arabic in the two-column layout, so it gets its own scale.
 const SIDE_BY_SIDE_FONT_SCALE = 0.95
 const SIDE_BY_SIDE_ENGLISH_FONT_SCALE = 1
+
+// Texts longer than this are collapsed behind a "Read more" toggle.
+const LONG_TEXT_THRESHOLD = 750
 
 interface HadithCardProps {
   hadith: Hadith
@@ -99,63 +102,12 @@ function removeChainFromMatn(matn: string, chain: string): string {
   return cleanMatn
 }
 
-function getHadithUrl(hadith: Hadith): string {
-  const bookId = hadith.bookId || ''
-  const cfg = getBookConfig(bookId)
-
-  // Multi-volume books: ids restart at 1 per volume, so the volume must be in
-  // the URL or the link is ambiguous. Single-volume books need no volume segment.
-  if (cfg?.hasMultipleVolumes && hadith.volume) {
-    const slug = cfg.bookId === 'Al-Kafi' ? 'al-kafi' : getBookUrlSlug(cfg.bookId)
-    return `/${slug}/volume/${hadith.volume}/hadith/${hadith.id}`
-  }
-
-  if (cfg) {
-    return cfg.bookId === 'Al-Kafi'
-      ? `/al-kafi/hadith/${hadith.id}`
-      : `/${getBookUrlSlug(cfg.bookId)}/hadith/${hadith.id}`
-  }
-  if (bookId.includes('Uyun') || hadith.book?.toLowerCase().includes('uyun')) {
-    return hadith.volume
-      ? `/uyun-akhbar-al-rida/volume/${hadith.volume}/hadith/${hadith.id}`
-      : `/Uyun-akhbar-al-Rida/hadith/${hadith.id}`
-  }
-  if (bookId) return `/${getBookUrlSlug(bookId)}/hadith/${hadith.id}`
-  return `/al-kafi/hadith/${hadith.id}`
-}
-
-function getChapterUrl(hadith: Hadith): string {
-  const bookId = hadith.bookId || ''
-  const cfg = getBookConfig(bookId)
-  let basePath = '/al-kafi'
-  let isAlKafi = true
-  let isMultiVolume = false
-
-  if (cfg) {
-    isMultiVolume = Boolean(cfg.hasMultipleVolumes)
-    if (cfg.bookId === 'Al-Kafi') {
-      basePath = '/al-kafi'
-    } else {
-      basePath = `/${getBookUrlSlug(cfg.bookId)}`
-      isAlKafi = false
-    }
-  } else if (bookId.includes('Uyun') || hadith.book?.toLowerCase().includes('uyun')) {
-    basePath = '/Uyun-akhbar-al-Rida'
-    isAlKafi = false
-  } else if (bookId) {
-    basePath = `/${getBookUrlSlug(bookId)}`
-    isAlKafi = false
-  }
-
-  return isAlKafi || isMultiVolume
-    ? `${basePath}/volume/${hadith.volume}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
-    : `${basePath}/chapter/${hadith.categoryId}/${hadith.chapterInCategoryId}`
-}
-
 // ── Grading badge color mapping ──
 
 function gradingVariant(grading: string): 'sahih' | 'hasan' | 'daif' | 'secondary' {
-  const g = grading.toLowerCase()
+  // normalizeArabic lowercases and folds letter variants (e.g. Persian-yeh
+  // spellings of ḍaʿīf) so the badge color matches the filter's behavior.
+  const g = normalizeArabic(grading)
   if (g.includes('sahih') || g.includes('صحيح')) return 'sahih'
   if (g.includes('hasan') || g.includes('حسن') || g.includes('good')) return 'hasan'
   if (g.includes('daif') || g.includes('ضعيف') || g.includes('weak')) return 'daif'
@@ -220,9 +172,8 @@ const HadithCard = ({
   const [showArabic, setShowArabic] = useState(resolvedArabicDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(settings.alwaysShowFullHadith)
-  const arabicRef = useRef<HTMLDivElement | null>(null)
-  const [arabicOverflow, setArabicOverflow] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
+  const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const bookmarked = isBookmarked(hadith.bookId, hadith.id)
 
@@ -238,8 +189,10 @@ const HadithCard = ({
     setShowArabic(showArabicByDefault ?? settings.defaultLanguage === 'arabic')
   }, [showArabicByDefault, settings.defaultLanguage])
 
-  // Memoize text processing
-  const { englishText, arabicText, isLongText } = useMemo(() => {
+  // Memoize text processing. Both languages use the same length-based
+  // "long text" rule; Arabic previously measured rendered overflow with a
+  // DOM-clone per card per resize, which thrashed layout on long chapters.
+  const { englishText, arabicText, isLongText, isLongArabic } = useMemo(() => {
     const rawEnglish = hadith.englishText || hadith.thaqalaynMatn
     const arabic = hadith.arabicText
     const chain = hadith.thaqalaynSanad
@@ -248,7 +201,8 @@ const HadithCard = ({
     return {
       englishText: processed,
       arabicText: arabic,
-      isLongText: (processed?.length || 0) > 750,
+      isLongText: (processed?.length || 0) > LONG_TEXT_THRESHOLD,
+      isLongArabic: (arabic?.length || 0) > LONG_TEXT_THRESHOLD,
     }
   }, [hadith.englishText, hadith.thaqalaynMatn, hadith.arabicText, hadith.thaqalaynSanad])
 
@@ -258,11 +212,32 @@ const HadithCard = ({
   const fontScale = settings.sideBySide ? SIDE_BY_SIDE_FONT_SCALE : 1
   const englishFontScale = settings.sideBySide ? SIDE_BY_SIDE_ENGLISH_FONT_SCALE : 1
 
+  // Truncation window for collapsed long texts. When a search highlight is
+  // active and the first match sits beyond the visible window, the excerpt
+  // recenters on the match so results never look like false positives.
+  const makeExcerpt = useCallback(
+    (text: string): string => {
+      let start = 0
+      if (highlightQuery?.trim()) {
+        const matchIndex = findFirstMatchIndex(text, highlightQuery, { exactMatch })
+        if (matchIndex > LONG_TEXT_THRESHOLD - 150) {
+          start = Math.max(0, matchIndex - Math.floor(LONG_TEXT_THRESHOLD / 3))
+          // Snap to the next word boundary so the excerpt starts cleanly.
+          const boundary = text.indexOf(' ', start)
+          if (boundary !== -1 && boundary < matchIndex) start = boundary + 1
+        }
+      }
+      const end = Math.min(text.length, start + LONG_TEXT_THRESHOLD)
+      return `${start > 0 ? '… ' : ''}${text.slice(start, end)}${end < text.length ? '…' : ''}`
+    },
+    [highlightQuery, exactMatch],
+  )
+
   // Render text with search highlighting
   const renderHighlighted = useCallback(
     (text: string | undefined, truncate?: boolean): ReactNode => {
       if (!text) return null
-      const display = truncate ? text.slice(0, 750) + '...' : text
+      const display = truncate ? makeExcerpt(text) : text
       if (!highlightQuery?.trim()) return display
       const segments = getHighlightSegments(display, highlightQuery, { exactMatch })
       if (segments.length === 1 && !segments[0].highlight) return display
@@ -279,32 +254,8 @@ const HadithCard = ({
         ),
       )
     },
-    [highlightQuery, exactMatch],
+    [highlightQuery, exactMatch, makeExcerpt],
   )
-
-  // Arabic overflow detection
-  useEffect(() => {
-    const el = arabicRef.current
-    if (!el) {
-      setArabicOverflow(false)
-      return
-    }
-    const check = () => {
-      try {
-        const clone = el.cloneNode(true) as HTMLElement
-        clone.style.cssText = `position:absolute;visibility:hidden;width:${el.offsetWidth}px;max-height:none;height:auto`
-        document.body.appendChild(clone)
-        const overflow = clone.scrollHeight > el.clientHeight + 2
-        document.body.removeChild(clone)
-        setArabicOverflow(overflow)
-      } catch {
-        setArabicOverflow(false)
-      }
-    }
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [arabicText, settings.arabicFontSize, arabicExpanded, settings.sideBySide])
 
   // Grading data
   const gradingData = useMemo(
@@ -316,51 +267,62 @@ const HadithCard = ({
     [hadith.gradingsFull],
   )
 
-  // Copy helpers
+  // Copy helpers — flash accurate success/failure feedback, and clear the
+  // timer on unmount so a pending flash never updates a dead component.
   const flash = useCallback((msg: string) => {
     setCopyFeedback(msg)
-    setTimeout(() => setCopyFeedback(null), 1500)
+    if (copyFeedbackTimerRef.current) clearTimeout(copyFeedbackTimerRef.current)
+    copyFeedbackTimerRef.current = setTimeout(() => setCopyFeedback(null), 1500)
   }, [])
+
+  useEffect(
+    () => () => {
+      if (copyFeedbackTimerRef.current) clearTimeout(copyFeedbackTimerRef.current)
+    },
+    [],
+  )
+
+  const copyWithFeedback = useCallback(
+    async (text: string, successMessage: string) => {
+      flash((await copyTextToClipboard(text)) ? successMessage : 'Copy failed')
+    },
+    [flash],
+  )
+
+  const buildSourceLine = useCallback(() => {
+    const parts = [hadith.book || 'Unknown Book']
+    if (hadith.volume) parts.push(`Volume ${hadith.volume}`)
+    parts.push(hadith.chapter || 'Unknown Chapter')
+    parts.push(`Hadith ${hadith.id}`)
+    return parts.join(', ')
+  }, [hadith])
 
   const handleCopyLink = useCallback(async () => {
     const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`
-    await navigator.clipboard.writeText(url)
-    flash('Link copied')
-  }, [hadith, flash])
+    await copyWithFeedback(url, 'Link copied')
+  }, [hadith, copyWithFeedback])
 
   const handleCopySource = useCallback(async () => {
-    const parts = [hadith.book || 'Unknown Book']
-    if (hadith.volume) parts.push(`Volume ${hadith.volume}`)
-    parts.push(hadith.chapter || 'Unknown Chapter')
-    parts.push(`Hadith ${hadith.id}`)
-    await navigator.clipboard.writeText(parts.join(', '))
-    flash('Source copied')
-  }, [hadith, flash])
+    await copyWithFeedback(buildSourceLine(), 'Source copied')
+  }, [buildSourceLine, copyWithFeedback])
 
   const handleCopyBoth = useCallback(async () => {
     const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ''}${getHadithUrl(hadith)}`
-    const parts = [hadith.book || 'Unknown Book']
-    if (hadith.volume) parts.push(`Volume ${hadith.volume}`)
-    parts.push(hadith.chapter || 'Unknown Chapter')
-    parts.push(`Hadith ${hadith.id}`)
-    await navigator.clipboard.writeText(`${parts.join(', ')}\n${url}`)
-    flash('Copied')
-  }, [hadith, flash])
+    await copyWithFeedback(`${buildSourceLine()}\n${url}`, 'Copied')
+  }, [hadith, buildSourceLine, copyWithFeedback])
 
   const handleCopyEnglish = useCallback(async () => {
     if (!englishText) return
-    await navigator.clipboard.writeText(englishText)
-    flash('English copied')
-  }, [englishText, flash])
+    await copyWithFeedback(englishText, 'English copied')
+  }, [englishText, copyWithFeedback])
 
   const handleCopyArabic = useCallback(
     async (withHarakat: boolean) => {
       if (!arabicText) return
       const text = withHarakat ? arabicText : removeHarakat(arabicText)
-      await navigator.clipboard.writeText(text)
-      flash('Arabic copied')
+      await copyWithFeedback(text, 'Arabic copied')
     },
-    [arabicText, flash],
+    [arabicText, copyWithFeedback],
   )
 
   const handleOpenNewTab = useCallback(() => {
@@ -441,16 +403,15 @@ const HadithCard = ({
   const arabicTextBlock = (
     <>
       <div
-        ref={arabicRef}
         className="hadith-arabic-text text-right font-arabic text-foreground"
         dir="rtl"
         style={{ fontSize: `${settings.arabicFontSize * 1.485 * fontScale}%` }}
       >
-        {arabicOverflow && !arabicExpanded
+        {isLongArabic && !arabicExpanded
           ? renderHighlighted(arabicText, true)
           : renderHighlighted(arabicText)}
       </div>
-      {arabicOverflow && (
+      {isLongArabic && (
         <button
           onClick={() => setArabicExpanded(!arabicExpanded)}
           className="mt-1 py-1 text-xs font-medium text-accent transition-colors hover:underline"
@@ -508,6 +469,8 @@ const HadithCard = ({
               size="icon"
               className={cn('h-9 w-9 sm:h-7 sm:w-7', bookmarked && 'text-bookmark')}
               onClick={handleBookmarkToggle}
+              aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this hadith'}
+              aria-pressed={bookmarked}
             >
               {bookmarked ? (
                 <BookmarkCheck className="h-3.5 w-3.5" />
@@ -527,6 +490,8 @@ const HadithCard = ({
                 size="icon"
                 className="h-9 w-9 sm:h-7 sm:w-7"
                 onClick={() => setShowArabic(!showArabic)}
+                aria-label={showArabic ? 'Hide Arabic text' : 'Show Arabic text'}
+                aria-pressed={showArabic}
               >
                 <Languages className="h-3.5 w-3.5" />
               </Button>
@@ -542,6 +507,7 @@ const HadithCard = ({
               size="icon"
               className="h-9 w-9 sm:h-7 sm:w-7"
               onClick={handleOpenNewTab}
+              aria-label="Open hadith in new tab"
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>

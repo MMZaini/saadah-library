@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { Hadith } from './api'
+import { isQuotaExceededError } from './utils'
 
 // Check localStorage availability
 const isLocalStorageAvailable = () => {
@@ -99,7 +100,7 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to save bookmarks to localStorage:', error)
 
       // Try to handle quota exceeded error
-      if (error instanceof Error && error.message.includes('QuotaExceededError')) {
+      if (isQuotaExceededError(error)) {
         try {
           // Remove oldest bookmarks and try again
           const reducedBookmarks = bookmarks.slice(0, Math.floor(MAX_BOOKMARKS / 2))
@@ -206,11 +207,16 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
     return { imported, duplicates }
   }, [])
 
-  const isBookmarked = useCallback(
-    (bookId: string, hadithId: number) => {
-      return bookmarks.some((bookmark) => bookmark.id === hadithId && bookmark.bookId === bookId)
-    },
+  // O(1) membership lookups — HadithCard checks this on every render and
+  // bookmark lists can hold up to MAX_BOOKMARKS entries.
+  const bookmarkKeys = useMemo(
+    () => new Set(bookmarks.map((bookmark) => `${bookmark.bookId}::${bookmark.id}`)),
     [bookmarks],
+  )
+
+  const isBookmarked = useCallback(
+    (bookId: string, hadithId: number) => bookmarkKeys.has(`${bookId}::${hadithId}`),
+    [bookmarkKeys],
   )
 
   const contextValue = useMemo(
