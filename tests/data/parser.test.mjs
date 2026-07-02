@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   deriveFallbackHadithIdFromSourceUrl,
+  isSitemapIndex,
   parseChapterPage,
+  parseRobotsSitemapUrls,
   parseSitemap,
   websiteHadithToLegacyShape,
 } from '../../scripts/data/thaqalayn-page-parser.mjs'
@@ -78,6 +80,34 @@ describe('Thaqalayn page parser', () => {
 
     expect(sitemap.bookUrls).toEqual(['https://thaqalayn.net/book/1'])
     expect(sitemap.chapterUrls).toEqual(['https://thaqalayn.net/chapter/1/1/0'])
+  })
+
+  it('discovers sitemap URLs from robots.txt directives', () => {
+    // The live site replaced /sitemap.xml (404) with split sitemaps that are
+    // only announced in robots.txt — this is what broke the data workflow.
+    const robots = [
+      'User-Agent: *',
+      'Allow: /',
+      '',
+      'Sitemap: https://thaqalayn.net/sitemap/books.xml',
+      'sitemap: https://thaqalayn.net/sitemap/chapters.xml',
+      'Sitemap: /sitemap/relative.xml',
+      'Sitemap: https://thaqalayn.net/sitemap/books.xml',
+    ].join('\n')
+
+    expect(parseRobotsSitemapUrls(robots, 'https://thaqalayn.net')).toEqual([
+      'https://thaqalayn.net/sitemap/books.xml',
+      'https://thaqalayn.net/sitemap/chapters.xml',
+      'https://thaqalayn.net/sitemap/relative.xml',
+    ])
+    expect(parseRobotsSitemapUrls('User-Agent: *\nAllow: /', 'https://thaqalayn.net')).toEqual([])
+  })
+
+  it('distinguishes sitemap index documents from URL sets', () => {
+    expect(
+      isSitemapIndex('<sitemapindex><sitemap><loc>https://x/a.xml</loc></sitemap></sitemapindex>'),
+    ).toBe(true)
+    expect(isSitemapIndex('<urlset><url><loc>https://x/page</loc></url></urlset>')).toBe(false)
   })
 
   it('maps website records into legacy-compatible hadiths', () => {

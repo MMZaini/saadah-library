@@ -1,0 +1,61 @@
+name: CI
+
+# Full quality gate on every pull request (and pushes to main) so a change
+# that breaks any main feature — search, routing, data access, narrators,
+# scans, lint, types, or the production build — fails the PR.
+#
+# One job on purpose: the checkout is heavy (~1 GB of PDFs + ~180 MB dataset),
+# so parallel jobs would multiply checkout + install cost for little wall-clock
+# gain. Steps are ordered cheapest-first so obvious failures surface early.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Tests, lint, types & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      # The scan rasterizer tests prefer the pdf.js wasm/cmaps assets that the
+      # build normally copies into public/pdf (gitignored).
+      - name: Copy pdf.js assets
+        run: yarn copy:pdf-assets
+
+      - name: ESLint
+        run: yarn lint
+
+      - name: Prettier check
+        run: yarn format:check
+
+      - name: TypeScript
+        run: yarn tsc --noEmit
+
+      - name: Unit tests (vitest)
+        run: yarn test
+
+      - name: Dataset validation
+        run: yarn data:validate
+
+      - name: Runtime dependency guard (no external API calls)
+        run: yarn data:check-runtime
+
+      - name: Production build
+        run: yarn build

@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { open } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -9,7 +10,7 @@ import {
   getKhoeiRijalPdfUrl,
   getKhoeiRijalScanUrl,
 } from '../lib/rijal-pdfs.ts'
-import { withBasePath } from '../lib/assets.ts'
+import { stripBasePath, withBasePath } from '../lib/assets.ts'
 
 const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -43,6 +44,28 @@ describe('withBasePath', () => {
   })
 })
 
+describe('stripBasePath', () => {
+  it('removes the configured base path prefix', () => {
+    process.env.NEXT_PUBLIC_BASE_PATH = '/read'
+
+    expect(stripBasePath('/read/al-kafi/volume/1')).toBe('/al-kafi/volume/1')
+    expect(stripBasePath('/read')).toBe('/')
+  })
+
+  it('leaves unprefixed paths and lookalikes untouched', () => {
+    process.env.NEXT_PUBLIC_BASE_PATH = '/read'
+
+    expect(stripBasePath('/al-kafi')).toBe('/al-kafi')
+    expect(stripBasePath('/reads/scans')).toBe('/reads/scans')
+  })
+
+  it('is a no-op when no base path is configured', () => {
+    delete process.env.NEXT_PUBLIC_BASE_PATH
+
+    expect(stripBasePath('/read/al-kafi')).toBe('/read/al-kafi')
+  })
+})
+
 describe('book PDF assets', () => {
   it('resolves runtime volume IDs and numeric book volume selections', () => {
     expect(getPdfPathForVolume('Al-Kafi', 3)).toBe('/pdfs/books/al-kafi/volume-3.pdf')
@@ -64,6 +87,44 @@ describe('book PDF assets', () => {
 
     expect(missing).toEqual([])
   })
+})
+
+describe('PDF file integrity', () => {
+  // Reads only the first and last bytes of each file, so checking all ~1 GB of
+  // registered PDFs stays fast. Catches Git-LFS pointer files (text stand-ins
+  // that exist on disk but are not PDFs) and truncated uploads — both of which
+  // pass existence checks and break the reader/scan viewer silently.
+  async function pdfCorruption(absolutePath) {
+    const handle = await open(absolutePath, 'r')
+    try {
+      const { size } = await handle.stat()
+      const head = Buffer.alloc(5)
+      await handle.read(head, 0, 5, 0)
+      if (head.toString('ascii') !== '%PDF-') return 'missing %PDF- header'
+
+      const tailLength = Math.min(1024, size)
+      const tail = Buffer.alloc(tailLength)
+      await handle.read(tail, 0, tailLength, size - tailLength)
+      if (!tail.toString('latin1').includes('%%EOF')) return 'missing %%EOF trailer'
+
+      return null
+    } finally {
+      await handle.close()
+    }
+  }
+
+  it('every registered PDF is a real, non-truncated PDF file', async () => {
+    const allPaths = [...getAllKnownPdfPaths(), ...getAllKhoeiRijalPdfPaths()]
+    const corrupt = []
+
+    for (const pdfPath of allPaths) {
+      const absolute = join(repoRoot, 'public', pdfPath.replace(/^\//, ''))
+      const problem = await pdfCorruption(absolute).catch((err) => String(err))
+      if (problem) corrupt.push({ pdfPath, problem })
+    }
+
+    expect(corrupt).toEqual([])
+  }, 60_000)
 })
 
 describe('Khoei rijal PDF assets', () => {

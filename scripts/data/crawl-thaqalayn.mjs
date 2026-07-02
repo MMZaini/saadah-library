@@ -16,8 +16,11 @@ import {
 } from './shared.mjs'
 import { generateReleaseFromLegacy } from './generate-release.mjs'
 import {
+  classifySitemapUrls,
+  isSitemapIndex,
   parseBookPage,
   parseChapterPage,
+  parseRobotsSitemapUrls,
   parseSitemap,
   websiteHadithToLegacyShape,
 } from './thaqalayn-page-parser.mjs'
@@ -406,12 +409,37 @@ async function main() {
   const robots = await assertRobotsAllowsSearch()
   await writeText(path.join(crawlDir, 'robots.txt'), robots)
 
-  const sitemapXml = await fetchWithRetry(`${THAQALAYN_ORIGIN}/sitemap.xml`, {
-    headers: { Accept: 'application/xml,text/xml' },
-  }).then((response) => response.text())
-  await writeText(path.join(crawlDir, 'sitemap.xml'), sitemapXml)
+  // Sitemaps are declared in robots.txt: the site moved from a single
+  // /sitemap.xml (now a 404) to split per-content sitemaps. Discover them from
+  // the directives, expand any <sitemapindex> documents, and only fall back to
+  // the legacy /sitemap.xml path when robots.txt declares none.
+  const declaredSitemaps = parseRobotsSitemapUrls(robots, THAQALAYN_ORIGIN)
+  const sitemapQueue =
+    declaredSitemaps.length > 0 ? [...declaredSitemaps] : [`${THAQALAYN_ORIGIN}/sitemap.xml`]
 
-  const sitemap = parseSitemap(sitemapXml)
+  const discoveredUrls = new Set()
+  const fetchedSitemaps = new Set()
+  while (sitemapQueue.length > 0) {
+    const sitemapUrl = sitemapQueue.shift()
+    if (fetchedSitemaps.has(sitemapUrl)) continue
+    if (fetchedSitemaps.size >= 50) {
+      throw new Error('Refusing to expand more than 50 sitemap documents')
+    }
+    fetchedSitemaps.add(sitemapUrl)
+
+    const sitemapXml = await fetchWithRetry(sitemapUrl, {
+      headers: { Accept: 'application/xml,text/xml' },
+    }).then((response) => response.text())
+    await writeText(path.join(crawlDir, `sitemap-${fetchedSitemaps.size}.xml`), sitemapXml)
+
+    if (isSitemapIndex(sitemapXml)) {
+      sitemapQueue.push(...parseSitemap(sitemapXml).urls)
+    } else {
+      for (const url of parseSitemap(sitemapXml).urls) discoveredUrls.add(url)
+    }
+  }
+
+  const sitemap = classifySitemapUrls([...discoveredUrls])
   const chapterUrls = limit > 0 ? sitemap.chapterUrls.slice(0, limit) : sitemap.chapterUrls
   const bookUrls = sitemap.bookUrls
 
@@ -565,7 +593,7 @@ async function main() {
       commitSha: null,
       license: 'Thaqalayn website terms and robots/content signals',
       notes: [
-        'Discovered from sitemap.xml.',
+        'Discovered from sitemaps declared in robots.txt.',
         'Parsed from rendered Next page data.',
         'Legacy IDs were mapped from the previous blessed dataset when possible.',
       ],

@@ -34,5 +34,7 @@ describe('VOLUMES_WITH_GRADINGS stays in sync with the dataset', () => {
     }
 
     expect([...actual].sort()).toEqual([...VOLUMES_WITH_GRADINGS].sort())
-  })
+    // Reading every runtime volume (~176 MB) can exceed the default 5 s timeout
+    // on a cold filesystem cache (fresh CI runners).
+  }, 60_000)
 })

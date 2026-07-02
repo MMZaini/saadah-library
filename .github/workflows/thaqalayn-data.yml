@@ -8,7 +8,8 @@ on:
         required: false
         default: ''
   schedule:
-    - cron: '17 3 * * *'
+    # Weekly (Mondays 03:17 UTC); run manually any time via workflow_dispatch.
+    - cron: '17 3 * * 1'
 
 permissions:
   contents: write
