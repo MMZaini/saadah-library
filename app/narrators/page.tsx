@@ -51,7 +51,7 @@ export default function NarratorsPage() {
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start">
         <div className={cn(mobileDetail && 'hidden lg:block')}>
           <NarratorResults
             query={query}

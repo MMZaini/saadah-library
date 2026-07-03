@@ -324,7 +324,7 @@ export default function AlKafiBookBrowser({
       )}
 
       {!loading && !error && Object.keys(volumeSummary).length > 0 && (
-        <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
           {/* Chapter Navigation — on mobile this swaps out for the hadith panel
               once a chapter is picked (see the back button below). */}
           <div className={cn('lg:col-span-1', selectedChapter && 'hidden lg:block')}>
