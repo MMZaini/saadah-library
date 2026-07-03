@@ -23,7 +23,7 @@ export default function ContinueReading() {
   return (
     <div className="mb-8">
       <h2 className="mb-3 text-sm font-medium text-foreground-muted">Continue reading</h2>
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {entries.map((entry) => (
           <Link
             key={entry.path}
@@ -32,7 +32,7 @@ export default function ContinueReading() {
           >
             <BookOpen className="h-4 w-4 shrink-0 text-foreground-faint" />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-foreground">
+              <span className="line-clamp-2 break-words text-sm font-medium text-foreground">
                 {entry.chapter}
               </span>
               <span className="block truncate text-xs text-foreground-muted">
