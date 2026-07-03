@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import {
-  stripArabicFootnoteMarkers,
-  stripEnglishFootnoteMarkers,
-} from '@/lib/footnote-markers'
+import { stripArabicFootnoteMarkers, stripEnglishFootnoteMarkers } from '@/lib/footnote-markers'
 
 // Sample texts below are taken verbatim from the current dataset release so
 // the rules stay anchored to real content, not invented fixtures.
@@ -23,7 +20,8 @@ describe('stripArabicFootnoteMarkers', () => {
   })
 
   it('removes sequential per-verse footnote markers (Al-Amali-Saduq #29)', () => {
-    const text = '(حسبنا الله ونعم الوكيل) (1)! فإني سمعت الله عز وجل يقول بعقبها: (فانقلبوا بنعمة من الله وفضل لم يمسسهم سوء) (2)،'
+    const text =
+      '(حسبنا الله ونعم الوكيل) (1)! فإني سمعت الله عز وجل يقول بعقبها: (فانقلبوا بنعمة من الله وفضل لم يمسسهم سوء) (2)،'
     expect(stripArabicFootnoteMarkers(text)).toBe(
       '(حسبنا الله ونعم الوكيل)! فإني سمعت الله عز وجل يقول بعقبها: (فانقلبوا بنعمة من الله وفضل لم يمسسهم سوء)،',
     )
@@ -93,12 +91,14 @@ describe('stripEnglishFootnoteMarkers', () => {
   })
 
   it('preserves parenthesized enumerations (Al-Amali-Saduq #18)', () => {
-    const text = 'The readers of the Quran are of three types: (1) One is a man who has learned the Quran'
+    const text =
+      'The readers of the Quran are of three types: (1) One is a man who has learned the Quran'
     expect(stripEnglishFootnoteMarkers(text)).toBe(text)
   })
 
   it('preserves Quran references and ranges', () => {
-    const refs = 'fear Allah alone.’ (35:28) and (2:167). Days: (2) the tenth, (3-5) three days of al-Tashriq'
+    const refs =
+      'fear Allah alone.’ (35:28) and (2:167). Days: (2) the tenth, (3-5) three days of al-Tashriq'
     expect(stripEnglishFootnoteMarkers(refs)).toBe(refs)
   })
 

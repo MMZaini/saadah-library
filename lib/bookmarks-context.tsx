@@ -123,7 +123,9 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
 
       // Create bookmark data with preview text, footnote markers removed so
       // the stored previews match what HadithCard displays.
-      const englishText = stripEnglishFootnoteMarkers(hadith.englishText || hadith.thaqalaynMatn || '')
+      const englishText = stripEnglishFootnoteMarkers(
+        hadith.englishText || hadith.thaqalaynMatn || '',
+      )
       const arabicText = stripArabicFootnoteMarkers(hadith.arabicText || '')
 
       const newBookmark: BookmarkData = {

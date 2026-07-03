@@ -447,8 +447,8 @@ const HadithCard = ({
         <p
           onClick={() => setSanadExpanded((prev) => !prev)}
           className={cn(
-            'hadith-english-size-only mb-2 cursor-pointer font-lora text-xs text-foreground-faint sm:cursor-auto sm:line-clamp-none sm:text-sm',
-            !sanadExpanded && 'line-clamp-3'
+            'hadith-english-size-only mb-2 cursor-pointer font-lora text-xs text-foreground-faint sm:line-clamp-none sm:cursor-auto sm:text-sm',
+            !sanadExpanded && 'line-clamp-3',
           )}
           style={{ fontSize: `${settings.englishFontSize * englishFontScale}%` }}
         >
