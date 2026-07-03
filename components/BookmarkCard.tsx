@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { BookmarkData } from '@/lib/bookmarks-context'
+// Previews created before footnote stripping existed may still carry markers
+// in localStorage; stripping at render is idempotent, so it covers both.
+import { stripArabicFootnoteMarkers, stripEnglishFootnoteMarkers } from '@/lib/footnote-markers'
 import { getBookConfig, getBookUrlSlug } from '@/lib/books-config'
 import { withBasePath } from '@/lib/assets'
 import { useBookmarks } from '@/lib/bookmarks-context'
@@ -108,7 +111,7 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
             dir="rtl"
             style={{ fontSize: `${settings.arabicFontSize * 1.485}%` }}
           >
-            {bookmark.arabicPreview}
+            {stripArabicFootnoteMarkers(bookmark.arabicPreview)}
           </div>
         </div>
       ) : (
@@ -116,7 +119,7 @@ export default function BookmarkCard({ bookmark, className }: BookmarkCardProps)
           className="font-mono text-sm leading-relaxed text-foreground"
           style={{ fontSize: `${settings.englishFontSize}%` }}
         >
-          {bookmark.preview}
+          {stripEnglishFootnoteMarkers(bookmark.preview)}
         </div>
       )}
 
