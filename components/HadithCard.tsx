@@ -172,6 +172,7 @@ const HadithCard = ({
   const [showArabic, setShowArabic] = useState(resolvedArabicDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(settings.alwaysShowFullHadith)
+  const [sanadExpanded, setSanadExpanded] = useState(settings.alwaysShowFullHadith)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -183,6 +184,10 @@ const HadithCard = ({
 
   useEffect(() => {
     setArabicExpanded(settings.alwaysShowFullHadith)
+  }, [settings.alwaysShowFullHadith])
+
+  useEffect(() => {
+    setSanadExpanded(settings.alwaysShowFullHadith)
   }, [settings.alwaysShowFullHadith])
 
   useEffect(() => {
@@ -431,8 +436,15 @@ const HadithCard = ({
   const englishBlock = (
     <>
       {hadith.thaqalaynSanad && (
+        // On mobile the sanad collapses to 3 lines to keep lists compact;
+        // tapping it reveals the full chain. Desktop always shows it in full
+        // (sm:line-clamp-none), so the tap toggle only matters below sm.
         <p
-          className="hadith-english-size-only mb-2 line-clamp-3 font-lora text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
+          onClick={() => setSanadExpanded((prev) => !prev)}
+          className={cn(
+            'hadith-english-size-only mb-2 cursor-pointer font-lora text-xs text-foreground-faint sm:cursor-auto sm:line-clamp-none sm:text-sm',
+            !sanadExpanded && 'line-clamp-3'
+          )}
           style={{ fontSize: `${settings.englishFontSize * englishFontScale}%` }}
         >
           {hadith.thaqalaynSanad.trim()}
