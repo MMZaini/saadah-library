@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { Hadith } from './api'
+import { stripArabicFootnoteMarkers, stripEnglishFootnoteMarkers } from './footnote-markers'
 import { isQuotaExceededError } from './utils'
 
 // Check localStorage availability
@@ -120,9 +121,10 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
         return prev
       }
 
-      // Create bookmark data with preview text
-      const englishText = hadith.englishText || hadith.thaqalaynMatn || ''
-      const arabicText = hadith.arabicText || ''
+      // Create bookmark data with preview text, footnote markers removed so
+      // the stored previews match what HadithCard displays.
+      const englishText = stripEnglishFootnoteMarkers(hadith.englishText || hadith.thaqalaynMatn || '')
+      const arabicText = stripArabicFootnoteMarkers(hadith.arabicText || '')
 
       const newBookmark: BookmarkData = {
         id: hadith.id,

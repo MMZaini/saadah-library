@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, memo, ReactNode } from 'react'
 import { Hadith } from '@/lib/api'
 import { findFirstMatchIndex, getHighlightSegments, normalizeArabic } from '@/lib/search-utils'
+import { stripArabicFootnoteMarkers, stripEnglishFootnoteMarkers } from '@/lib/footnote-markers'
 import { useSettings } from '@/lib/settings-context'
 import { useBookmarks } from '@/lib/bookmarks-context'
 import { getHadithUrl, getChapterUrl } from '@/lib/hadith-urls'
@@ -172,6 +173,7 @@ const HadithCard = ({
   const [showArabic, setShowArabic] = useState(resolvedArabicDefault)
   const [expanded, setExpanded] = useState(settings.alwaysShowFullHadith)
   const [arabicExpanded, setArabicExpanded] = useState(settings.alwaysShowFullHadith)
+  const [sanadExpanded, setSanadExpanded] = useState(settings.alwaysShowFullHadith)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -186,21 +188,29 @@ const HadithCard = ({
   }, [settings.alwaysShowFullHadith])
 
   useEffect(() => {
+    setSanadExpanded(settings.alwaysShowFullHadith)
+  }, [settings.alwaysShowFullHadith])
+
+  useEffect(() => {
     setShowArabic(showArabicByDefault ?? settings.defaultLanguage === 'arabic')
   }, [showArabicByDefault, settings.defaultLanguage])
 
   // Memoize text processing. Both languages use the same length-based
   // "long text" rule; Arabic previously measured rendered overflow with a
   // DOM-clone per card per resize, which thrashed layout on long chapters.
-  const { englishText, arabicText, isLongText, isLongArabic } = useMemo(() => {
-    const rawEnglish = hadith.englishText || hadith.thaqalaynMatn
-    const arabic = hadith.arabicText
-    const chain = hadith.thaqalaynSanad
+  // Footnote markers are stripped here — before the chain/matn prefix
+  // comparison, so both sides are transformed identically — which also keeps
+  // the copy actions (they reuse these values) footnote-free.
+  const { englishText, arabicText, sanadText, isLongText, isLongArabic } = useMemo(() => {
+    const rawEnglish = stripEnglishFootnoteMarkers(hadith.englishText || hadith.thaqalaynMatn)
+    const arabic = stripArabicFootnoteMarkers(hadith.arabicText)
+    const chain = stripEnglishFootnoteMarkers(hadith.thaqalaynSanad)
     const processed = chain && rawEnglish ? removeChainFromMatn(rawEnglish, chain) : rawEnglish
 
     return {
       englishText: processed,
       arabicText: arabic,
+      sanadText: chain,
       isLongText: (processed?.length || 0) > LONG_TEXT_THRESHOLD,
       isLongArabic: (arabic?.length || 0) > LONG_TEXT_THRESHOLD,
     }
@@ -430,12 +440,19 @@ const HadithCard = ({
 
   const englishBlock = (
     <>
-      {hadith.thaqalaynSanad && (
+      {sanadText && (
+        // On mobile the sanad collapses to 3 lines to keep lists compact;
+        // tapping it reveals the full chain. Desktop always shows it in full
+        // (sm:line-clamp-none), so the tap toggle only matters below sm.
         <p
-          className="hadith-english-size-only mb-2 line-clamp-3 font-lora text-xs text-foreground-faint sm:line-clamp-none sm:text-sm"
+          onClick={() => setSanadExpanded((prev) => !prev)}
+          className={cn(
+            'hadith-english-size-only mb-2 cursor-pointer font-lora text-xs text-foreground-faint sm:cursor-auto sm:line-clamp-none sm:text-sm',
+            !sanadExpanded && 'line-clamp-3'
+          )}
           style={{ fontSize: `${settings.englishFontSize * englishFontScale}%` }}
         >
-          {hadith.thaqalaynSanad.trim()}
+          {sanadText}
         </p>
       )}
       <div
