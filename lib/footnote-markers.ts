@@ -1,11 +1,17 @@
+import { normalizeArabicPresentation } from './utils'
+
 /**
- * Strips printed-edition footnote markers from hadith text at display time.
+ * Strips printed-edition footnote markers from hadith text at display time,
+ * and folds non-standard Arabic-script letters to their standard forms so the
+ * Quranic display font can render them (see `normalizeArabicPresentation`).
  *
  * The dataset carries markers like "(2)", "(١)", "[1]", "(*)" and a stray
  * superscript "¹" that reference footnotes of the printed source editions —
- * footnotes the app does not have. The dataset itself is immutable (releases
- * are checksummed in the manifest), so cleanup happens here, on the way to
- * the screen/clipboard, never in the data files.
+ * footnotes the app does not have. It also carries Persian code points (Farsi
+ * yeh ی, keheh ک) from Persian-sourced digitisations that the display font
+ * shows as broken glyphs. The dataset itself is immutable (releases are
+ * checksummed in the manifest), so all such cleanup happens here, on the way
+ * to the screen/clipboard, never in the data files.
  *
  * The rules are deliberately asymmetric per language. They were derived from
  * a census of all 33k hadiths in the current release:
@@ -62,7 +68,9 @@ export function stripArabicFootnoteMarkers(text: string): string
 export function stripArabicFootnoteMarkers(text: string | undefined): string | undefined
 export function stripArabicFootnoteMarkers(text: string | undefined): string | undefined {
   if (!text) return text
-  return applyPatterns(text, ARABIC_PATTERNS)
+  // Fold Persian code points first so Persian-digit markers (e.g. "(۲)") are
+  // normalised into a form the digit patterns below can also strip.
+  return applyPatterns(normalizeArabicPresentation(text), ARABIC_PATTERNS)
 }
 
 export function stripEnglishFootnoteMarkers(text: string): string

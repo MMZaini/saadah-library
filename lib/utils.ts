@@ -23,6 +23,58 @@ export function removeHarakat(text: string): string {
 }
 
 /**
+ * Folds non-standard Arabic-script code points that the Uthmanic Hafs display
+ * font (`.font-arabic`) cannot draw — it ships only placeholder "stub" glyphs
+ * for them, which the browser renders as broken dotted-circle ornaments — to
+ * the standard Arabic letters the font renders correctly, with full cursive
+ * joining.
+ *
+ * These Persian/Urdu code points appear in the dataset because the upstream
+ * texts were digitised from Persian sources: e.g. Farsi yeh (ی U+06CC) in
+ * رَضِیتُ where Arabic yeh (ي U+064A) is meant, and keheh (ک U+06A9) for kaf
+ * (ك U+0643). Only characters with an unambiguous standard-Arabic equivalent
+ * are folded here — the substituted letter renders in-font and joins to its
+ * neighbours. Genuinely Persian letters with no Arabic counterpart (پ چ گ ژ)
+ * and punctuation/signs (؟ ۔) are deliberately left untouched; those are
+ * non-joining, so they are handled at the font layer by the @font-face
+ * `unicode-range` in globals.css, which routes them to Noto Sans Arabic.
+ *
+ * Unlike `normalizeArabic` (search-utils), this preserves harakat and every
+ * other character, so it is safe on the way to the screen and clipboard.
+ * Pure and idempotent.
+ */
+const ARABIC_PRESENTATION_FOLD: Readonly<Record<string, string>> = {
+  ی: 'ي', // Farsi yeh ی → Arabic yeh ي
+  ک: 'ك', // keheh ک → Arabic kaf ك
+  ڪ: 'ك', // swash kaf ڪ → Arabic kaf ك
+  ھ: 'ه', // heh doachashmee ھ → Arabic heh ه
+  ہ: 'ه', // heh goal ہ → Arabic heh ه
+  // Extended (Persian) Arabic-Indic digits ۰-۹ → standard Arabic-Indic ٠-٩,
+  // which the Quranic font draws (used for verse numbers).
+  '۰': '٠',
+  '۱': '١',
+  '۲': '٢',
+  '۳': '٣',
+  '۴': '٤',
+  '۵': '٥',
+  '۶': '٦',
+  '۷': '٧',
+  '۸': '٨',
+  '۹': '٩',
+}
+
+const ARABIC_PRESENTATION_CHAR_CLASS = /[یکڪھہ۰-۹]/g
+
+export function normalizeArabicPresentation(text: string): string
+export function normalizeArabicPresentation(text: string | undefined): string | undefined
+export function normalizeArabicPresentation(text: string | undefined): string | undefined {
+  if (!text) return text
+  // Runs unconditionally (no stateful `.test()` on the global regex); the
+  // replace is a no-op copy when nothing matches.
+  return text.replace(ARABIC_PRESENTATION_CHAR_CLASS, (ch) => ARABIC_PRESENTATION_FOLD[ch] ?? ch)
+}
+
+/**
  * True if the error is the browser's storage-quota error. Browsers put the
  * identifier in `error.name` (the message text varies per engine), with
  * legacy DOMException code 22 as a fallback.

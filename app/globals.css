@@ -11,11 +11,22 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  /* Exclude U+060C (Arabic comma ،) and U+061B (Arabic semicolon ؛) so the browser
-     falls through to Noto Sans Arabic instead of rendering them as Quranic ayah symbols. */
+  /* This Quranic font ships only placeholder "stub" glyphs for many Arabic-block
+     code points (they render as a broken dotted-circle ornament). The ranges
+     below grant the font ONLY the code points it draws correctly and route the
+     rest to Noto Sans Arabic, which is next in the .font-arabic stack. Excluded:
+       • U+060C comma ، and U+061B semicolon ؛
+       • U+061F question mark ؟
+       • U+0672–U+06D5 Persian/Urdu extended letters (پ چ گ ژ …) and the
+         Persian full stop ۔ — none are standard Arabic, all are stubs here
+       • U+06F0–U+06FF extended Arabic-Indic digits ۰–۹ and further foreign letters
+     Persian yeh (ی) and keheh (ک), which sit inside Arabic words, are folded to
+     Arabic letters in text (normalizeArabicPresentation) so they render joined in
+     THIS font; their code points fall in the excluded band above as a safety net.
+     Kept: U+0620–U+0671 core Arabic + alef wasla, and U+06D6–U+06ED Quran marks. */
   unicode-range:
-    U+0600-060B, U+060D-061A, U+061C-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F,
-    U+2028-202F, U+0020-007E;
+    U+0600-060B, U+060D-061A, U+061C-061E, U+0620-0671, U+06D6-06ED, U+0750-077F, U+FB50-FDFF,
+    U+FE70-FEFF, U+200C-200F, U+2028-202F, U+0020-007E;
 }
 
 @tailwind base;
