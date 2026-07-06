@@ -63,8 +63,20 @@ describe('stripArabicFootnoteMarkers', () => {
     expect(stripArabicFootnoteMarkers('سطر أول (1)\nسطر ثان')).toBe('سطر أول\nسطر ثان')
   })
 
+  it('folds Persian code points that the display font cannot render', () => {
+    // Farsi yeh (ی) and keheh (ک) fold to Arabic yeh/kaf; the sentence stays
+    // otherwise identical (Thawab al-Amal #105).
+    expect(stripArabicFootnoteMarkers('مَنْ قَالَ رَضِیتُ بِاللَّهِ رَبّاً کَانَ حَقّاً')).toBe(
+      'مَنْ قَالَ رَضِيتُ بِاللَّهِ رَبّاً كَانَ حَقّاً',
+    )
+  })
+
+  it('strips a Persian-digit footnote marker after folding it (۲ → ٢)', () => {
+    expect(stripArabicFootnoteMarkers('قول (۲) نص')).toBe('قول نص')
+  })
+
   it('is idempotent and passes through empty/undefined', () => {
-    const once = stripArabicFootnoteMarkers('قول (2). نص')
+    const once = stripArabicFootnoteMarkers('قول (2). نص رَضِیتُ')
     expect(stripArabicFootnoteMarkers(once)).toBe(once)
     expect(stripArabicFootnoteMarkers(undefined)).toBeUndefined()
     expect(stripArabicFootnoteMarkers('')).toBe('')
@@ -145,6 +157,8 @@ describe('against the real dataset', () => {
       ...(await volume('Al-Amali-Saduq')),
       ...(await volume('Al-Tawhid-Saduq')),
       ...(await volume('Al-Khisal-Saduq')),
+      // The book that carries the Persian-code-point mis-encodings.
+      ...(await volume('Thawab-al-Amal-wa-iqab-al-Amal-Saduq')),
     ]
 
     const quranRef = /\(\s*\d{1,3}\s*:\s*\d{1,3}\s*\)/g
@@ -154,6 +168,9 @@ describe('against the real dataset', () => {
         // No 1–2 digit paren/bracket markers survive…
         expect(cleaned).not.toMatch(/\(\s*[\d٠-٩]{1,2}\s*\)/)
         expect(cleaned).not.toMatch(/\[\s*\d{1,3}\s*\]/)
+        // …and no non-standard connecting letters that the display font renders
+        // as broken glyphs (Farsi yeh, keheh, swash kaf, heh doachashmee/goal).
+        expect(cleaned).not.toMatch(/[یکڪھہ]/)
       }
       for (const text of [h.englishText, h.thaqalaynMatn]) {
         if (!text) continue
