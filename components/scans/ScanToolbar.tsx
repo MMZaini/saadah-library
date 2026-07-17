@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import {
   Highlighter,
+  Underline,
+  Palette,
   Move,
   ZoomIn,
   ZoomOut,
@@ -17,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { normalizeExportLayout } from '@/lib/scan-layout'
 import {
   HIGHLIGHT_COLORS,
+  UNDERLINE_COLORS,
   type Highlight,
   type ExportLayout,
   type ExportFormat,
@@ -247,14 +250,80 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
   )
 }
 
+function ColorPanel({
+  tool,
+  activeColor,
+  onColorChange,
+  selectedHighlight,
+  onClose,
+}: Pick<ScanToolbarProps, 'tool' | 'activeColor' | 'onColorChange' | 'selectedHighlight'> & {
+  onClose: () => void
+}) {
+  const annotationKind =
+    selectedHighlight?.kind ?? (tool === 'underline' ? 'underline' : 'highlight')
+  const colors = annotationKind === 'underline' ? UNDERLINE_COLORS : HIGHLIGHT_COLORS
+  const label = annotationKind === 'underline' ? 'Underline colour' : 'Highlight colour'
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden />
+      <div
+        role="dialog"
+        aria-label={label}
+        className="absolute left-1/2 top-full z-50 mt-2 w-[min(17rem,calc(100vw-1rem))] -translate-x-1/2 rounded-lg border border-border bg-surface-1 p-3 shadow-xl"
+      >
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-faint">
+          {label}
+        </p>
+        <div className="grid grid-cols-6 gap-2">
+          {colors.map((color) => (
+            <button
+              key={color.value}
+              type="button"
+              onClick={() => onColorChange(color.value)}
+              title={color.name}
+              aria-label={`${color.name} ${annotationKind}`}
+              aria-pressed={activeColor.toLowerCase() === color.value.toLowerCase()}
+              className={cn(
+                'h-8 w-8 rounded-full border border-black/30 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                activeColor.toLowerCase() === color.value.toLowerCase() &&
+                  'scale-105 shadow-sm ring-2 ring-white/70',
+              )}
+              style={{ backgroundColor: color.value }}
+            />
+          ))}
+        </div>
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 border-t border-border pt-3 text-sm text-foreground-muted">
+          <span>Custom colour</span>
+          <span
+            className="relative h-8 w-12 overflow-hidden rounded-md border border-border"
+            style={{ backgroundColor: activeColor }}
+          >
+            <input
+              type="color"
+              value={activeColor}
+              onChange={(event) => onColorChange(event.currentTarget.value)}
+              aria-label={`Custom ${annotationKind} colour`}
+              className="absolute -inset-2 h-12 w-16 cursor-pointer opacity-0"
+            />
+          </span>
+        </label>
+        {selectedHighlight && (
+          <p className="mt-2 text-xs text-foreground-faint">
+            Changes apply to the selected {annotationKind}.
+          </p>
+        )}
+      </div>
+    </>
+  )
+}
+
 export default function ScanToolbar(props: ScanToolbarProps) {
   const {
     hasDoc,
     tool,
     onToolChange,
     activeColor,
-    onColorChange,
-    selectedHighlight,
     zoom,
     onZoomIn,
     onZoomOut,
@@ -268,6 +337,7 @@ export default function ScanToolbar(props: ScanToolbarProps) {
     onOpenSidebar,
   } = props
   const [exportOpen, setExportOpen] = useState(false)
+  const [colorOpen, setColorOpen] = useState(false)
 
   return (
     <>
@@ -304,6 +374,22 @@ export default function ScanToolbar(props: ScanToolbarProps) {
             <button
               type="button"
               disabled={!hasDoc}
+              onClick={() => onToolChange('underline')}
+              title="Underline (drag under text)"
+              aria-label="Draw underline"
+              aria-pressed={tool === 'underline'}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-all disabled:opacity-40',
+                tool === 'underline'
+                  ? 'bg-accent text-accent-foreground shadow-sm'
+                  : 'text-foreground-muted hover:bg-surface-2 hover:text-foreground',
+              )}
+            >
+              <Underline className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={!hasDoc}
               onClick={() => onToolChange('select')}
               title="Select, move and resize highlights"
               aria-label="Select and move highlights"
@@ -319,26 +405,27 @@ export default function ScanToolbar(props: ScanToolbarProps) {
             </button>
           </div>
 
-          <div className="ml-1 hidden items-center gap-1 rounded-lg border border-border bg-surface-1 px-2 py-1.5 shadow-sm lg:flex">
-            {HIGHLIGHT_COLORS.map((color) => (
-              <button
-                key={color.value}
-                type="button"
-                disabled={!hasDoc}
-                onClick={() => {
-                  onColorChange(color.value)
-                }}
-                title={`${color.name}${selectedHighlight ? ' (apply to selected highlight)' : ''}`}
-                aria-label={`${color.name} highlight`}
-                className={cn(
-                  'h-5 w-5 rounded-full border border-black/30 transition-transform disabled:opacity-40',
-                  activeColor === color.value
-                    ? 'scale-105 shadow-sm ring-2 ring-white/50'
-                    : 'hover:scale-110',
-                )}
-                style={{ backgroundColor: color.value }}
+          <div className="relative ml-1">
+            <button
+              type="button"
+              disabled={!hasDoc}
+              onClick={() => {
+                setExportOpen(false)
+                setColorOpen((open) => !open)
+              }}
+              title="Choose annotation colour"
+              aria-label="Choose annotation colour"
+              aria-expanded={colorOpen}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface-1 px-2 text-foreground-muted shadow-sm transition-colors hover:bg-surface-2 hover:text-foreground disabled:opacity-40"
+            >
+              <Palette className="h-4 w-4" />
+              <span
+                aria-hidden
+                className="h-4 w-4 rounded-full border border-black/30"
+                style={{ backgroundColor: activeColor }}
               />
-            ))}
+            </button>
+            {colorOpen && <ColorPanel {...props} onClose={() => setColorOpen(false)} />}
           </div>
         </div>
 
@@ -407,7 +494,10 @@ export default function ScanToolbar(props: ScanToolbarProps) {
               size="sm"
               className="h-9 gap-1.5 rounded-lg shadow-sm"
               disabled={!hasDoc}
-              onClick={() => setExportOpen((v) => !v)}
+              onClick={() => {
+                setColorOpen(false)
+                setExportOpen((v) => !v)
+              }}
             >
               <Download className="h-4 w-4" />
               <span className="hidden lg:inline">Export</span>
@@ -448,26 +538,6 @@ export default function ScanToolbar(props: ScanToolbarProps) {
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
-
-          <div className="h-5 w-px shrink-0 bg-border" />
-
-          <div className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-surface-1 px-2 py-1">
-            {HIGHLIGHT_COLORS.map((color) => (
-              <button
-                key={color.value}
-                type="button"
-                onClick={() => {
-                  onColorChange(color.value)
-                }}
-                title={color.name}
-                className={cn(
-                  'h-6 w-6 shrink-0 rounded-full border border-black/20 transition-transform',
-                  activeColor === color.value ? 'scale-105 shadow-sm ring-2 ring-white/50' : '',
-                )}
-                style={{ backgroundColor: color.value }}
-              />
-            ))}
           </div>
 
           <div className="h-5 w-px shrink-0 bg-border" />

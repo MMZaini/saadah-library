@@ -4,16 +4,25 @@ import { Fragment, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import type { Highlight } from '@/lib/scan-export'
 import {
+  chooseUnderlineMoveAxis,
+  createHighlightDraft,
+  createUnderlineDraft,
+  ensureUnderlineHitArea,
   moveHighlight,
+  moveUnderlineOnAxis,
+  resolveDrawCommit,
   resizeHighlight,
   type HighlightRect,
   type ResizeHandle,
+  type UnderlineMoveAxis,
 } from '@/lib/scan-highlight-geometry'
 import { cn } from '@/lib/utils'
 import type { ScanTool } from './PageCanvas'
 
 const MIN_DRAW_PX = 6
 const MIN_RESIZE_PX = 12
+const UNDERLINE_HIT_PX = 12
+const AXIS_LOCK_THRESHOLD_PX = 4
 
 type Interaction =
   | { kind: 'draw'; startX: number; startY: number }
@@ -23,6 +32,7 @@ type Interaction =
       startY: number
       highlight: Highlight
       handle?: ResizeHandle
+      axis?: UnderlineMoveAxis
     }
 
 interface HighlightOverlayProps {
@@ -51,6 +61,17 @@ const HANDLE_POSITIONS: { handle: ResizeHandle; className: string; cursor: strin
   { handle: 'w', className: '-left-[5px] top-1/2 -translate-y-1/2', cursor: 'ew-resize' },
 ]
 
+// Underlines resize only from their visible endpoints. The larger parent rect
+// remains the move/touch target, but its invisible height is not exposed as UI.
+const UNDERLINE_HANDLE_POSITIONS: {
+  handle: ResizeHandle
+  className: string
+  cursor: string
+}[] = [
+  { handle: 'w', className: '-left-[5px] -bottom-[5px]', cursor: 'ew-resize' },
+  { handle: 'e', className: '-right-[5px] -bottom-[5px]', cursor: 'ew-resize' },
+]
+
 export default function HighlightOverlay({
   pageNum,
   tool,
@@ -65,7 +86,13 @@ export default function HighlightOverlay({
 }: HighlightOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const interactionRef = useRef<Interaction | null>(null)
+  const draftRef = useRef<HighlightRect | null>(null)
   const [draft, setDraft] = useState<HighlightRect | null>(null)
+
+  const updateDraft = (nextDraft: HighlightRect | null) => {
+    draftRef.current = nextDraft
+    setDraft(nextDraft)
+  }
 
   const point = (event: React.PointerEvent) => {
     const bounds = overlayRef.current!.getBoundingClientRect()
@@ -91,7 +118,7 @@ export default function HighlightOverlay({
     const { x, y } = point(event)
     capture(event)
     interactionRef.current = { kind: 'draw', startX: x, startY: y }
-    setDraft({ x, y, w: 0, h: 0 })
+    updateDraft({ x, y, w: 0, h: 0 })
   }
 
   const beginEdit = (event: React.PointerEvent, highlight: Highlight, handle?: ResizeHandle) => {
@@ -121,17 +148,28 @@ export default function HighlightOverlay({
     const dy = y - interaction.startY
 
     if (interaction.kind === 'draw') {
-      setDraft({
-        x: Math.min(interaction.startX, x),
-        y: Math.min(interaction.startY, y),
-        w: Math.abs(x - interaction.startX),
-        h: Math.abs(y - interaction.startY),
-      })
+      if (tool === 'underline') {
+        // Lock the baseline to pointer-down so vertical hand wobble cannot
+        // make a supposedly horizontal underline jump above or below the text.
+        updateDraft(createUnderlineDraft(interaction.startX, interaction.startY, x))
+        return
+      }
+      updateDraft(createHighlightDraft(interaction.startX, interaction.startY, x, y))
       return
     }
 
     const original = interaction.highlight
     if (interaction.kind === 'move') {
+      if (original.kind === 'underline') {
+        if (!interaction.axis) {
+          const distanceX = Math.abs(dx * bounds.width)
+          const distanceY = Math.abs(dy * bounds.height)
+          if (Math.max(distanceX, distanceY) < AXIS_LOCK_THRESHOLD_PX) return
+          interaction.axis = chooseUnderlineMoveAxis(distanceX, distanceY)
+        }
+        onUpdateHighlight(original.id, moveUnderlineOnAxis(original, dx, dy, interaction.axis))
+        return
+      }
       onUpdateHighlight(original.id, moveHighlight(original, dx, dy))
       return
     }
@@ -147,17 +185,37 @@ export default function HighlightOverlay({
   const endInteraction = (event: React.PointerEvent, commit = true) => {
     const interaction = interactionRef.current
     interactionRef.current = null
-    if (commit && interaction?.kind === 'draw' && draft) {
+    if (commit && interaction?.kind === 'draw') {
       const bounds = overlayRef.current?.getBoundingClientRect()
-      if (
-        bounds &&
-        draft.w * bounds.width >= MIN_DRAW_PX &&
-        draft.h * bounds.height >= MIN_DRAW_PX
-      ) {
-        onAddHighlight(pageNum, draft)
+      // The ref is updated synchronously with the geometry used by the preview.
+      // Prefer it over pointer-up coordinates, which can regress to an earlier
+      // position for captured touch/stylus pointers. Release geometry is only a
+      // defensive fallback if drawing somehow ended before a draft was stored.
+      const releasePoint = !draftRef.current && bounds ? point(event) : null
+      const releaseFallback = releasePoint
+        ? tool === 'underline'
+          ? createUnderlineDraft(interaction.startX, interaction.startY, releasePoint.x)
+          : createHighlightDraft(
+              interaction.startX,
+              interaction.startY,
+              releasePoint.x,
+              releasePoint.y,
+            )
+        : null
+      const finalDraft = resolveDrawCommit(draftRef.current, releaseFallback)
+      if (bounds && finalDraft && finalDraft.w * bounds.width >= MIN_DRAW_PX) {
+        if (tool === 'underline') {
+          // A natural left-to-right stroke has almost no height. Preserve a
+          // touch-friendly editable area ending at the user's baseline while
+          // rendering only its bottom edge as the underline.
+          const minHeight = Math.min(1, UNDERLINE_HIT_PX / bounds.height)
+          onAddHighlight(pageNum, ensureUnderlineHitArea(finalDraft, minHeight))
+        } else if (finalDraft.h * bounds.height >= MIN_DRAW_PX) {
+          onAddHighlight(pageNum, finalDraft)
+        }
       }
     }
-    setDraft(null)
+    updateDraft(null)
     if (overlayRef.current?.hasPointerCapture(event.pointerId)) {
       overlayRef.current.releasePointerCapture(event.pointerId)
     }
@@ -171,8 +229,8 @@ export default function HighlightOverlay({
       draggable={false}
       className="absolute inset-0 select-none [-webkit-touch-callout:none] [-webkit-user-drag:none]"
       style={{
-        touchAction: tool === 'draw' || interactionRef.current ? 'none' : 'auto',
-        cursor: tool === 'draw' ? 'crosshair' : 'default',
+        touchAction: tool !== 'select' || interactionRef.current ? 'none' : 'auto',
+        cursor: tool !== 'select' ? 'crosshair' : 'default',
       }}
       onDragStartCapture={(event) => event.preventDefault()}
       onPointerDown={beginDraw}
@@ -185,6 +243,7 @@ export default function HighlightOverlay({
     >
       {highlights.map((highlight) => {
         const selected = tool === 'select' && selectedHighlightId === highlight.id
+        const isUnderline = highlight.kind === 'underline'
         const rightEdge = highlight.x + highlight.w
         const deletePlacement = rightEdge <= 0.92 ? 'right' : highlight.x >= 0.08 ? 'left' : 'above'
         return (
@@ -194,7 +253,9 @@ export default function HighlightOverlay({
               role={tool === 'select' ? 'button' : undefined}
               tabIndex={selected ? 0 : -1}
               aria-label={
-                tool === 'select' ? `Highlight on page ${pageNum}. Drag to move.` : undefined
+                tool === 'select'
+                  ? `${isUnderline ? 'Underline' : 'Highlight'} on page ${pageNum}. Drag to move.`
+                  : undefined
               }
               onPointerDown={(event) => beginEdit(event, highlight)}
               onKeyDown={(event) => {
@@ -209,29 +270,44 @@ export default function HighlightOverlay({
                 width: `${highlight.w * 100}%`,
                 height: `${highlight.h * 100}%`,
                 touchAction: tool === 'select' ? 'none' : undefined,
-                boxShadow: selected
-                  ? '0 0 0 1px rgba(9, 9, 11, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.85)'
-                  : undefined,
+                boxShadow:
+                  selected && !isUnderline
+                    ? '0 0 0 1px rgba(9, 9, 11, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.85)'
+                    : undefined,
               }}
             >
               <span
-                className="pointer-events-none absolute inset-0"
-                style={{ backgroundColor: highlight.color, mixBlendMode: 'multiply' }}
+                className={cn(
+                  'pointer-events-none absolute',
+                  isUnderline ? 'inset-x-0 bottom-0 h-[3px]' : 'inset-0',
+                )}
+                style={{
+                  backgroundColor: highlight.color,
+                  mixBlendMode: isUnderline ? undefined : 'multiply',
+                }}
               />
+              {selected && isUnderline && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 -bottom-[4px] h-[11px] rounded-[3px] border border-zinc-900/75 shadow-[0_0_0_1px_rgba(255,255,255,0.85)]"
+                />
+              )}
               {selected &&
-                HANDLE_POSITIONS.map(({ handle, className, cursor }) => (
-                  <span
-                    key={handle}
-                    aria-hidden
-                    draggable={false}
-                    onPointerDown={(event) => beginEdit(event, highlight, handle)}
-                    className={cn(
-                      "absolute h-2.5 w-2.5 rounded-full border border-zinc-300/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] after:absolute after:-inset-2 after:content-['']",
-                      className,
-                    )}
-                    style={{ cursor, touchAction: 'none' }}
-                  />
-                ))}
+                (isUnderline ? UNDERLINE_HANDLE_POSITIONS : HANDLE_POSITIONS).map(
+                  ({ handle, className, cursor }) => (
+                    <span
+                      key={handle}
+                      aria-hidden
+                      draggable={false}
+                      onPointerDown={(event) => beginEdit(event, highlight, handle)}
+                      className={cn(
+                        "absolute h-2.5 w-2.5 rounded-full border border-zinc-300/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] after:absolute after:-inset-2 after:content-['']",
+                        className,
+                      )}
+                      style={{ cursor, touchAction: 'none' }}
+                    />
+                  ),
+                )}
             </div>
             {selected && (
               <button
@@ -255,12 +331,14 @@ export default function HighlightOverlay({
                         : `calc(${rightEdge * 100}% - 1.5rem)`,
                   top:
                     deletePlacement === 'above'
-                      ? `calc(${highlight.y * 100}% - 2rem)`
-                      : `calc(${highlight.y * 100}% - 0.25rem)`,
+                      ? `calc(${(isUnderline ? highlight.y + highlight.h : highlight.y) * 100}% - 2rem)`
+                      : isUnderline
+                        ? `calc(${(highlight.y + highlight.h) * 100}% - 0.75rem)`
+                        : `calc(${highlight.y * 100}% - 0.25rem)`,
                   touchAction: 'manipulation',
                 }}
-                title="Delete highlight"
-                aria-label={`Delete highlight on page ${pageNum}`}
+                title={`Delete ${isUnderline ? 'underline' : 'highlight'}`}
+                aria-label={`Delete ${isUnderline ? 'underline' : 'highlight'} on page ${pageNum}`}
               >
                 <X className="h-3.5 w-3.5" strokeWidth={2} />
               </button>
@@ -276,10 +354,17 @@ export default function HighlightOverlay({
             top: `${draft.y * 100}%`,
             width: `${draft.w * 100}%`,
             height: `${draft.h * 100}%`,
-            backgroundColor: activeColor,
-            mixBlendMode: 'multiply',
+            backgroundColor: tool === 'underline' ? 'transparent' : activeColor,
+            mixBlendMode: tool === 'underline' ? undefined : 'multiply',
           }}
-        />
+        >
+          {tool === 'underline' && (
+            <span
+              className="absolute inset-x-0 bottom-0 h-[3px]"
+              style={{ backgroundColor: activeColor }}
+            />
+          )}
+        </div>
       )}
     </div>
   )

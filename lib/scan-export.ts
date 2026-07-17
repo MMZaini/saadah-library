@@ -6,18 +6,14 @@
 // what you draw is what you get.
 import JSZip from 'jszip'
 import { renderPage, scaleForWidth, type PDFDocumentProxy } from './pdf-engine'
+import { drawHighlights, type Highlight } from './scan-annotations'
 
-export interface Highlight {
-  id: string
-  /** 1-based page number this highlight belongs to. */
-  page: number
-  /** Normalised rect (0..1 of page width/height) so it maps to any scale. */
-  x: number
-  y: number
-  w: number
-  h: number
-  color: string
-}
+export {
+  drawHighlights,
+  HIGHLIGHT_COLORS,
+  UNDERLINE_COLORS,
+  type Highlight,
+} from './scan-annotations'
 
 export type ExportLayout = 'each' | 'page-cover' | 'all-cover'
 export type ExportFormat = 'png' | 'jpg'
@@ -34,15 +30,6 @@ export interface ExportOptions {
   /** Slug used to name downloaded files, e.g. "al-kafi-volume-1". */
   fileBaseName: string
 }
-
-// Strong, FastStone-style highlight colours. Each stays readable over text
-// thanks to the multiply blend.
-export const HIGHLIGHT_COLORS: { name: string; value: string }[] = [
-  { name: 'Yellow', value: '#ffe600' },
-  { name: 'Green', value: '#8cff66' },
-  { name: 'Pink', value: '#ff8ad4' },
-  { name: 'Blue', value: '#7cd4ff' },
-]
 
 const EXPORT_PAGE_WIDTH = 1500 // px target width per rendered page
 const COVER_HEIGHT_RATIO = 0.55 // cover height as a fraction of page height
@@ -92,23 +79,6 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
     img.src = src
   })
-}
-
-/** Paints highlights (multiply) onto an already-rendered page canvas context. */
-export function drawHighlights(
-  ctx: CanvasRenderingContext2D,
-  highlights: Highlight[],
-  width: number,
-  height: number,
-): void {
-  if (highlights.length === 0) return
-  ctx.save()
-  ctx.globalCompositeOperation = 'multiply'
-  for (const h of highlights) {
-    ctx.fillStyle = h.color
-    ctx.fillRect(h.x * width, h.y * height, h.w * width, h.h * height)
-  }
-  ctx.restore()
 }
 
 /** Draws an "n/total" pill in the top-right corner. */

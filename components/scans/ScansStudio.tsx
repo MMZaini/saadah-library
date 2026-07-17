@@ -7,7 +7,13 @@ import { withBasePath } from '@/lib/assets'
 import { loadPdf, type PDFDocumentProxy } from '@/lib/pdf-engine'
 import { getKhoeiRijalPdf, KHOEI_RIJAL_TITLE } from '@/lib/rijal-pdfs'
 import { normalizeExportLayout } from '@/lib/scan-layout'
-import { exportPages, HIGHLIGHT_COLORS, type ExportCover, type Highlight } from '@/lib/scan-export'
+import {
+  exportPages,
+  HIGHLIGHT_COLORS,
+  UNDERLINE_COLORS,
+  type ExportCover,
+  type Highlight,
+} from '@/lib/scan-export'
 import type { ScanBook, ScanVolume } from '@/lib/scan-sources'
 import { isConstrainedDevice } from '@/lib/device'
 import { isAllowedScanPdfPath } from '@/lib/scan-image'
@@ -90,7 +96,8 @@ export default function ScansStudio() {
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const [selectedHighlightId, setSelectedHighlightId] = useState<string | null>(null)
   const [tool, setTool] = useState<ScanTool>('draw')
-  const [activeColor, setActiveColor] = useState(HIGHLIGHT_COLORS[0].value)
+  const [highlightColor, setHighlightColor] = useState(HIGHLIGHT_COLORS[0].value)
+  const [underlineColor, setUnderlineColor] = useState(UNDERLINE_COLORS[0].value)
   const [zoom, setZoom] = useState(1)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -381,10 +388,16 @@ export default function ScansStudio() {
       selectPageFromHighlight(pageNum)
       setHighlights((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), page: pageNum, color: activeColor, ...rect },
+        {
+          id: crypto.randomUUID(),
+          kind: tool === 'underline' ? 'underline' : 'highlight',
+          page: pageNum,
+          color: tool === 'underline' ? underlineColor : highlightColor,
+          ...rect,
+        },
       ])
     },
-    [activeColor, selectPageFromHighlight],
+    [highlightColor, selectPageFromHighlight, tool, underlineColor],
   )
 
   const deleteHighlight = useCallback((id: string) => {
@@ -481,14 +494,15 @@ export default function ScansStudio() {
     if (selectedHighlightId && !selectedHighlight) setSelectedHighlightId(null)
   }, [selectedHighlight, selectedHighlightId])
 
-  const selectHighlight = useCallback(
-    (id: string | null) => {
-      setSelectedHighlightId(id)
-      const highlight = highlights.find((candidate) => candidate.id === id)
-      if (highlight) setActiveColor(highlight.color)
-    },
-    [highlights],
-  )
+  const activeColor = selectedHighlight
+    ? selectedHighlight.color
+    : tool === 'underline'
+      ? underlineColor
+      : highlightColor
+
+  const selectHighlight = useCallback((id: string | null) => {
+    setSelectedHighlightId(id)
+  }, [])
 
   const updateHighlight = useCallback(
     (id: string, patch: Partial<Pick<Highlight, 'x' | 'y' | 'w' | 'h' | 'color'>>) => {
@@ -501,15 +515,17 @@ export default function ScansStudio() {
 
   const changeTool = useCallback((nextTool: ScanTool) => {
     setTool(nextTool)
-    if (nextTool === 'draw') setSelectedHighlightId(null)
+    if (nextTool !== 'select') setSelectedHighlightId(null)
   }, [])
 
   const changeColor = useCallback(
     (color: string) => {
-      setActiveColor(color)
       if (tool === 'select' && selectedHighlightId) {
         updateHighlight(selectedHighlightId, { color })
+      } else if (tool === 'underline') {
+        setUnderlineColor(color)
       } else {
+        setHighlightColor(color)
         changeTool('draw')
       }
     },

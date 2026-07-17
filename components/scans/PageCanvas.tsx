@@ -23,7 +23,7 @@ const RENDER_ROOT_MARGIN = CONSTRAINED ? '200px 0px' : '700px 0px'
 const MAX_RENDER_DPR = 2 // plenty sharp for a bilevel scan; halves backing-store size vs DPR 3
 const MAX_CANVAS_PIXELS = 4_000_000 // ceiling on a single output canvas (constrained devices)
 
-export type ScanTool = 'draw' | 'select'
+export type ScanTool = 'draw' | 'underline' | 'select'
 
 interface PageViewProps {
   doc: PDFDocumentProxy
