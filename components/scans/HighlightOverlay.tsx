@@ -41,14 +41,14 @@ interface HighlightOverlayProps {
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 const HANDLE_POSITIONS: { handle: ResizeHandle; className: string; cursor: string }[] = [
-  { handle: 'nw', className: '-left-2 -top-2', cursor: 'nwse-resize' },
-  { handle: 'n', className: 'left-1/2 -top-2 -translate-x-1/2', cursor: 'ns-resize' },
-  { handle: 'ne', className: '-right-2 -top-2', cursor: 'nesw-resize' },
-  { handle: 'e', className: '-right-2 top-1/2 -translate-y-1/2', cursor: 'ew-resize' },
-  { handle: 'se', className: '-bottom-2 -right-2', cursor: 'nwse-resize' },
-  { handle: 's', className: '-bottom-2 left-1/2 -translate-x-1/2', cursor: 'ns-resize' },
-  { handle: 'sw', className: '-bottom-2 -left-2', cursor: 'nesw-resize' },
-  { handle: 'w', className: '-left-2 top-1/2 -translate-y-1/2', cursor: 'ew-resize' },
+  { handle: 'nw', className: '-left-[5px] -top-[5px]', cursor: 'nwse-resize' },
+  { handle: 'n', className: 'left-1/2 -top-[5px] -translate-x-1/2', cursor: 'ns-resize' },
+  { handle: 'ne', className: '-right-[5px] -top-[5px]', cursor: 'nesw-resize' },
+  { handle: 'e', className: '-right-[5px] top-1/2 -translate-y-1/2', cursor: 'ew-resize' },
+  { handle: 'se', className: '-bottom-[5px] -right-[5px]', cursor: 'nwse-resize' },
+  { handle: 's', className: '-bottom-[5px] left-1/2 -translate-x-1/2', cursor: 'ns-resize' },
+  { handle: 'sw', className: '-bottom-[5px] -left-[5px]', cursor: 'nesw-resize' },
+  { handle: 'w', className: '-left-[5px] top-1/2 -translate-y-1/2', cursor: 'ew-resize' },
 ]
 
 export default function HighlightOverlay({
@@ -202,18 +202,16 @@ export default function HighlightOverlay({
                 event.preventDefault()
                 onDeleteHighlight(highlight.id)
               }}
-              className={cn(
-                'absolute',
-                tool === 'select' ? 'cursor-move' : 'pointer-events-none',
-                selected && 'outline outline-2 outline-offset-1 outline-white',
-              )}
+              className={cn('absolute', tool === 'select' ? 'cursor-move' : 'pointer-events-none')}
               style={{
                 left: `${highlight.x * 100}%`,
                 top: `${highlight.y * 100}%`,
                 width: `${highlight.w * 100}%`,
                 height: `${highlight.h * 100}%`,
                 touchAction: tool === 'select' ? 'none' : undefined,
-                boxShadow: selected ? '0 0 0 3px rgba(24, 24, 27, 0.9)' : undefined,
+                boxShadow: selected
+                  ? '0 0 0 1px rgba(9, 9, 11, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.85)'
+                  : undefined,
               }}
             >
               <span
@@ -228,7 +226,7 @@ export default function HighlightOverlay({
                     draggable={false}
                     onPointerDown={(event) => beginEdit(event, highlight, handle)}
                     className={cn(
-                      'absolute h-4 w-4 rounded-[3px] border-2 border-zinc-900 bg-white shadow-sm',
+                      "absolute h-2.5 w-2.5 rounded-full border border-zinc-300/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] after:absolute after:-inset-2 after:content-['']",
                       className,
                     )}
                     style={{ cursor, touchAction: 'none' }}
@@ -247,7 +245,7 @@ export default function HighlightOverlay({
                   event.stopPropagation()
                   onDeleteHighlight(highlight.id)
                 }}
-                className="absolute z-20 flex h-6 w-6 items-center justify-center rounded-full border border-white/25 bg-zinc-950/85 text-zinc-100 shadow-sm backdrop-blur-sm transition-[background-color,border-color,transform] after:absolute after:-inset-1 after:content-[''] hover:scale-105 hover:border-red-400/60 hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95"
+                className="absolute z-20 flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-zinc-900/70 text-zinc-100 shadow-md backdrop-blur-sm transition-colors after:absolute after:-inset-1.5 after:content-[''] hover:border-white/25 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 style={{
                   left:
                     deletePlacement === 'right'
@@ -264,7 +262,7 @@ export default function HighlightOverlay({
                 title="Delete highlight"
                 aria-label={`Delete highlight on page ${pageNum}`}
               >
-                <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+                <X className="h-3.5 w-3.5" strokeWidth={2} />
               </button>
             )}
           </Fragment>
