@@ -88,6 +88,7 @@ export default function ScansStudio() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set())
   const [highlights, setHighlights] = useState<Highlight[]>([])
+  const [selectedHighlightId, setSelectedHighlightId] = useState<string | null>(null)
   const [tool, setTool] = useState<ScanTool>('draw')
   const [activeColor, setActiveColor] = useState(HIGHLIGHT_COLORS[0].value)
   const [zoom, setZoom] = useState(1)
@@ -388,6 +389,7 @@ export default function ScansStudio() {
 
   const deleteHighlight = useCallback((id: string) => {
     setHighlights((prev) => prev.filter((h) => h.id !== id))
+    setSelectedHighlightId((selected) => (selected === id ? null : selected))
   }, [])
 
   const handleExport = useCallback(async () => {
@@ -470,6 +472,50 @@ export default function ScansStudio() {
     return byPage
   }, [highlights])
 
+  const selectedHighlight = useMemo(
+    () => highlights.find((highlight) => highlight.id === selectedHighlightId) ?? null,
+    [highlights, selectedHighlightId],
+  )
+
+  useEffect(() => {
+    if (selectedHighlightId && !selectedHighlight) setSelectedHighlightId(null)
+  }, [selectedHighlight, selectedHighlightId])
+
+  const selectHighlight = useCallback(
+    (id: string | null) => {
+      setSelectedHighlightId(id)
+      const highlight = highlights.find((candidate) => candidate.id === id)
+      if (highlight) setActiveColor(highlight.color)
+    },
+    [highlights],
+  )
+
+  const updateHighlight = useCallback(
+    (id: string, patch: Partial<Pick<Highlight, 'x' | 'y' | 'w' | 'h' | 'color'>>) => {
+      setHighlights((current) =>
+        current.map((highlight) => (highlight.id === id ? { ...highlight, ...patch } : highlight)),
+      )
+    },
+    [],
+  )
+
+  const changeTool = useCallback((nextTool: ScanTool) => {
+    setTool(nextTool)
+    if (nextTool === 'draw') setSelectedHighlightId(null)
+  }, [])
+
+  const changeColor = useCallback(
+    (color: string) => {
+      setActiveColor(color)
+      if (tool === 'select' && selectedHighlightId) {
+        updateHighlight(selectedHighlightId, { color })
+      } else {
+        changeTool('draw')
+      }
+    },
+    [changeTool, selectedHighlightId, tool, updateHighlight],
+  )
+
   const imagePdfPath =
     constrained && source && source.kind !== 'upload' && isAllowedScanPdfPath(source.path)
       ? source.path
@@ -509,9 +555,10 @@ export default function ScansStudio() {
         <ScanToolbar
           hasDoc={!!doc}
           tool={tool}
-          onToolChange={setTool}
+          onToolChange={changeTool}
           activeColor={activeColor}
-          onColorChange={setActiveColor}
+          onColorChange={changeColor}
+          selectedHighlight={selectedHighlight}
           zoom={zoom}
           onZoomIn={() => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))}
           onZoomOut={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))}
@@ -549,8 +596,11 @@ export default function ScansStudio() {
               tool={tool}
               activeColor={activeColor}
               highlightsByPage={highlightsByPage}
+              selectedHighlightId={selectedHighlightId}
               onActivatePage={setCurrentPage}
               onAddHighlight={addHighlight}
+              onSelectHighlight={selectHighlight}
+              onUpdateHighlight={updateHighlight}
               onDeleteHighlight={deleteHighlight}
             />
           ) : (
@@ -562,8 +612,11 @@ export default function ScansStudio() {
               tool={tool}
               activeColor={activeColor}
               highlightsByPage={highlightsByPage}
+              selectedHighlightId={selectedHighlightId}
               onActivatePage={setCurrentPage}
               onAddHighlight={addHighlight}
+              onSelectHighlight={selectHighlight}
+              onUpdateHighlight={updateHighlight}
               onDeleteHighlight={deleteHighlight}
             />
           )

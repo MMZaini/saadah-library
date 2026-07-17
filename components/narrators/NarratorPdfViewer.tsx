@@ -315,11 +315,14 @@ export default function NarratorPdfViewer() {
           pageNums={pageNums}
           activePage={currentPage}
           zoom={zoom}
-          tool="erase"
+          tool="select"
           activeColor="#ffe600"
           highlightsByPage={NO_HIGHLIGHTS}
+          selectedHighlightId={null}
           onActivatePage={setCurrentPage}
           onAddHighlight={() => {}}
+          onSelectHighlight={() => {}}
+          onUpdateHighlight={() => {}}
           onDeleteHighlight={() => {}}
         />
       ) : docError ? (
@@ -338,11 +341,14 @@ export default function NarratorPdfViewer() {
           pageNums={pageNums}
           activePage={currentPage}
           zoom={zoom}
-          tool="erase"
+          tool="select"
           activeColor="#ffe600"
           highlightsByPage={NO_HIGHLIGHTS}
+          selectedHighlightId={null}
           onActivatePage={setCurrentPage}
           onAddHighlight={() => {}}
+          onSelectHighlight={() => {}}
+          onUpdateHighlight={() => {}}
           onDeleteHighlight={() => {}}
         />
       )}

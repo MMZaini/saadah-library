@@ -7,11 +7,11 @@ import { pdfRenderScheduler, RENDER_PRIORITY } from '@/lib/pdf-render-queue'
 import { isConstrainedDevice } from '@/lib/device'
 import type { Highlight } from '@/lib/scan-export'
 import { cn } from '@/lib/utils'
+import HighlightOverlay from './HighlightOverlay'
 
 const CONTAINER_PADDING = 48 // px breathing room around the page
 const MAX_FIT_WIDTH = 1100 // cap page width at zoom = 1 on large screens
 const DISPLAY_BASE_SCALE = 0.8 // 100% now matches the old 80% view.
-const MIN_DRAW_PX = 6 // ignore tiny accidental drags
 const FALLBACK_ASPECT = 1.4 // assumed page height/width before real dims load
 
 // Mobile Safari caps total canvas memory, so on constrained devices we (a) render
@@ -23,14 +23,7 @@ const RENDER_ROOT_MARGIN = CONSTRAINED ? '200px 0px' : '700px 0px'
 const MAX_RENDER_DPR = 2 // plenty sharp for a bilevel scan; halves backing-store size vs DPR 3
 const MAX_CANVAS_PIXELS = 4_000_000 // ceiling on a single output canvas (constrained devices)
 
-export type ScanTool = 'draw' | 'erase'
-
-interface DraftRect {
-  x: number
-  y: number
-  w: number
-  h: number
-}
+export type ScanTool = 'draw' | 'select'
 
 interface PageViewProps {
   doc: PDFDocumentProxy
@@ -42,8 +35,11 @@ interface PageViewProps {
   tool: ScanTool
   activeColor: string
   highlights: Highlight[]
+  selectedHighlightId: string | null
   onActivate: (pageNum: number) => void
   onAddHighlight: (pageNum: number, rect: { x: number; y: number; w: number; h: number }) => void
+  onSelectHighlight: (id: string | null) => void
+  onUpdateHighlight: (id: string, patch: Partial<Pick<Highlight, 'x' | 'y' | 'w' | 'h'>>) => void
   onDeleteHighlight: (id: string) => void
 }
 
@@ -55,12 +51,13 @@ interface PageCanvasProps {
   tool: ScanTool
   activeColor: string
   highlightsByPage: Map<number, Highlight[]>
+  selectedHighlightId: string | null
   onActivatePage: (pageNum: number) => void
   onAddHighlight: (pageNum: number, rect: { x: number; y: number; w: number; h: number }) => void
+  onSelectHighlight: (id: string | null) => void
+  onUpdateHighlight: (id: string, patch: Partial<Pick<Highlight, 'x' | 'y' | 'w' | 'h'>>) => void
   onDeleteHighlight: (id: string) => void
 }
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 function PageView({
   doc,
@@ -72,20 +69,20 @@ function PageView({
   tool,
   activeColor,
   highlights,
+  selectedHighlightId,
   onActivate,
   onAddHighlight,
+  onSelectHighlight,
+  onUpdateHighlight,
   onDeleteHighlight,
 }: PageViewProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const drawStartRef = useRef<{ x: number; y: number } | null>(null)
   const isActiveRef = useRef(isActive)
   isActiveRef.current = isActive
 
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null)
   const [inView, setInView] = useState(false)
-  const [draft, setDraft] = useState<DraftRect | null>(null)
 
   // Cheap structural pass — learn the page's intrinsic size so its scroll space
   // can be reserved immediately. No image is decoded here.
@@ -182,52 +179,6 @@ function PageView({
     return () => controller.abort()
   }, [inView, dims, doc, pageNum, renderZoom, fitWidth])
 
-  const localPoint = (e: React.PointerEvent) => {
-    const rect = overlayRef.current!.getBoundingClientRect()
-    return {
-      x: clamp(e.clientX - rect.left, 0, rect.width),
-      y: clamp(e.clientY - rect.top, 0, rect.height),
-      rect,
-    }
-  }
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    onActivate(pageNum)
-    if (tool !== 'draw' || e.button !== 0) return
-    overlayRef.current?.setPointerCapture(e.pointerId)
-    const { x, y } = localPoint(e)
-    drawStartRef.current = { x, y }
-    setDraft({ x, y, w: 0, h: 0 })
-  }
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    const start = drawStartRef.current
-    if (!start) return
-    const { x, y } = localPoint(e)
-    setDraft({
-      x: Math.min(start.x, x),
-      y: Math.min(start.y, y),
-      w: Math.abs(x - start.x),
-      h: Math.abs(y - start.y),
-    })
-  }
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    const start = drawStartRef.current
-    drawStartRef.current = null
-    const rect = overlayRef.current?.getBoundingClientRect()
-    if (start && draft && rect && draft.w >= MIN_DRAW_PX && draft.h >= MIN_DRAW_PX) {
-      onAddHighlight(pageNum, {
-        x: draft.x / rect.width,
-        y: draft.y / rect.height,
-        w: draft.w / rect.width,
-        h: draft.h / rect.height,
-      })
-    }
-    setDraft(null)
-    overlayRef.current?.releasePointerCapture?.(e.pointerId)
-  }
-
   return (
     <section
       ref={sectionRef}
@@ -243,58 +194,18 @@ function PageView({
         className="block rounded-sm shadow-xl"
         style={display ? { width: display.w, height: display.h } : undefined}
       />
-      <div
-        ref={overlayRef}
-        className="absolute inset-0"
-        style={{
-          touchAction: tool === 'draw' ? 'none' : 'auto',
-          cursor: tool === 'draw' ? 'crosshair' : 'default',
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        {highlights.map((h) => (
-          <div
-            key={h.id}
-            onClick={
-              tool === 'erase'
-                ? () => {
-                    onActivate(pageNum)
-                    onDeleteHighlight(h.id)
-                  }
-                : undefined
-            }
-            className={cn(
-              'absolute',
-              tool === 'erase'
-                ? 'cursor-pointer outline outline-2 outline-red-500/70'
-                : 'pointer-events-none',
-            )}
-            style={{
-              left: `${h.x * 100}%`,
-              top: `${h.y * 100}%`,
-              width: `${h.w * 100}%`,
-              height: `${h.h * 100}%`,
-              backgroundColor: h.color,
-              mixBlendMode: 'multiply',
-            }}
-          />
-        ))}
-        {draft && (
-          <div
-            className="pointer-events-none absolute"
-            style={{
-              left: draft.x,
-              top: draft.y,
-              width: draft.w,
-              height: draft.h,
-              backgroundColor: activeColor,
-              mixBlendMode: 'multiply',
-            }}
-          />
-        )}
-      </div>
+      <HighlightOverlay
+        pageNum={pageNum}
+        tool={tool}
+        activeColor={activeColor}
+        highlights={highlights}
+        selectedHighlightId={selectedHighlightId}
+        onActivate={onActivate}
+        onAddHighlight={onAddHighlight}
+        onSelectHighlight={onSelectHighlight}
+        onUpdateHighlight={onUpdateHighlight}
+        onDeleteHighlight={onDeleteHighlight}
+      />
       <span className="pointer-events-none absolute right-2 top-2 rounded bg-black/65 px-2 py-1 text-xs font-medium text-white">
         {pageNum}
       </span>
@@ -310,8 +221,11 @@ export default function PageCanvas({
   tool,
   activeColor,
   highlightsByPage,
+  selectedHighlightId,
   onActivatePage,
   onAddHighlight,
+  onSelectHighlight,
+  onUpdateHighlight,
   onDeleteHighlight,
 }: PageCanvasProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -351,8 +265,11 @@ export default function PageCanvas({
             tool={tool}
             activeColor={activeColor}
             highlights={highlightsByPage.get(pageNum) ?? []}
+            selectedHighlightId={selectedHighlightId}
             onActivate={onActivatePage}
             onAddHighlight={onAddHighlight}
+            onSelectHighlight={onSelectHighlight}
+            onUpdateHighlight={onUpdateHighlight}
             onDeleteHighlight={onDeleteHighlight}
           />
         ))}
