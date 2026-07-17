@@ -47,9 +47,17 @@ export async function validateKhoeiRelease(releaseDir) {
   const metadataPath = path.join(runtimeDir, 'metadata.json')
   const indexPath = path.join(runtimeDir, 'index.json')
   const searchPath = path.join(runtimeDir, 'search.json')
+  const transliterationsPath = path.join(runtimeDir, 'transliterations.json')
+  const transliterationTokensPath = path.join(runtimeDir, 'transliteration-tokens.json')
   const narratorsDir = path.join(runtimeDir, 'narrators')
 
-  for (const required of [metadataPath, indexPath, searchPath]) {
+  for (const required of [
+    metadataPath,
+    indexPath,
+    searchPath,
+    transliterationsPath,
+    transliterationTokensPath,
+  ]) {
     if (!(await pathExists(required))) {
       addIssue(issues, 'error', 'runtime artifact is missing', { path: required })
     }
@@ -59,6 +67,8 @@ export async function validateKhoeiRelease(releaseDir) {
   const metadata = await readJson(metadataPath)
   const index = await readJson(indexPath)
   const search = await readJson(searchPath)
+  const transliterations = await readJson(transliterationsPath)
+  const transliterationTokens = await readJson(transliterationTokensPath)
   const narratorShardFiles = await listFiles(narratorsDir, (file) => file.endsWith('.json'))
 
   if (metadata.counts?.volumes !== EXPECTED_VOLUME_COUNT) {
@@ -80,6 +90,15 @@ export async function validateKhoeiRelease(releaseDir) {
       search: search.length,
     })
   }
+  if (Object.keys(transliterations).length !== index.length) {
+    addIssue(issues, 'error', 'transliteration count must equal narrator index count', {
+      index: index.length,
+      transliterations: Object.keys(transliterations).length,
+    })
+  }
+  if (Object.keys(transliterationTokens).length === 0) {
+    addIssue(issues, 'error', 'transliteration token lexicon must not be empty')
+  }
   if (narratorShardFiles.length !== EXPECTED_VOLUME_COUNT) {
     addIssue(issues, 'error', 'narrator shards must be one JSON file per volume', {
       files: narratorShardFiles.length,
@@ -95,6 +114,11 @@ export async function validateKhoeiRelease(releaseDir) {
     }
     if (ids.has(item.id)) addIssue(issues, 'error', 'duplicate narrator id', { id: item.id })
     ids.add(item.id)
+
+    const transliteration = transliterations[item.id]
+    if (!transliteration?.primary || !Array.isArray(transliteration.aliases)) {
+      addIssue(issues, 'error', 'index entry is missing its transliteration', { id: item.id })
+    }
 
     if (item.entryNumber != null) {
       const key = `${item.volumeNumber}:${item.entryNumber}`

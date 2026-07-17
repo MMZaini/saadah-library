@@ -22,6 +22,8 @@ describe('GET /api/narrators/search', () => {
     const response = await narratorSearchGet(searchRequest({ q: 'أبان', limit: '5' }))
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toMatch(/s-maxage=\d+/)
+    expect(response.headers.get('cache-control')).toContain('max-age=0')
+    expect(response.headers.get('cache-control')).toContain('must-revalidate')
 
     const body = await response.json()
     expect(body.total).toBeGreaterThan(0)
@@ -34,6 +36,19 @@ describe('GET /api/narrators/search', () => {
   it('respects the limit parameter', async () => {
     const one = await narratorSearchGet(searchRequest({ q: 'أبان', limit: '1' }))
     expect((await one.json()).results).toHaveLength(1)
+  })
+
+  it('returns exact English phrase matches before longer names', async () => {
+    const response = await narratorSearchGet(
+      searchRequest({ q: 'muhammad bin muslim', limit: '50', ranking: '2' }),
+    )
+    expect(response.status).toBe(200)
+
+    const body = await response.json()
+    expect(
+      body.results.slice(0, 2).map((result: { entryNumber: number }) => result.entryNumber),
+    ).toEqual([11804, 11805])
+    expect(body.results[2].matchType).not.toBe('exact')
   })
 })
 

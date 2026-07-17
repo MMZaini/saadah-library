@@ -134,6 +134,11 @@ async function writeRuntimeArtifacts(releaseDir, version, volumes) {
   await writeJson(path.join(runtimeDir, 'metadata.json'), artifacts.metadata)
   await writeJson(path.join(runtimeDir, 'index.json'), artifacts.index)
   await writeJson(path.join(runtimeDir, 'search.json'), artifacts.search)
+  await writeJson(path.join(runtimeDir, 'transliterations.json'), artifacts.transliterations)
+  await writeJson(
+    path.join(runtimeDir, 'transliteration-tokens.json'),
+    artifacts.transliterationTokens,
+  )
   await writeNarratorShards(runtimeDir, artifacts.narrators)
 
   return { artifacts, parserReport }

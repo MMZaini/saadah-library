@@ -1,17 +1,24 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+  containsArabic,
   normalizeArabic,
+  normalizeEnglishForSearch,
   type SearchMode,
   normalizeSearchModes,
   matchesSearchMode,
 } from '@/lib/search-utils'
+import {
+  narratorTransliterationSkeleton,
+  normalizeNarratorTransliteration,
+} from '@/lib/data/rijal-transliteration'
 import type {
   NarratorEntry,
   NarratorIndexEntry,
   NarratorSearchEntry,
   NarratorSearchResponse,
   NarratorSearchResult,
+  NarratorTransliterationIndex,
   RijalManifest,
   RijalMetadata,
 } from '@/lib/data/rijal-types'
@@ -53,6 +60,10 @@ async function getNarratorSearchIndex(): Promise<NarratorSearchEntry[]> {
   return readJson<NarratorSearchEntry[]>(await runtimePath('search.json'))
 }
 
+async function getNarratorTransliterations(): Promise<NarratorTransliterationIndex> {
+  return readJson<NarratorTransliterationIndex>(await runtimePath('transliterations.json'))
+}
+
 interface SearchStructure {
   searchIndex: NarratorSearchEntry[]
   indexById: Map<string, NarratorIndexEntry>
@@ -72,8 +83,17 @@ async function getNarratorIndexMap(): Promise<Map<string, NarratorIndexEntry>> {
     return indexMapCache.promise
   }
 
-  const promise = getNarratorIndex().then(
-    (index) => new Map(index.map((entry) => [entry.id, entry])),
+  const promise = Promise.all([getNarratorIndex(), getNarratorTransliterations()]).then(
+    ([index, transliterations]) =>
+      new Map(
+        index.map((entry) => [
+          entry.id,
+          {
+            ...entry,
+            transliteratedName: transliterations[entry.id]?.primary ?? entry.primaryName,
+          },
+        ]),
+      ),
   )
   promise.catch(() => {
     if (indexMapCache?.promise === promise) indexMapCache = null
@@ -108,10 +128,25 @@ async function getSearchStructure(): Promise<SearchStructure> {
   }
 
   const promise = (async () => {
-    const [searchIndex, indexById] = await Promise.all([
+    const [rawSearchIndex, indexById, transliterations] = await Promise.all([
       getNarratorSearchIndex(),
       getNarratorIndexMap(),
+      getNarratorTransliterations(),
     ])
+    const searchIndex = rawSearchIndex.map((entry) => {
+      const transliteration = transliterations[entry.id]
+      const names = [transliteration?.primary, ...(transliteration?.aliases ?? [])].filter(
+        (name): name is string => Boolean(name),
+      )
+      return {
+        ...entry,
+        transliteratedName: transliteration?.primary,
+        transliteratedAliases: transliteration?.aliases,
+        normalizedTransliterations: names.map(normalizeEnglishForSearch),
+        phoneticTransliterations: names.map(normalizeNarratorTransliteration),
+        transliterationSkeletons: names.map(narratorTransliterationSkeleton),
+      }
+    })
     return { searchIndex, indexById }
   })()
   promise.catch(() => {
@@ -168,8 +203,13 @@ export async function getNarrator(id: string): Promise<NarratorEntry | null> {
   if (!Number.isInteger(volumeNumber) || volumeNumber < 1 || volumeNumber > 24) return null
 
   try {
-    const shard = await getNarratorShard(volumeNumber)
-    return shard[id] ?? null
+    const [shard, summary] = await Promise.all([
+      getNarratorShard(volumeNumber),
+      getNarratorSummary(id),
+    ])
+    const narrator = shard[id]
+    if (!narrator || !summary) return null
+    return { ...narrator, transliteratedName: summary.transliteratedName }
   } catch {
     return null
   }
@@ -179,14 +219,66 @@ export function rankNarratorSearchEntry(
   entry: NarratorSearchEntry,
   query: string,
   modes: SearchMode[] = ['exactPhrase'],
-  // Callers iterating thousands of entries can pass the query normalized once to
-  // avoid re-running normalizeArabic(query) on every entry.
+  // Callers iterating thousands of entries can pass the query normalized once.
   precomputedNormalizedQuery?: string,
 ): {
   score: number
   matchType: NarratorSearchResult['matchType']
   matchedAlias?: string
 } | null {
+  if (!containsArabic(query)) {
+    const normalizedQuery = precomputedNormalizedQuery ?? normalizeEnglishForSearch(query)
+    if (!normalizedQuery) return null
+    const names = [entry.transliteratedName, ...(entry.transliteratedAliases ?? [])].filter(
+      (name): name is string => Boolean(name),
+    )
+    const normalizedNames = entry.normalizedTransliterations ?? names.map(normalizeEnglishForSearch)
+
+    const exactIndex = normalizedNames.findIndex((name) => name === normalizedQuery)
+    if (exactIndex !== -1) {
+      return { score: 0, matchType: 'exact', matchedAlias: names[exactIndex] }
+    }
+    const startsIndex = normalizedNames.findIndex((name) => name.startsWith(normalizedQuery))
+    if (startsIndex !== -1) {
+      return { score: 1, matchType: 'startsWith', matchedAlias: names[startsIndex] }
+    }
+    const containsIndex = normalizedNames.findIndex((name) => name.includes(normalizedQuery))
+    if (containsIndex !== -1) {
+      return { score: 2, matchType: 'contains', matchedAlias: names[containsIndex] }
+    }
+
+    const phoneticQuery = normalizeNarratorTransliteration(normalizedQuery)
+    const phoneticNames =
+      entry.phoneticTransliterations ?? names.map(normalizeNarratorTransliteration)
+    const phoneticExact = phoneticNames.findIndex((name) => name === phoneticQuery)
+    if (phoneticExact !== -1) {
+      return { score: 0, matchType: 'exact', matchedAlias: names[phoneticExact] }
+    }
+    const phoneticStarts = phoneticNames.findIndex((name) => name.startsWith(phoneticQuery))
+    if (phoneticStarts !== -1) {
+      return { score: 1, matchType: 'startsWith', matchedAlias: names[phoneticStarts] }
+    }
+    const queryWords = phoneticQuery.split(' ').filter(Boolean)
+    const phoneticWordMatch = phoneticNames.some((name) => {
+      const words = name.split(' ').filter(Boolean)
+      return queryWords.length > 0 && queryWords.every((queryWord) => words.includes(queryWord))
+    })
+    if (phoneticWordMatch) return { score: 3, matchType: 'words' }
+
+    // Generated fallback spellings preserve every Arabic consonant even when
+    // the source has no short vowels. Match a sufficiently specific consonant
+    // skeleton so a user's vocalized spelling can still find those rare names.
+    const skeletonQuery = narratorTransliterationSkeleton(normalizedQuery)
+    const skeletonWords = skeletonQuery.split(' ').filter((word) => word.length >= 3)
+    const skeletonNames =
+      entry.transliterationSkeletons ?? names.map(narratorTransliterationSkeleton)
+    const skeletonMatch = skeletonNames.some((name) => {
+      const words = name.split(' ').filter(Boolean)
+      return skeletonWords.length > 0 && skeletonWords.every((word) => words.includes(word))
+    })
+    return skeletonMatch ? { score: 3, matchType: 'words' } : null
+  }
+
   const normalizedQuery = precomputedNormalizedQuery ?? normalizeArabic(query)
   if (!normalizedQuery) return null
 
@@ -243,7 +335,9 @@ export async function searchNarrators({
 
   const safeLimit = Math.max(1, Math.min(Number.isFinite(limit) ? limit : 50, 100))
   const { searchIndex, indexById } = await getSearchStructure()
-  const normalizedQuery = normalizeArabic(trimmed)
+  const normalizedQuery = containsArabic(trimmed)
+    ? normalizeArabic(trimmed)
+    : normalizeEnglishForSearch(trimmed)
 
   const hits: Array<NarratorSearchResult & { _score: number }> = []
   for (const searchEntry of searchIndex) {
@@ -260,43 +354,35 @@ export async function searchNarrators({
     })
   }
 
-  // Relevance decides which entries make the limited result set...
-  hits.sort(
-    (a, b) =>
-      a._score - b._score ||
-      a.volumeNumber - b.volumeNumber ||
-      (a.entryNumber ?? 0) - (b.entryNumber ?? 0) ||
-      a.primaryName.localeCompare(b.primaryName, 'ar'),
-  )
-
-  // ...but the list is presented to the user ordered by entry number, lowest to
-  // highest. Entries without a number sort last; ids break the remaining ties so
-  // ordering is stable (entryNumber is not unique across the work).
+  // Display order is relevance first, then the visible narrator entry number.
+  // Keep this ordering before applying the limit so a low-numbered weak match
+  // can never displace a higher-numbered exact/prefix match.
   const displayNumber = (hit: { entryNumber?: number; sourceEntryNumber?: number }): number =>
     hit.entryNumber ?? hit.sourceEntryNumber ?? Number.POSITIVE_INFINITY
 
-  const results: NarratorSearchResult[] = hits
-    .slice(0, safeLimit)
-    .sort(
-      (a, b) =>
-        displayNumber(a) - displayNumber(b) ||
-        a.volumeNumber - b.volumeNumber ||
-        a.id.localeCompare(b.id),
-    )
-    .map((hit) => ({
-      id: hit.id,
-      entryNumber: hit.entryNumber,
-      sourceEntryNumber: hit.sourceEntryNumber,
-      primaryName: hit.primaryName,
-      normalizedName: hit.normalizedName,
-      aliases: hit.aliases,
-      volumeNumber: hit.volumeNumber,
-      startPage: hit.startPage,
-      endPage: hit.endPage,
-      sourceBookId: hit.sourceBookId,
-      matchType: hit.matchType,
-      matchedAlias: hit.matchedAlias,
-    }))
+  hits.sort(
+    (a, b) =>
+      a._score - b._score ||
+      displayNumber(a) - displayNumber(b) ||
+      a.volumeNumber - b.volumeNumber ||
+      a.id.localeCompare(b.id),
+  )
+
+  const results: NarratorSearchResult[] = hits.slice(0, safeLimit).map((hit) => ({
+    id: hit.id,
+    entryNumber: hit.entryNumber,
+    sourceEntryNumber: hit.sourceEntryNumber,
+    primaryName: hit.primaryName,
+    transliteratedName: hit.transliteratedName,
+    normalizedName: hit.normalizedName,
+    aliases: hit.aliases,
+    volumeNumber: hit.volumeNumber,
+    startPage: hit.startPage,
+    endPage: hit.endPage,
+    sourceBookId: hit.sourceBookId,
+    matchType: hit.matchType,
+    matchedAlias: hit.matchedAlias,
+  }))
 
   return {
     results,

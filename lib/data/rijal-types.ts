@@ -81,6 +81,7 @@ export interface NarratorEntry {
   entryNumber?: number
   sourceEntryNumber?: number
   primaryName: string
+  transliteratedName: string
   normalizedName: string
   aliases: string[]
   volumeNumber: number
@@ -102,6 +103,7 @@ export interface NarratorIndexEntry {
   entryNumber?: number
   sourceEntryNumber?: number
   primaryName: string
+  transliteratedName: string
   normalizedName: string
   aliases: string[]
   volumeNumber: number
@@ -119,7 +121,20 @@ export interface NarratorSearchEntry {
   sourceEntryNumber?: number
   volumeNumber: number
   startPage: number
+  // Enriched in memory from transliterations.json; not duplicated in search.json.
+  transliteratedName?: string
+  transliteratedAliases?: string[]
+  normalizedTransliterations?: string[]
+  phoneticTransliterations?: string[]
+  transliterationSkeletons?: string[]
 }
+
+export interface NarratorTransliteration {
+  primary: string
+  aliases: string[]
+}
+
+export type NarratorTransliterationIndex = Record<string, NarratorTransliteration>
 
 export interface NarratorSearchResult extends NarratorIndexEntry {
   matchType: 'exact' | 'startsWith' | 'contains' | 'words'

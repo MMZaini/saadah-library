@@ -6,6 +6,7 @@ import {
   parseArabicNumber,
   sha256,
 } from './shared.mjs'
+import { buildNarratorTransliterations, buildTokenTransliterationList } from './transliteration.mjs'
 
 const INTRO_TERMS = ['مقدمة', 'تقديم', 'الناشر', 'المؤلف', 'تمهيد']
 const TOC_TERMS = ['الفهرس', 'فهرست', 'المحتويات']
@@ -468,5 +469,8 @@ export function buildRuntimeArtifacts(entries, { version, source }) {
     },
   }
 
-  return { metadata, index, search, narrators: sorted }
+  const transliterations = buildNarratorTransliterations(index)
+  const transliterationTokens = buildTokenTransliterationList(index)
+
+  return { metadata, index, search, transliterations, transliterationTokens, narrators: sorted }
 }

@@ -28,6 +28,11 @@ interface UseNarratorSearchResult {
 // network, no re-parse) for narrators and queries already seen this session.
 const DETAIL_CACHE_LIMIT = 60
 const SEARCH_CACHE_LIMIT = 80
+// Increment whenever matching or ordering semantics change. Including the
+// version in both cache keys prevents a Fast Refresh from reusing results
+// produced by older client code, while including it in the request URL busts
+// browser/CDN responses produced by an older server ranking implementation.
+const NARRATOR_SEARCH_RANKING_VERSION = '2'
 const detailCache = new Map<string, NarratorEntry>()
 const searchCache = new Map<
   string,
@@ -56,9 +61,7 @@ export function useNarratorSearch(): UseNarratorSearchResult {
   const detailSeqRef = useRef(0)
 
   useEffect(() => {
-    // The rijāl dataset is Arabic-only — say so up front instead of letting
-    // Latin-script queries fail with "not found".
-    configurePlaceholder('Search narrators (Arabic)…')
+    configurePlaceholder('Search narrators in Arabic or English…')
     configureFilters(false)
     return () => configureFilters(false)
   }, [configurePlaceholder, configureFilters])
@@ -141,7 +144,8 @@ export function useNarratorSearch(): UseNarratorSearchResult {
           }
         }
 
-        const cachedSearch = searchCache.get(trimmed)
+        const searchCacheKey = `${NARRATOR_SEARCH_RANKING_VERSION}:${trimmed}`
+        const cachedSearch = searchCache.get(searchCacheKey)
         if (cachedSearch) {
           if (requestSeq !== requestSeqRef.current) return
           applyResults(cachedSearch)
@@ -150,7 +154,11 @@ export function useNarratorSearch(): UseNarratorSearchResult {
         }
 
         try {
-          const params = new URLSearchParams({ q: trimmed, limit: '50' })
+          const params = new URLSearchParams({
+            q: trimmed,
+            limit: '50',
+            ranking: NARRATOR_SEARCH_RANKING_VERSION,
+          })
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/narrators/search?${params.toString()}`,
           )
@@ -160,7 +168,7 @@ export function useNarratorSearch(): UseNarratorSearchResult {
 
           remember(
             searchCache,
-            trimmed,
+            searchCacheKey,
             { results: data.results, total: data.total, metadata: data.metadata },
             SEARCH_CACHE_LIMIT,
           )

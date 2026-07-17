@@ -7,14 +7,18 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { getHighlightSegments } from '@/lib/search-utils'
 import { cleanNarratorName } from '@/lib/data/rijal-display'
+import { getNarratorHighlightSegments } from '@/lib/data/rijal-transliteration'
 import { getKhoeiRijalViewerUrl } from '@/lib/rijal-pdfs'
 import { useNarratorBookmarks } from '@/lib/narrator-bookmarks-context'
-import { cn } from '@/lib/utils'
+import { cn, copyTextToClipboard } from '@/lib/utils'
 import type { NarratorEntry } from '@/lib/data/rijal-types'
 
 interface NarratorDetailProps {
   narrator: NarratorEntry | null
-  query: string
+  // Only the dedicated entry page supplies this from its "Find in this entry"
+  // field. The narrator search page deliberately leaves it unset so the search
+  // query highlights result names in the sidebar, not the selected entry.
+  highlightQuery?: string
   loading?: boolean
   // On the dedicated /narrators/[id] page the entry is already the whole page, so
   // the "open in new tab" affordance is hidden there.
@@ -65,6 +69,24 @@ function highlightToNodes(text: string, query: string): ReactNode {
   )
 }
 
+function highlightTransliterationToNodes(text: string, query: string): ReactNode {
+  if (!query.trim()) return text
+  const segments = getNarratorHighlightSegments(text, query)
+  if (segments.length === 1 && !segments[0].highlight) return text
+  return segments.map((segment, index) =>
+    segment.highlight ? (
+      <mark
+        key={index}
+        className="rounded-sm bg-yellow-300/80 px-0.5 text-inherit dark:bg-yellow-500/50"
+      >
+        {segment.text}
+      </mark>
+    ) : (
+      segment.text
+    ),
+  )
+}
+
 // Memoized so that, while the rest of the entry streams in, blocks already on
 // screen are not re-highlighted on every chunk (the query is stable mid-stream).
 const NarratorTextBlock = memo(function NarratorTextBlock({
@@ -91,7 +113,7 @@ const NarratorTextBlock = memo(function NarratorTextBlock({
 
 export default function NarratorDetail({
   narrator,
-  query,
+  highlightQuery = '',
   loading = false,
   standalone = false,
 }: NarratorDetailProps) {
@@ -143,14 +165,12 @@ export default function NarratorDetail({
 
   const copyText = useCallback(async () => {
     if (!narrator) return
-    await navigator.clipboard.writeText(narrator.plainText)
-    flash('Entry copied')
+    flash((await copyTextToClipboard(narrator.plainText)) ? 'Entry copied' : 'Entry copy failed')
   }, [flash, narrator])
 
   const copySource = useCallback(async () => {
     if (!sourceText) return
-    await navigator.clipboard.writeText(sourceText)
-    flash('Source copied')
+    flash((await copyTextToClipboard(sourceText)) ? 'Source copied' : 'Source copy failed')
   }, [flash, sourceText])
 
   const toggleBookmark = useCallback(() => {
@@ -160,8 +180,8 @@ export default function NarratorDetail({
   }, [addNarratorBookmark, isNarratorBookmarked, narrator, removeNarratorBookmark])
 
   const renderHighlighted = useCallback(
-    (text: string): ReactNode => highlightToNodes(text, query),
-    [query],
+    (text: string): ReactNode => highlightToNodes(text, highlightQuery),
+    [highlightQuery],
   )
 
   if (loading) {
@@ -207,6 +227,9 @@ export default function NarratorDetail({
           >
             {renderHighlighted(cleanNarratorName(narrator.primaryName))}
           </h1>
+          <p className="mt-1 text-base italic text-foreground-muted sm:text-lg" dir="ltr">
+            {highlightTransliterationToNodes(narrator.transliteratedName, highlightQuery)}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-1 sm:shrink-0">
@@ -241,13 +264,27 @@ export default function NarratorDetail({
             <Bookmark className={cn('h-3.5 w-3.5', bookmarked && 'fill-current')} />
             {bookmarked ? 'Saved' : 'Save'}
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 gap-1.5" onClick={copyText}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={copyText}
+            title="Copy the complete Arabic entry"
+          >
             <Copy className="h-3.5 w-3.5" />
-            {copyFeedback === 'Entry copied' ? 'Copied' : 'Copy'}
+            {copyFeedback === 'Entry copied'
+              ? 'Copied'
+              : copyFeedback === 'Entry copy failed'
+                ? 'Try again'
+                : 'Copy Arabic'}
           </Button>
           <Button variant="ghost" size="sm" className="h-8 gap-1.5" onClick={copySource}>
             <FileText className="h-3.5 w-3.5" />
-            {copyFeedback === 'Source copied' ? 'Copied' : 'Source'}
+            {copyFeedback === 'Source copied'
+              ? 'Copied'
+              : copyFeedback === 'Source copy failed'
+                ? 'Try again'
+                : 'Source'}
           </Button>
         </div>
       </div>
@@ -260,7 +297,7 @@ export default function NarratorDetail({
             key={`${block.pageNumber}-${block.contentId ?? 'block'}-${index}`}
             text={block.text}
             heading={block.kind === 'heading'}
-            query={query}
+            query={highlightQuery}
           />
         ))}
       </div>

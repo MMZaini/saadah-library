@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
 
     const response = await searchNarrators({ query, limit, modes })
     return NextResponse.json(response, {
-      // The dataset is immutable per deploy and the query is fully in the URL, so
-      // identical searches can be served from the browser/CDN cache instead of
-      // re-running the server scan.
+      // The ranking version supplied by the client is part of the URL, so a
+      // ranking change cannot reuse an older response. Browsers must still
+      // revalidate across reloads; the CDN may cache a versioned query.
       headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=86400, stale-while-revalidate=604800',
+        'Cache-Control': 'public, max-age=0, must-revalidate, s-maxage=86400',
       },
     })
   } catch {

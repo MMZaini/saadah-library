@@ -6,6 +6,29 @@ import {
   searchNarrators,
 } from '@/lib/data/rijal-server-repository'
 
+const MATCH_SCORE = { exact: 0, startsWith: 1, contains: 2, words: 3 } as const
+
+function expectSimilarityThenIdOrder(
+  results: Array<{
+    id: string
+    matchType: keyof typeof MATCH_SCORE
+    entryNumber?: number
+    sourceEntryNumber?: number
+  }>,
+) {
+  const number = (result: (typeof results)[number]) =>
+    result.entryNumber ?? result.sourceEntryNumber ?? Number.POSITIVE_INFINITY
+
+  for (let index = 1; index < results.length; index++) {
+    const previous = results[index - 1]
+    const current = results[index]
+    expect(MATCH_SCORE[current.matchType]).toBeGreaterThanOrEqual(MATCH_SCORE[previous.matchType])
+    if (MATCH_SCORE[current.matchType] === MATCH_SCORE[previous.matchType]) {
+      expect(number(current)).toBeGreaterThanOrEqual(number(previous))
+    }
+  }
+}
+
 describe('narrator search ranking', () => {
   const entry = {
     id: 'khoei-v1-1',
@@ -37,6 +60,13 @@ describe('local narrator repository', () => {
     const response = await searchNarrators({ query: 'أبان', limit: 10 })
     expect(response.total).toBeGreaterThan(0)
     expect(response.results[0].primaryName).toContain('أبان')
+  })
+
+  it('sorts Arabic results by similarity and then narrator id number', async () => {
+    const response = await searchNarrators({ query: 'محمد', limit: 100 })
+    expect(response.results.length).toBeGreaterThan(1)
+    expect(new Set(response.results.map((result) => result.matchType)).size).toBeGreaterThan(1)
+    expectSimilarityThenIdOrder(response.results)
   })
 
   it('hydrates narrator entries and rejects malformed ids', async () => {
