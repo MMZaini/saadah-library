@@ -50,6 +50,9 @@ export const metadata = {
   title: 'Saadah Library',
   description: 'Saadah Library - The Comprehensive Shia Library',
   robots: { index: true, follow: true },
+  other: {
+    google: 'notranslate',
+  },
 }
 
 export const viewport = {
@@ -63,11 +66,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${lora.variable} ${merriweather.variable} ${notoSansArabic.variable} ${spaceMono.variable}`}
+      translate="no"
+      className={`notranslate ${inter.variable} ${lora.variable} ${merriweather.variable} ${notoSansArabic.variable} ${spaceMono.variable}`}
       data-motion="full"
       suppressHydrationWarning
     >
       <head>
+        <meta name="google" content="notranslate" />
+        <meta httpEquiv="Content-Language" content="en" />
         <link rel="icon" href={favicon.src} />
         <link
           rel="preload"
@@ -77,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
       </head>
-      <body className="font-sans antialiased" suppressHydrationWarning>
+      <body className="notranslate font-sans antialiased" suppressHydrationWarning>
         <ClientProviders>
           <TooltipProvider delayDuration={300}>
             <div className="flex min-h-screen flex-col">
