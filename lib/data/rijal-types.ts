@@ -117,6 +117,9 @@ export interface NarratorSearchEntry {
   normalizedName: string
   normalizedAliases: string[]
   searchText: string
+  // Derived in memory; not duplicated in search.json.
+  compactArabicNames?: string[]
+  compactArabicNameBoundaries?: number[][]
   entryNumber?: number
   sourceEntryNumber?: number
   volumeNumber: number

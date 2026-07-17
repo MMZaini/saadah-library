@@ -53,7 +53,7 @@ function scheduleIdle(cb: () => void): () => void {
 /** Highlight `query` occurrences in `text`. Pure + module-level so it can back a memoized block. */
 function highlightToNodes(text: string, query: string): ReactNode {
   if (!query.trim()) return text
-  const segments = getHighlightSegments(text, query)
+  const segments = getHighlightSegments(text, query, { ignoreArabicSpaces: true })
   if (segments.length === 1 && !segments[0].highlight) return text
   return segments.map((segment, index) =>
     segment.highlight ? (

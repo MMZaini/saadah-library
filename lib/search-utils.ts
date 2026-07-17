@@ -394,6 +394,11 @@ export function normalizeArabicNarratorName(input: string | null | undefined): s
     .trim()
 }
 
+/** A secondary narrator-name key that treats split and joined compounds alike. */
+export function compactArabicNarratorName(input: string | null | undefined): string {
+  return normalizeArabicNarratorName(input).replace(/\s+/g, '')
+}
+
 /**
  * Common Islamic/religious terminology synonyms for enhanced English search
  */
@@ -605,7 +610,7 @@ export function findFirstMatchIndex(
 export function getHighlightSegments(
   text: string,
   query: string,
-  options: { exactMatch?: boolean } = {},
+  options: { exactMatch?: boolean; ignoreArabicSpaces?: boolean } = {},
 ): HighlightSegment[] {
   if (!text || !query?.trim()) return [{ text, highlight: false }]
 
@@ -613,7 +618,7 @@ export function getHighlightSegments(
   const arabic = isArabicQuery(trimmed)
 
   if (arabic) {
-    return highlightArabicSegments(text, trimmed)
+    return highlightArabicSegments(text, trimmed, options.ignoreArabicSpaces)
   }
   return highlightEnglishSegments(text, trimmed, options)
 }
@@ -641,7 +646,11 @@ function highlightEnglishSegments(
   return splitByRegex(text, regex)
 }
 
-function highlightArabicSegments(text: string, query: string): HighlightSegment[] {
+function highlightArabicSegments(
+  text: string,
+  query: string,
+  ignoreSpaces = false,
+): HighlightSegment[] {
   const normQuery = normalizeArabic(query)
   const queryWords = normQuery.split(/\s+/).filter(Boolean)
   if (queryWords.length === 0) return [{ text, highlight: false }]
@@ -690,8 +699,15 @@ function highlightArabicSegments(text: string, query: string): HighlightSegment[
     .filter((w) => w.length >= 1)
     .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   // Try full phrase first
-  const allPatterns = [queryWords.join('\\s*'), ...patterns]
-  const regex = new RegExp(`(${allPatterns.join('|')})`, 'gi')
+  const compactPhrase = normQuery.replace(/\s+/g, '')
+  const compactPattern =
+    ignoreSpaces && compactPhrase.length >= 4
+      ? `(?<![\\p{Script=Arabic}\\p{N}])${Array.from(compactPhrase)
+          .map((char) => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+          .join('\\s*')}(?![\\p{Script=Arabic}\\p{N}])`
+      : null
+  const allPatterns = [compactPattern, queryWords.join('\\s*'), ...patterns].filter(Boolean)
+  const regex = new RegExp(`(${allPatterns.join('|')})`, 'giu')
 
   const matchRanges: Array<[number, number]> = [] // [origStart, origEnd] inclusive
   let m: RegExpExecArray | null

@@ -126,6 +126,22 @@ describe('getHighlightSegments', () => {
     expect(highlighted('الصلاة ثم الزكاة', 'الصلاة الزكاة')).toEqual(['الصلاة', 'الزكاة'])
   })
 
+  it('can highlight narrator names across split and joined compound boundaries', () => {
+    const segments = getHighlightSegments('أحمد بن حاتم بن ما هوية', 'أحمد بن حاتم بن ماهويه', {
+      ignoreArabicSpaces: true,
+    })
+
+    expect(segments.filter((segment) => segment.highlight).map((segment) => segment.text)).toEqual([
+      'أحمد بن حاتم بن ما هوية',
+    ])
+
+    expect(
+      getHighlightSegments('أحمد بن ادريس', 'نادر', { ignoreArabicSpaces: true })
+        .filter((segment) => segment.highlight)
+        .map((segment) => segment.text),
+    ).toEqual([])
+  })
+
   it('still highlights English matches', () => {
     expect(highlighted('When Allah created the intellect', 'intellect')).toEqual(['intellect'])
   })

@@ -46,6 +46,38 @@ describe('narrator search ranking', () => {
     expect(rankNarratorSearchEntry(entry, 'أبو سعيد')?.matchType).toBe('startsWith')
     expect(rankNarratorSearchEntry(entry, 'تغلب أبان', ['exactWords'])?.matchType).toBe('words')
   })
+
+  it('matches split and joined Arabic name compounds without short cross-word noise', () => {
+    const compound = {
+      ...entry,
+      normalizedName: 'احمد بن حاتم بن ما هويه',
+      normalizedAliases: [],
+      searchText: 'احمد بن حاتم بن ما هويه',
+    }
+
+    expect(rankNarratorSearchEntry(compound, 'أحمد بن حاتم بن ماهويه')).toMatchObject({
+      matchType: 'exact',
+      score: 0,
+    })
+    expect(rankNarratorSearchEntry(compound, 'ماهويه')?.matchType).toBe('contains')
+    expect(rankNarratorSearchEntry(compound, 'دبن')).toBeNull()
+
+    const joinedCompound = {
+      ...entry,
+      normalizedName: 'عبدالله بن محمد',
+      normalizedAliases: [],
+      searchText: 'عبدالله بن محمد',
+    }
+    expect(rankNarratorSearchEntry(joinedCompound, 'عبد الله بن محمد')?.matchType).toBe('exact')
+
+    const crossBoundary = {
+      ...entry,
+      normalizedName: 'احمد بن ادريس',
+      normalizedAliases: [],
+      searchText: 'احمد بن ادريس',
+    }
+    expect(rankNarratorSearchEntry(crossBoundary, 'نادر')).toBeNull()
+  })
 })
 
 describe('local narrator repository', () => {
@@ -69,6 +101,14 @@ describe('local narrator repository', () => {
     expect(response.results.find((result) => result.id === 'khoei-v4-2054')?.matchType).toBe(
       'exact',
     )
+  })
+
+  it('finds a narrator when a split name compound is typed joined', async () => {
+    const response = await searchNarrators({ query: 'أحمد بن حاتم بن ماهويه', limit: 10 })
+    const result = response.results.find((item) => item.id === 'khoei-v2-476')
+
+    expect(result).toBeDefined()
+    expect(result?.matchType).toBe('exact')
   })
 
   it('sorts Arabic results by similarity and then narrator id number', async () => {

@@ -35,7 +35,7 @@ export default function NarratorResults({
 
   const highlightedName = (name: string) => {
     if (!trimmed) return name
-    const segments = getHighlightSegments(name, trimmed)
+    const segments = getHighlightSegments(name, trimmed, { ignoreArabicSpaces: true })
     return segments.map((segment, index) =>
       segment.highlight ? (
         <mark

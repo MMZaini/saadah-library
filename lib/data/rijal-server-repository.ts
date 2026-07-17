@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+  compactArabicNarratorName,
   containsArabic,
   normalizeArabicNarratorName,
   normalizeEnglishForSearch,
@@ -67,6 +68,37 @@ async function getNarratorTransliterations(): Promise<NarratorTransliterationInd
 interface SearchStructure {
   searchIndex: NarratorSearchEntry[]
   indexById: Map<string, NarratorIndexEntry>
+}
+
+function compactNameTokenBoundaries(name: string): number[] {
+  const boundaries = [0]
+  let length = 0
+  for (const word of normalizeArabicNarratorName(name).split(/\s+/).filter(Boolean)) {
+    length += Array.from(word).length
+    boundaries.push(length)
+  }
+  return boundaries
+}
+
+function compactNameMatchKind(
+  name: string,
+  boundaries: readonly number[],
+  query: string,
+): 'exact' | 'startsWith' | 'contains' | null {
+  if (name === query) return 'exact'
+
+  let start = name.indexOf(query)
+  while (start !== -1) {
+    const end = start + query.length
+    // Only remove boundaries between complete tokens. This accepts ما هويه as
+    // ماهويه, but rejects a synthetic word spanning part of بن and part of
+    // ادريس (e.g. نادر from بن ادريس).
+    if (boundaries.includes(start) && boundaries.includes(end)) {
+      return start === 0 ? 'startsWith' : 'contains'
+    }
+    start = name.indexOf(query, start + 1)
+  }
+  return null
 }
 
 // id → lightweight index entry, joined once per dataset version and reused. Both
@@ -138,13 +170,19 @@ async function getSearchStructure(): Promise<SearchStructure> {
       const names = [transliteration?.primary, ...(transliteration?.aliases ?? [])].filter(
         (name): name is string => Boolean(name),
       )
+      const normalizedName = normalizeArabicNarratorName(entry.normalizedName)
+      const normalizedAliases = entry.normalizedAliases.map(normalizeArabicNarratorName)
       return {
         ...entry,
         // Canonicalize artifacts again at the read boundary so loaded names and
         // live queries always pass through the same narrator-specific contract.
-        normalizedName: normalizeArabicNarratorName(entry.normalizedName),
-        normalizedAliases: entry.normalizedAliases.map(normalizeArabicNarratorName),
+        normalizedName,
+        normalizedAliases,
         searchText: normalizeArabicNarratorName(entry.searchText),
+        compactArabicNames: [normalizedName, ...normalizedAliases].map(compactArabicNarratorName),
+        compactArabicNameBoundaries: [normalizedName, ...normalizedAliases].map(
+          compactNameTokenBoundaries,
+        ),
         transliteratedName: transliteration?.primary,
         transliteratedAliases: transliteration?.aliases,
         normalizedTransliterations: names.map(normalizeEnglishForSearch),
@@ -294,15 +332,48 @@ export function rankNarratorSearchEntry(
     }
   }
 
+  // Arabic compounds are inconsistently split in names and in common usage
+  // (e.g. ماهويه/ما هويه, عبدالله/عبد الله). Compare a secondary letters-only
+  // key for sufficiently specific queries; the minimum prevents short fragments
+  // from gaining accidental cross-word matches such as د بن -> دبن.
+  const compactQuery = compactArabicNarratorName(normalizedQuery)
+  const compactAliases = entry.compactArabicNames ?? aliases.map(compactArabicNarratorName)
+  const compactBoundaries =
+    entry.compactArabicNameBoundaries ?? aliases.map(compactNameTokenBoundaries)
+  const allowCompactMatch = compactQuery.length >= 4
+  const compactMatchKinds = allowCompactMatch
+    ? compactAliases.map((alias, index) =>
+        compactNameMatchKind(alias, compactBoundaries[index], compactQuery),
+      )
+    : []
+  if (allowCompactMatch) {
+    const exactIndex = compactMatchKinds.findIndex((kind) => kind === 'exact')
+    if (exactIndex !== -1) {
+      return { score: 0, matchType: 'exact', matchedAlias: aliases[exactIndex] }
+    }
+  }
+
   for (const alias of aliases) {
     if (alias.startsWith(normalizedQuery)) {
       return { score: 1, matchType: 'startsWith', matchedAlias: alias }
+    }
+  }
+  if (allowCompactMatch) {
+    const startsIndex = compactMatchKinds.findIndex((kind) => kind === 'startsWith')
+    if (startsIndex !== -1) {
+      return { score: 1, matchType: 'startsWith', matchedAlias: aliases[startsIndex] }
     }
   }
 
   for (const alias of aliases) {
     if (alias.includes(normalizedQuery)) {
       return { score: 2, matchType: 'contains', matchedAlias: alias }
+    }
+  }
+  if (allowCompactMatch) {
+    const containsIndex = compactMatchKinds.findIndex((kind) => kind === 'contains')
+    if (containsIndex !== -1) {
+      return { score: 2, matchType: 'contains', matchedAlias: aliases[containsIndex] }
     }
   }
 
