@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest'
 import {
   getHighlightSegments,
   matchesSearchMode,
+  normalizeArabicNarratorName,
   normalizeSearchModes,
   tokenizeEnglish,
 } from '../lib/search-utils'
+// The data builder is plain ESM while the application is TypeScript. Import it
+// here deliberately so CI enforces their shared normalization contract.
+import { normalizeArabic as normalizeArabicForRijalBuild } from '../tools/rijal/shared.mjs'
 
 const highlighted = (text: string, query: string, opts?: { exactMatch?: boolean }) =>
   getHighlightSegments(text, query, opts)
@@ -12,6 +16,31 @@ const highlighted = (text: string, query: string, opts?: { exactMatch?: boolean 
     .map((s) => s.text)
 
 describe('search matching', () => {
+  it('keeps runtime and narrator-build Arabic normalization in lockstep', () => {
+    const samples = [
+      'جبرئيل بن أحمد',
+      'مسؤول',
+      'يحيى الكوفي',
+      'علی کاظم',
+      'مُحَمَّد،بن',
+      'علي\u200dبن',
+      'عبدﷲ',
+      'شَيْءٌ',
+    ]
+
+    for (const sample of samples) {
+      expect(normalizeArabicNarratorName(sample)).toBe(normalizeArabicForRijalBuild(sample))
+    }
+  })
+
+  it('normalizes hamza carriers, Persian keyboard letters, marks, and boundaries', () => {
+    expect(normalizeArabicNarratorName('جبرئيل بن أحمد')).toBe('جبرييل بن احمد')
+    expect(normalizeArabicNarratorName('مسؤول')).toBe('مسوول')
+    expect(normalizeArabicNarratorName('علی کاظم')).toBe('علي كاظم')
+    expect(normalizeArabicNarratorName('مُحَمَّد،بن')).toBe('محمد بن')
+    expect(normalizeArabicNarratorName('علي\u200dبن')).toBe('علي بن')
+  })
+
   it('tokenizes English without preserving punctuation or diacritics', () => {
     expect(tokenizeEnglish("Al-Kāfi: Ja'far said")).toEqual(['al', 'kafi', "ja'far", 'said'])
   })

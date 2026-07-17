@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
   containsArabic,
-  normalizeArabic,
+  normalizeArabicNarratorName,
   normalizeEnglishForSearch,
   type SearchMode,
   normalizeSearchModes,
@@ -140,6 +140,11 @@ async function getSearchStructure(): Promise<SearchStructure> {
       )
       return {
         ...entry,
+        // Canonicalize artifacts again at the read boundary so loaded names and
+        // live queries always pass through the same narrator-specific contract.
+        normalizedName: normalizeArabicNarratorName(entry.normalizedName),
+        normalizedAliases: entry.normalizedAliases.map(normalizeArabicNarratorName),
+        searchText: normalizeArabicNarratorName(entry.searchText),
         transliteratedName: transliteration?.primary,
         transliteratedAliases: transliteration?.aliases,
         normalizedTransliterations: names.map(normalizeEnglishForSearch),
@@ -279,7 +284,7 @@ export function rankNarratorSearchEntry(
     return skeletonMatch ? { score: 3, matchType: 'words' } : null
   }
 
-  const normalizedQuery = precomputedNormalizedQuery ?? normalizeArabic(query)
+  const normalizedQuery = precomputedNormalizedQuery ?? normalizeArabicNarratorName(query)
   if (!normalizedQuery) return null
 
   const aliases = [entry.normalizedName, ...entry.normalizedAliases].filter(Boolean)
@@ -304,7 +309,7 @@ export function rankNarratorSearchEntry(
   const activeModes = normalizeSearchModes(modes)
   const wordMatch = activeModes.some((mode) =>
     matchesSearchMode({
-      query,
+      query: normalizedQuery,
       mode,
       arabicText: entry.searchText,
     }),
@@ -336,7 +341,7 @@ export async function searchNarrators({
   const safeLimit = Math.max(1, Math.min(Number.isFinite(limit) ? limit : 50, 100))
   const { searchIndex, indexById } = await getSearchStructure()
   const normalizedQuery = containsArabic(trimmed)
-    ? normalizeArabic(trimmed)
+    ? normalizeArabicNarratorName(trimmed)
     : normalizeEnglishForSearch(trimmed)
 
   const hits: Array<NarratorSearchResult & { _score: number }> = []

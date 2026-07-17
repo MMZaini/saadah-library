@@ -62,6 +62,15 @@ describe('local narrator repository', () => {
     expect(response.results[0].primaryName).toContain('أبان')
   })
 
+  it('finds a narrator by the exact Arabic display name with hamza on ya', async () => {
+    const response = await searchNarrators({ query: 'جبرئيل بن أحمد', limit: 10 })
+
+    expect(response.results.some((result) => result.id === 'khoei-v4-2054')).toBe(true)
+    expect(response.results.find((result) => result.id === 'khoei-v4-2054')?.matchType).toBe(
+      'exact',
+    )
+  })
+
   it('sorts Arabic results by similarity and then narrator id number', async () => {
     const response = await searchNarrators({ query: 'محمد', limit: 100 })
     expect(response.results.length).toBeGreaterThan(1)

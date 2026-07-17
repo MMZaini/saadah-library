@@ -372,6 +372,29 @@ export function normalizeArabic(input: string | null | undefined): string {
 }
 
 /**
+ * Normalize Arabic names using the same contract as the rijal data builder.
+ * This is deliberately separate from general hadith normalization: narrator
+ * artifacts reduce hamza-on-waw/ya to carrier letters, whereas hadith search
+ * has historically reduced both to bare hamza.
+ */
+export function normalizeArabicNarratorName(input: string | null | undefined): string {
+  if (!input) return ''
+  return String(input)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0610-\u061A\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u08D3-\u08FF]/g, '')
+    .replace(/[\u0622\u0623\u0625\u0671]/g, '\u0627')
+    .replace(/[\u0649\u06CC]/g, '\u064A')
+    .replace(/\u06A9/g, '\u0643')
+    .replace(/\u0624/g, '\u0648')
+    .replace(/\u0626/g, '\u064A')
+    .replace(/\u0629/g, '\u0647')
+    .replace(/[^\p{Script=Arabic}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
  * Common Islamic/religious terminology synonyms for enhanced English search
  */
 const ISLAMIC_SYNONYMS: Record<string, string[]> = {
