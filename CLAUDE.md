@@ -27,16 +27,22 @@ yarn test:data           # parser tests + data:validate + check-runtime (the dat
 npx tsc --noEmit         # typecheck (no `typecheck` script; CI runs `yarn tsc --noEmit`)
 ```
 
-There is no `typecheck` npm script and no single-command "verify everything"; CI runs `test:data`, `lint`, `tsc --noEmit`, and `build` separately (see `.github/workflows/thaqalayn-data.yml`).
+There is no `typecheck` npm script and no single-command "verify everything". The normal CI
+workflow runs the repository checks separately and validates the checked-in dataset; it never
+crawls, generates, advances, or publishes Thaqalayn data.
 
-### Data pipeline (maintainer-only — never runs at serve time)
+### Data pipeline (manual maintainer-only tooling — never scheduled or run at serve time)
 
 ```bash
-yarn data:import:github  # bootstrap dataset from the ThaqalaynAPI GitHub snapshot
-yarn data:crawl          # dry-run sitemap discovery against thaqalayn.net
-yarn data:update         # crawl + generate a candidate release
+yarn data:import:github  # manually bootstrap from the ThaqalaynAPI GitHub snapshot
+yarn data:crawl          # manual dry-run sitemap discovery against thaqalayn.net
+yarn data:update         # manually crawl + generate an unreviewed candidate release
 yarn data:validate       # validate the active release
 ```
+
+There is no data-update GitHub Action or automatic publication path. `yarn data:update`
+repoints `data/thaqalayn/current.json` even when public auto-publication is disabled, so its
+output must receive a semantic content review before either pointer is treated as blessed.
 
 ## Critical conventions
 

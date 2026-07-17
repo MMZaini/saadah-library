@@ -80,28 +80,34 @@ Thaqalayn API host reference is reintroduced into the app code.
 
 Data is organized as immutable releases:
 
-- `data/thaqalayn/current.json` - pointer to the active ("blessed") release.
+- `data/thaqalayn/current.json` - repository-side pointer used by validation and maintenance
+  tooling; manual candidate generation can move it before a release is blessed.
 - `data/thaqalayn/releases/<version>/canonical` - source-oriented canonical records.
 - `data/thaqalayn/releases/<version>/runtime` - app-ready artifacts (books, per-volume hadiths, chapter structures, merged structure metadata, search shards, lookup, and random indexes).
-- `public/data/thaqalayn/<version>/runtime` - the artifacts actually served to clients, with `public/data/thaqalayn/current/manifest.json` as the active-version pointer.
+- `public/data/thaqalayn/<version>/runtime` - the artifacts actually served to clients, with
+  `public/data/thaqalayn/current/manifest.json` as the blessed active-version pointer.
 
 The app reads those artifacts directly and uses a local `/api/search` route for server-side search/filtering. In the browser, large runtime payloads are cached in IndexedDB behind a versioned URL so repeated reading stays fast without making the dataset mutable.
 
-The crawl/import pipeline (below) is only for maintainers refreshing the dataset; it never
-runs as part of serving the site.
+The crawl/import pipeline below is a manual, maintainer-only tool. Saadah Library does **not**
+automatically crawl, import, generate, advance, or publish Thaqalayn data. No GitHub Action is
+configured to update the dataset. Dataset changes must be initiated deliberately, reviewed as
+content changes, and promoted separately from ordinary application releases.
 
 Useful commands:
 
 ```bash
-yarn data:import:github   # bootstrap from the open-source ThaqalaynAPI snapshot
-yarn data:crawl           # dry-run sitemap discovery against thaqalayn.net
-yarn data:update          # crawl thaqalayn.net and generate a candidate release
+yarn data:import:github   # manual bootstrap from the open-source ThaqalaynAPI snapshot
+yarn data:crawl           # manual dry-run sitemap discovery against thaqalayn.net
+yarn data:update          # manually crawl and generate an unreviewed candidate release
 yarn test:data            # parser tests, data validation, runtime dependency scan
 ```
 
-Scheduled data updates are configured in `.github/workflows/thaqalayn-data.yml`. The workflow
-opens a PR after crawling, validation, tests, lint, typecheck, and build pass; it does not
-auto-publish by default.
+The normal CI workflow validates the checked-in dataset but never changes it. Running
+`yarn data:update` writes a candidate release and repoints `data/thaqalayn/current.json`; it
+does not update the public runtime unless a maintainer explicitly performs a separate
+publication step. Generated candidates must not be treated as blessed merely because the
+structural checks pass.
 
 Data quality notes:
 
