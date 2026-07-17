@@ -7,13 +7,8 @@ import { withBasePath } from '@/lib/assets'
 import { loadPdf, type PDFDocumentProxy } from '@/lib/pdf-engine'
 import { getKhoeiRijalPdf, KHOEI_RIJAL_TITLE } from '@/lib/rijal-pdfs'
 import { normalizeExportLayout } from '@/lib/scan-layout'
-import {
-  exportPages,
-  HIGHLIGHT_COLORS,
-  UNDERLINE_COLORS,
-  type ExportCover,
-  type Highlight,
-} from '@/lib/scan-export'
+import { resolveExportCover } from '@/lib/scan-cover'
+import { exportPages, HIGHLIGHT_COLORS, UNDERLINE_COLORS, type Highlight } from '@/lib/scan-export'
 import type { ScanBook, ScanVolume } from '@/lib/scan-sources'
 import { isConstrainedDevice } from '@/lib/device'
 import { isAllowedScanPdfPath } from '@/lib/scan-image'
@@ -109,6 +104,7 @@ export default function ScansStudio() {
     delivery: 'zip',
     showBadge: false,
     coverEnabled: true,
+    coverSource: 'book',
     coverPage: 1,
   })
 
@@ -156,7 +152,7 @@ export default function ScansStudio() {
     lastSelectedPageRef.current = null
     setCurrentPage(1)
     setZoom(1)
-    setSettings((s) => ({ ...s, coverPage: 1 }))
+    setSettings((s) => ({ ...s, coverSource: 'book', coverPage: 1 }))
 
     const handle = loadPdf(withBasePath(volume.path))
     loadHandleRef.current = handle
@@ -205,7 +201,7 @@ export default function ScansStudio() {
     lastSelectedPageRef.current = null
     setCurrentPage(1)
     setZoom(1)
-    setSettings((s) => ({ ...s, coverPage: 1 }))
+    setSettings((s) => ({ ...s, coverSource: 'page', coverPage: 1 }))
 
     try {
       const bytes = new Uint8Array(await file.arrayBuffer())
@@ -261,7 +257,12 @@ export default function ScansStudio() {
       lastSelectedPageRef.current = null
       setCurrentPage(1)
       setZoom(1)
-      setSettings((s) => ({ ...s, coverPage: 1, coverEnabled: true }))
+      setSettings((s) => ({
+        ...s,
+        coverSource: 'page',
+        coverPage: 1,
+        coverEnabled: true,
+      }))
 
       const handle = loadPdf(withBasePath(pdf.path))
       loadHandleRef.current = handle
@@ -287,7 +288,7 @@ export default function ScansStudio() {
         setSelectedPages(selected)
         lastSelectedPageRef.current = selected.size ? firstSelected : null
         setCurrentPage(firstSelected)
-        setSettings((s) => ({ ...s, coverPage: 1 }))
+        setSettings((s) => ({ ...s, coverSource: 'page', coverPage: 1 }))
         setSidebarOpen(false)
       } catch {
         if (loadTokenRef.current === token) {
@@ -327,7 +328,7 @@ export default function ScansStudio() {
     setSelectedPages(new Set())
     lastSelectedPageRef.current = null
     setLoadError(null)
-    setSettings((s) => ({ ...s, coverPage: 1 }))
+    setSettings((s) => ({ ...s, coverSource: 'book', coverPage: 1 }))
   }, [])
 
   const toggleSelectPage = useCallback((n: number, extendRange = false) => {
@@ -417,17 +418,14 @@ export default function ScansStudio() {
         if (list) list.push(h)
         else byPage.set(h.page, [h])
       }
-      let cover: ExportCover | null = null
-      if (settings.coverEnabled && layout !== 'each' && source) {
-        if (source.kind === 'library') {
-          cover = { kind: 'image', src: withBasePath(source.cover) }
-        } else {
-          cover = {
-            kind: 'page',
-            pageNumber: Math.min(numPages, Math.max(1, settings.coverPage)),
-          }
-        }
-      }
+      const cover = resolveExportCover({
+        enabled: settings.coverEnabled,
+        layout,
+        source: settings.coverSource,
+        bookCoverSrc: source?.kind === 'library' ? withBasePath(source.cover) : null,
+        page: settings.coverPage,
+        numPages,
+      })
       await exportPages(docRef.current, pageNumbers, byPage, {
         layout,
         format: settings.format,

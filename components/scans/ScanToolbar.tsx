@@ -16,7 +16,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { normalizeExportLayout } from '@/lib/scan-layout'
+import { normalizeCoverPage, normalizeExportLayout } from '@/lib/scan-layout'
+import type { CoverSource } from '@/lib/scan-cover'
 import {
   HIGHLIGHT_COLORS,
   UNDERLINE_COLORS,
@@ -33,6 +34,7 @@ export interface ExportSettings {
   delivery: ExportDelivery
   showBadge: boolean
   coverEnabled: boolean
+  coverSource: CoverSource
   coverPage: number
 }
 
@@ -115,6 +117,7 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
   const effectiveLayout = normalizeExportLayout(settings.layout, selectedCount)
   const layoutOptions = selectedCount > 1 ? LAYOUT_OPTIONS : SINGLE_PAGE_LAYOUT_OPTIONS
   const coverRelevant = effectiveLayout !== 'each'
+  const pageCoverSelected = coverMode === 'page' || settings.coverSource === 'page'
   const multiFile =
     selectedCount > 1 && (effectiveLayout === 'each' || effectiveLayout === 'page-cover')
   const exportLabel =
@@ -161,7 +164,20 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
               />
               Include cover
             </label>
-            {settings.coverEnabled && coverMode === 'page' ? (
+            {settings.coverEnabled && coverMode === 'book' && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-foreground-muted">Cover source</span>
+                <Seg
+                  value={settings.coverSource}
+                  onChange={(coverSource) => onSettingsChange({ coverSource })}
+                  options={[
+                    { value: 'book', label: 'Book cover' },
+                    { value: 'page', label: 'PDF page' },
+                  ]}
+                />
+              </div>
+            )}
+            {settings.coverEnabled && pageCoverSelected ? (
               <label className="flex items-center justify-between gap-3 text-sm text-foreground-muted">
                 <span>Cover page</span>
                 <input
@@ -172,19 +188,17 @@ function ExportPanel(props: ScanToolbarProps & { onClose: () => void }) {
                   onChange={(event) => {
                     const parsed = Number(event.currentTarget.value)
                     onSettingsChange({
-                      coverPage: Number.isFinite(parsed)
-                        ? Math.min(numPages, Math.max(1, parsed))
-                        : 1,
+                      coverPage: normalizeCoverPage(parsed, numPages),
                     })
                   }}
                   className="h-8 w-20 rounded-md border border-border bg-background px-2 text-sm text-foreground"
                 />
               </label>
-            ) : settings.coverEnabled ? (
+            ) : settings.coverEnabled && coverMode === 'book' ? (
               <p className="text-xs text-foreground-faint">Uses the current book cover.</p>
             ) : null}
-            {settings.coverEnabled && coverMode === 'page' && (
-              <p className="text-xs text-foreground-faint">Page 1 is used by default.</p>
+            {settings.coverEnabled && pageCoverSelected && (
+              <p className="text-xs text-foreground-faint">Choose any page from 1 to {numPages}.</p>
             )}
           </div>
         )}
