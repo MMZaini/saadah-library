@@ -1,7 +1,8 @@
 'use client'
 
-import { Fragment, useRef, useState } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { X } from 'lucide-react'
+import { underlinePaintRect } from '@/lib/scan-annotations'
 import type { Highlight } from '@/lib/scan-export'
 import {
   chooseUnderlineMoveAxis,
@@ -23,6 +24,7 @@ const MIN_DRAW_PX = 6
 const MIN_RESIZE_PX = 12
 const UNDERLINE_HIT_PX = 12
 const AXIS_LOCK_THRESHOLD_PX = 4
+const UNDERLINE_STROKE_CSS_PX = 3
 
 type Interaction =
   | { kind: 'draw'; startX: number; startY: number }
@@ -71,6 +73,72 @@ const UNDERLINE_HANDLE_POSITIONS: {
   { handle: 'w', className: '-left-[5px] -bottom-[5px]', cursor: 'ew-resize' },
   { handle: 'e', className: '-right-[5px] -bottom-[5px]', cursor: 'ew-resize' },
 ]
+
+interface UnderlineCanvasProps {
+  overlayRef: RefObject<HTMLDivElement | null>
+  highlights: Highlight[]
+  draft: HighlightRect | null
+  draftColor: string
+}
+
+/** Paints draft and committed underline ink through the exact same pixel grid. */
+function UnderlineCanvas({ overlayRef, highlights, draft, draftColor }: UnderlineCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current
+    const overlay = overlayRef.current
+    if (!canvas || !overlay) return
+
+    const paint = () => {
+      const bounds = overlay.getBoundingClientRect()
+      if (bounds.width <= 0 || bounds.height <= 0) return
+
+      const dpr = Math.max(1, window.devicePixelRatio || 1)
+      const width = Math.max(1, Math.round(bounds.width * dpr))
+      const height = Math.max(1, Math.round(bounds.height * dpr))
+      if (canvas.width !== width) canvas.width = width
+      if (canvas.height !== height) canvas.height = height
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.clearRect(0, 0, width, height)
+      const thickness = Math.max(1, Math.round(UNDERLINE_STROKE_CSS_PX * dpr))
+
+      for (const highlight of highlights) {
+        if (highlight.kind !== 'underline') continue
+        const rect = underlinePaintRect(highlight, width, height, thickness)
+        ctx.fillStyle = highlight.color
+        ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+      }
+
+      if (draft) {
+        const rect = underlinePaintRect(draft, width, height, thickness)
+        ctx.fillStyle = draftColor
+        ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+      }
+    }
+
+    paint()
+    const observer = new ResizeObserver(paint)
+    observer.observe(overlay)
+    // Browser zoom and moving the window between screens can change DPR
+    // without changing the overlay's CSS dimensions.
+    window.addEventListener('resize', paint)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', paint)
+    }
+  }, [draft, draftColor, highlights, overlayRef])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
+    />
+  )
+}
 
 export default function HighlightOverlay({
   pageNum,
@@ -241,6 +309,12 @@ export default function HighlightOverlay({
         if (interactionRef.current) endInteraction(event, false)
       }}
     >
+      <UnderlineCanvas
+        overlayRef={overlayRef}
+        highlights={highlights}
+        draft={tool === 'underline' ? draft : null}
+        draftColor={activeColor}
+      />
       {highlights.map((highlight) => {
         const selected = tool === 'select' && selectedHighlightId === highlight.id
         const isUnderline = highlight.kind === 'underline'
@@ -276,16 +350,12 @@ export default function HighlightOverlay({
                     : undefined,
               }}
             >
-              <span
-                className={cn(
-                  'pointer-events-none absolute',
-                  isUnderline ? 'inset-x-0 bottom-0 h-[3px]' : 'inset-0',
-                )}
-                style={{
-                  backgroundColor: highlight.color,
-                  mixBlendMode: isUnderline ? undefined : 'multiply',
-                }}
-              />
+              {!isUnderline && (
+                <span
+                  className="pointer-events-none absolute inset-0"
+                  style={{ backgroundColor: highlight.color, mixBlendMode: 'multiply' }}
+                />
+              )}
               {selected && isUnderline && (
                 <span
                   aria-hidden
@@ -346,7 +416,7 @@ export default function HighlightOverlay({
           </Fragment>
         )
       })}
-      {draft && (
+      {draft && tool !== 'underline' && (
         <div
           className="pointer-events-none absolute"
           style={{
@@ -354,17 +424,10 @@ export default function HighlightOverlay({
             top: `${draft.y * 100}%`,
             width: `${draft.w * 100}%`,
             height: `${draft.h * 100}%`,
-            backgroundColor: tool === 'underline' ? 'transparent' : activeColor,
-            mixBlendMode: tool === 'underline' ? undefined : 'multiply',
+            backgroundColor: activeColor,
+            mixBlendMode: 'multiply',
           }}
-        >
-          {tool === 'underline' && (
-            <span
-              className="absolute inset-x-0 bottom-0 h-[3px]"
-              style={{ backgroundColor: activeColor }}
-            />
-          )}
-        </div>
+        />
       )}
     </div>
   )

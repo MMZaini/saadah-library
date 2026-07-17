@@ -30,6 +30,41 @@ export const UNDERLINE_COLORS: { name: string; value: string }[] = [
   { name: 'Black', value: '#18181b' },
 ]
 
+export interface UnderlinePaintRect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+/**
+ * Resolves an underline to whole backing-store pixels. Rounding both endpoints
+ * independently keeps the normalised width stable, while an integer stroke
+ * prevents fractional CSS/device-pixel placement from alternating thickness.
+ */
+export function underlinePaintRect(
+  annotation: Pick<Highlight, 'x' | 'y' | 'w' | 'h'>,
+  width: number,
+  height: number,
+  thickness: number,
+): UnderlinePaintRect {
+  const pixelWidth = Math.max(1, Math.round(width))
+  const pixelHeight = Math.max(1, Math.round(height))
+  const stroke = clamp(Math.round(thickness), 1, pixelHeight)
+  const left = Math.round(clamp(annotation.x, 0, 1) * pixelWidth)
+  const right = Math.round(clamp(annotation.x + annotation.w, 0, 1) * pixelWidth)
+  const baseline = Math.round(clamp(annotation.y + annotation.h, 0, 1) * pixelHeight)
+
+  return {
+    x: left,
+    y: clamp(baseline - stroke, 0, pixelHeight - stroke),
+    w: Math.max(0, right - left),
+    h: stroke,
+  }
+}
+
 /** Paints annotations onto an already-rendered page canvas context. */
 export function drawHighlights(
   ctx: CanvasRenderingContext2D,
@@ -44,13 +79,9 @@ export function drawHighlights(
       // The rect height is the editable hit area; only its bottom edge is part
       // of the exported annotation.
       const thickness = Math.max(2, Math.round(height * 0.0025))
+      const rect = underlinePaintRect(annotation, width, height, thickness)
       ctx.globalCompositeOperation = 'source-over'
-      ctx.fillRect(
-        annotation.x * width,
-        (annotation.y + annotation.h) * height - thickness,
-        annotation.w * width,
-        thickness,
-      )
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
     } else {
       ctx.globalCompositeOperation = 'multiply'
       ctx.fillRect(

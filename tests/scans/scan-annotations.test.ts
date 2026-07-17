@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drawHighlights, type Highlight } from '../../lib/scan-annotations'
+import { drawHighlights, underlinePaintRect, type Highlight } from '../../lib/scan-annotations'
 
 function recordingContext() {
   const fills: Array<{
@@ -89,5 +89,52 @@ describe('scan annotation rendering', () => {
         h: 5,
       },
     ])
+  })
+
+  it('pixel-aligns underline endpoints and thickness at fractional zoom scales', () => {
+    const annotation = { x: 0.101, y: 0.201, w: 0.303, h: 0.019 }
+
+    expect(underlinePaintRect(annotation, 997.4, 1403.6, 3.75)).toEqual({
+      x: 101,
+      y: 305,
+      w: 302,
+      h: 4,
+    })
+    expect(underlinePaintRect(annotation, 1246.75, 1754.5, 3.75)).toEqual({
+      x: 126,
+      y: 382,
+      w: 378,
+      h: 4,
+    })
+  })
+
+  it('paints preview and committed hit-area geometry identically', () => {
+    const preview = { x: 0.2, y: 0.4, w: 0.45, h: 0 }
+    const committed = { x: 0.2, y: 0.38, w: 0.45, h: 0.02 }
+
+    for (const [width, height, thickness] of [
+      [800, 1120, 3],
+      [997, 1404, 4],
+      [1600, 2240, 6],
+    ]) {
+      expect(underlinePaintRect(committed, width, height, thickness)).toEqual(
+        underlinePaintRect(preview, width, height, thickness),
+      )
+    }
+  })
+
+  it('keeps edge underlines fully visible inside the backing store', () => {
+    expect(underlinePaintRect({ x: 0, y: 0, w: 1, h: 0 }, 100, 200, 3)).toEqual({
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 3,
+    })
+    expect(underlinePaintRect({ x: 0, y: 1, w: 1, h: 0 }, 100, 200, 3)).toEqual({
+      x: 0,
+      y: 197,
+      w: 100,
+      h: 3,
+    })
   })
 })
