@@ -5,25 +5,18 @@ import { buildScanPageImageUrl, snapScanImageWidth } from '@/lib/scan-image'
 import type { Highlight } from '@/lib/scan-export'
 import type { ScanTool } from './PageCanvas'
 import { cn } from '@/lib/utils'
+import HighlightOverlay from './HighlightOverlay'
 
 // Mobile/constrained-device counterpart to PageCanvas: instead of decoding the
 // huge JBIG2 pages with client pdf.js (which whites-out on phones — see
 // [[narrators-pdf-mobile-white]]), it shows server-rasterized WebP page images
 // from /api/scan-page. The highlight-overlay model is identical to PageCanvas so
-// the scan studio's draw/erase tools keep working on mobile.
+// the scan studio's highlight editing tools keep working on mobile.
 
 const CONTAINER_PADDING = 32
 const MAX_FIT_WIDTH = 1100
 const DISPLAY_BASE_SCALE = 0.8
-const MIN_DRAW_PX = 6
 const FALLBACK_ASPECT = 1.45 // height/width before the image's real ratio is known
-
-interface DraftRect {
-  x: number
-  y: number
-  w: number
-  h: number
-}
 
 interface ScanImageViewProps {
   pdfPath: string
@@ -33,12 +26,13 @@ interface ScanImageViewProps {
   tool: ScanTool
   activeColor: string
   highlightsByPage: Map<number, Highlight[]>
+  selectedHighlightId: string | null
   onActivatePage: (pageNum: number) => void
   onAddHighlight: (pageNum: number, rect: { x: number; y: number; w: number; h: number }) => void
+  onSelectHighlight: (id: string | null) => void
+  onUpdateHighlight: (id: string, patch: Partial<Pick<Highlight, 'x' | 'y' | 'w' | 'h'>>) => void
   onDeleteHighlight: (id: string) => void
 }
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 interface PageImageProps {
   pdfPath: string
@@ -50,8 +44,11 @@ interface PageImageProps {
   tool: ScanTool
   activeColor: string
   highlights: Highlight[]
+  selectedHighlightId: string | null
   onActivate: (pageNum: number) => void
   onAddHighlight: (pageNum: number, rect: { x: number; y: number; w: number; h: number }) => void
+  onSelectHighlight: (id: string | null) => void
+  onUpdateHighlight: (id: string, patch: Partial<Pick<Highlight, 'x' | 'y' | 'w' | 'h'>>) => void
   onDeleteHighlight: (id: string) => void
 }
 
@@ -65,14 +62,14 @@ function PageImage({
   tool,
   activeColor,
   highlights,
+  selectedHighlightId,
   onActivate,
   onAddHighlight,
+  onSelectHighlight,
+  onUpdateHighlight,
   onDeleteHighlight,
 }: PageImageProps) {
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const drawStartRef = useRef<{ x: number; y: number } | null>(null)
   const [aspect, setAspect] = useState<number | null>(null)
-  const [draft, setDraft] = useState<DraftRect | null>(null)
   // attempt 0 = first load; 1 = one retry (cache-busted); 2 = give up.
   const [attempt, setAttempt] = useState(0)
 
@@ -82,52 +79,6 @@ function PageImage({
   const baseSrc = fitWidth ? buildScanPageImageUrl(pdfPath, pageNum, renderWidth) : undefined
   const src =
     baseSrc && !failed ? (attempt > 0 ? `${baseSrc}&retry=${attempt}` : baseSrc) : undefined
-
-  const localPoint = (e: React.PointerEvent) => {
-    const rect = overlayRef.current!.getBoundingClientRect()
-    return {
-      x: clamp(e.clientX - rect.left, 0, rect.width),
-      y: clamp(e.clientY - rect.top, 0, rect.height),
-      rect,
-    }
-  }
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    onActivate(pageNum)
-    if (tool !== 'draw' || e.button !== 0) return
-    overlayRef.current?.setPointerCapture(e.pointerId)
-    const { x, y } = localPoint(e)
-    drawStartRef.current = { x, y }
-    setDraft({ x, y, w: 0, h: 0 })
-  }
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    const start = drawStartRef.current
-    if (!start) return
-    const { x, y } = localPoint(e)
-    setDraft({
-      x: Math.min(start.x, x),
-      y: Math.min(start.y, y),
-      w: Math.abs(x - start.x),
-      h: Math.abs(y - start.y),
-    })
-  }
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    const start = drawStartRef.current
-    drawStartRef.current = null
-    const rect = overlayRef.current?.getBoundingClientRect()
-    if (start && draft && rect && draft.w >= MIN_DRAW_PX && draft.h >= MIN_DRAW_PX) {
-      onAddHighlight(pageNum, {
-        x: draft.x / rect.width,
-        y: draft.y / rect.height,
-        w: draft.w / rect.width,
-        h: draft.h / rect.height,
-      })
-    }
-    setDraft(null)
-    overlayRef.current?.releasePointerCapture?.(e.pointerId)
-  }
 
   return (
     <section
@@ -166,58 +117,18 @@ function PageImage({
           <span className="text-foreground-faint">Tap to retry</span>
         </button>
       )}
-      <div
-        ref={overlayRef}
-        className="absolute inset-0"
-        style={{
-          touchAction: tool === 'draw' ? 'none' : 'auto',
-          cursor: tool === 'draw' ? 'crosshair' : 'default',
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        {highlights.map((h) => (
-          <div
-            key={h.id}
-            onClick={
-              tool === 'erase'
-                ? () => {
-                    onActivate(pageNum)
-                    onDeleteHighlight(h.id)
-                  }
-                : undefined
-            }
-            className={cn(
-              'absolute',
-              tool === 'erase'
-                ? 'cursor-pointer outline outline-2 outline-red-500/70'
-                : 'pointer-events-none',
-            )}
-            style={{
-              left: `${h.x * 100}%`,
-              top: `${h.y * 100}%`,
-              width: `${h.w * 100}%`,
-              height: `${h.h * 100}%`,
-              backgroundColor: h.color,
-              mixBlendMode: 'multiply',
-            }}
-          />
-        ))}
-        {draft && (
-          <div
-            className="pointer-events-none absolute"
-            style={{
-              left: draft.x,
-              top: draft.y,
-              width: draft.w,
-              height: draft.h,
-              backgroundColor: activeColor,
-              mixBlendMode: 'multiply',
-            }}
-          />
-        )}
-      </div>
+      <HighlightOverlay
+        pageNum={pageNum}
+        tool={tool}
+        activeColor={activeColor}
+        highlights={highlights}
+        selectedHighlightId={selectedHighlightId}
+        onActivate={onActivate}
+        onAddHighlight={onAddHighlight}
+        onSelectHighlight={onSelectHighlight}
+        onUpdateHighlight={onUpdateHighlight}
+        onDeleteHighlight={onDeleteHighlight}
+      />
       <span className="pointer-events-none absolute right-2 top-2 rounded bg-black/65 px-2 py-1 text-xs font-medium text-white">
         {pageNum}
       </span>
@@ -233,8 +144,11 @@ export default function ScanImageView({
   tool,
   activeColor,
   highlightsByPage,
+  selectedHighlightId,
   onActivatePage,
   onAddHighlight,
+  onSelectHighlight,
+  onUpdateHighlight,
   onDeleteHighlight,
 }: ScanImageViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -283,8 +197,11 @@ export default function ScanImageView({
             tool={tool}
             activeColor={activeColor}
             highlights={highlightsByPage.get(pageNum) ?? []}
+            selectedHighlightId={selectedHighlightId}
             onActivate={onActivatePage}
             onAddHighlight={onAddHighlight}
+            onSelectHighlight={onSelectHighlight}
+            onUpdateHighlight={onUpdateHighlight}
             onDeleteHighlight={onDeleteHighlight}
           />
         ))}

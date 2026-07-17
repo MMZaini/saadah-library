@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   Highlighter,
-  Eraser,
+  Move,
   ZoomIn,
   ZoomOut,
   ChevronLeft,
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { normalizeExportLayout } from '@/lib/scan-layout'
 import {
   HIGHLIGHT_COLORS,
+  type Highlight,
   type ExportLayout,
   type ExportFormat,
   type ExportDelivery,
@@ -40,6 +41,7 @@ interface ScanToolbarProps {
   onToolChange: (tool: ScanTool) => void
   activeColor: string
   onColorChange: (color: string) => void
+  selectedHighlight: Highlight | null
   zoom: number
   onZoomIn: () => void
   onZoomOut: () => void
@@ -252,6 +254,7 @@ export default function ScanToolbar(props: ScanToolbarProps) {
     onToolChange,
     activeColor,
     onColorChange,
+    selectedHighlight,
     zoom,
     onZoomIn,
     onZoomOut,
@@ -268,30 +271,32 @@ export default function ScanToolbar(props: ScanToolbarProps) {
 
   return (
     <>
-      <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-2 sm:px-3">
+      <div className="relative flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-2 sm:px-4">
         {/* Left: tools */}
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1 lg:pr-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 md:hidden"
+            className="absolute left-2 h-8 w-8 md:hidden"
             onClick={onOpenSidebar}
             title="Browse PDFs"
           >
             <Menu className="h-4 w-4" />
           </Button>
 
-          <div className="inline-flex rounded-md border border-border p-0.5">
+          <div className="inline-flex rounded-lg border border-border bg-surface-1 p-1 shadow-sm">
             <button
               type="button"
               disabled={!hasDoc}
               onClick={() => onToolChange('draw')}
               title="Highlight (drag)"
+              aria-label="Draw highlight"
+              aria-pressed={tool === 'draw'}
               className={cn(
-                'rounded p-1.5 transition-colors disabled:opacity-40',
+                'inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-all disabled:opacity-40',
                 tool === 'draw'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-foreground-muted hover:text-foreground',
+                  ? 'bg-accent text-accent-foreground shadow-sm'
+                  : 'text-foreground-muted hover:bg-surface-2 hover:text-foreground',
               )}
             >
               <Highlighter className="h-4 w-4" />
@@ -299,20 +304,22 @@ export default function ScanToolbar(props: ScanToolbarProps) {
             <button
               type="button"
               disabled={!hasDoc}
-              onClick={() => onToolChange('erase')}
-              title="Erase (click a highlight)"
+              onClick={() => onToolChange('select')}
+              title="Select, move and resize highlights"
+              aria-label="Select and move highlights"
+              aria-pressed={tool === 'select'}
               className={cn(
-                'rounded p-1.5 transition-colors disabled:opacity-40',
-                tool === 'erase'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-foreground-muted hover:text-foreground',
+                'inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-all disabled:opacity-40',
+                tool === 'select'
+                  ? 'bg-accent text-accent-foreground shadow-sm'
+                  : 'text-foreground-muted hover:bg-surface-2 hover:text-foreground',
               )}
             >
-              <Eraser className="h-4 w-4" />
+              <Move className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="ml-1 hidden items-center gap-1 sm:flex">
+          <div className="ml-1 hidden items-center gap-1 rounded-lg border border-border bg-surface-1 px-2 py-1.5 shadow-sm lg:flex">
             {HIGHLIGHT_COLORS.map((color) => (
               <button
                 key={color.value}
@@ -320,13 +327,13 @@ export default function ScanToolbar(props: ScanToolbarProps) {
                 disabled={!hasDoc}
                 onClick={() => {
                   onColorChange(color.value)
-                  onToolChange('draw')
                 }}
-                title={color.name}
+                title={`${color.name}${selectedHighlight ? ' (apply to selected highlight)' : ''}`}
+                aria-label={`${color.name} highlight`}
                 className={cn(
-                  'h-5 w-5 rounded-full border border-black/20 transition-transform disabled:opacity-40',
-                  activeColor === color.value && tool === 'draw'
-                    ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
+                  'h-5 w-5 rounded-full border border-black/30 transition-transform disabled:opacity-40',
+                  activeColor === color.value
+                    ? 'scale-105 shadow-sm ring-2 ring-white/50'
                     : 'hover:scale-110',
                 )}
                 style={{ backgroundColor: color.value }}
@@ -337,7 +344,7 @@ export default function ScanToolbar(props: ScanToolbarProps) {
 
         {/* Center: page nav */}
         {hasDoc && (
-          <div className="hidden items-center gap-1 sm:flex">
+          <div className="hidden items-center gap-1 rounded-lg border border-border bg-surface-1 p-1 shadow-sm lg:flex">
             <Button
               variant="ghost"
               size="icon"
@@ -347,7 +354,7 @@ export default function ScanToolbar(props: ScanToolbarProps) {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[72px] text-center text-sm text-foreground-muted">
+            <span className="min-w-[72px] text-center text-sm tabular-nums text-foreground-muted">
               {currentPage} / {numPages}
             </span>
             <Button
@@ -363,8 +370,8 @@ export default function ScanToolbar(props: ScanToolbarProps) {
         )}
 
         {/* Right: zoom + export */}
-        <div className="flex items-center gap-1">
-          <div className="hidden items-center gap-0.5 sm:flex">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+          <div className="hidden items-center gap-0.5 rounded-lg border border-border bg-surface-1 p-1 shadow-sm lg:flex">
             <Button
               variant="ghost"
               size="icon"
@@ -398,12 +405,12 @@ export default function ScanToolbar(props: ScanToolbarProps) {
           <div className="relative">
             <Button
               size="sm"
-              className="h-8 gap-1.5"
+              className="h-9 gap-1.5 rounded-lg shadow-sm"
               disabled={!hasDoc}
               onClick={() => setExportOpen((v) => !v)}
             >
               <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Export</span>
+              <span className="hidden lg:inline">Export</span>
               {selectedCount > 0 && (
                 <span className="bg-accent-foreground/20 rounded-full px-1.5 text-[11px]">
                   {selectedCount}
@@ -415,10 +422,10 @@ export default function ScanToolbar(props: ScanToolbarProps) {
         </div>
       </div>
 
-      {/* Mobile-only secondary row: page nav, highlight colors and zoom are hidden
-          in the row above on phones, so they're surfaced here (scrolls if tight). */}
+      {/* Compact secondary row: retained until the viewer pane is wide enough for
+          navigation, colours and zoom to fit comfortably in the primary row. */}
       {hasDoc && (
-        <div className="flex items-center gap-2 overflow-x-auto border-b border-border bg-background px-2 py-1.5 sm:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-border bg-background px-2 py-1.5 lg:hidden">
           <div className="flex shrink-0 items-center gap-1">
             <Button
               variant="ghost"
@@ -445,21 +452,18 @@ export default function ScanToolbar(props: ScanToolbarProps) {
 
           <div className="h-5 w-px shrink-0 bg-border" />
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 rounded-lg border border-border bg-surface-1 px-2 py-1">
             {HIGHLIGHT_COLORS.map((color) => (
               <button
                 key={color.value}
                 type="button"
                 onClick={() => {
                   onColorChange(color.value)
-                  onToolChange('draw')
                 }}
                 title={color.name}
                 className={cn(
                   'h-6 w-6 shrink-0 rounded-full border border-black/20 transition-transform',
-                  activeColor === color.value && tool === 'draw'
-                    ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
-                    : '',
+                  activeColor === color.value ? 'scale-105 shadow-sm ring-2 ring-white/50' : '',
                 )}
                 style={{ backgroundColor: color.value }}
               />

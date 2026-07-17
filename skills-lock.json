@@ -1,11 +1,4 @@
 {
   "version": 1,
-  "skills": {
-    "absolute": {
-      "source": "absolutelyskilled/absolutelyskilled",
-      "sourceType": "github",
-      "skillPath": "skills/absolute/SKILL.md",
-      "computedHash": "6f0b70cc6c302d099f05348e5e0888a38b2d75eade1261c3d0ce2fbfc51f0187"
-    }
-  }
+  "skills": {}
 }
