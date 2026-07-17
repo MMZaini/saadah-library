@@ -1,10 +1,11 @@
 'use client'
 
-import { Languages, Loader2, Search, X } from 'lucide-react'
+import { Loader2, Search, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { containsArabic, getHighlightSegments } from '@/lib/search-utils'
+import { getNarratorHighlightSegments } from '@/lib/data/rijal-transliteration'
 import { cleanNarratorName } from '@/lib/data/rijal-display'
 import type { NarratorSearchResult } from '@/lib/data/rijal-types'
 
@@ -30,13 +31,28 @@ export default function NarratorResults({
   onClear,
 }: NarratorResultsProps) {
   const trimmed = query.trim()
-  // The narrator dataset is Arabic-only, so a query with no Arabic characters can
-  // never match — surface that explicitly rather than a generic "not found".
   const queryIsArabic = containsArabic(trimmed)
 
   const highlightedName = (name: string) => {
     if (!trimmed) return name
     const segments = getHighlightSegments(name, trimmed)
+    return segments.map((segment, index) =>
+      segment.highlight ? (
+        <mark
+          key={index}
+          className="rounded-sm bg-yellow-300/80 px-0.5 text-inherit dark:bg-yellow-500/50"
+        >
+          {segment.text}
+        </mark>
+      ) : (
+        segment.text
+      ),
+    )
+  }
+
+  const highlightedTransliteration = (name: string) => {
+    if (!trimmed) return name
+    const segments = getNarratorHighlightSegments(name, trimmed)
     return segments.map((segment, index) =>
       segment.highlight ? (
         <mark
@@ -70,7 +86,7 @@ export default function NarratorResults({
                 {total === 1 ? 'narrator' : 'narrators'} found
               </>
             ) : (
-              'Search by Arabic name.'
+              'Search by Arabic name or English transliteration.'
             )}
           </p>
         </div>
@@ -127,6 +143,11 @@ export default function NarratorResults({
                     >
                       {highlightedName(cleanNarratorName(result.primaryName))}
                     </h3>
+                    <p className="mt-0.5 truncate text-sm italic text-foreground-muted" dir="ltr">
+                      {queryIsArabic
+                        ? result.transliteratedName
+                        : highlightedTransliteration(result.transliteratedName)}
+                    </p>
                   </div>
                   <Badge variant="outline" className="shrink-0 tabular-nums">
                     {result.entryNumber != null || result.sourceEntryNumber != null
@@ -147,27 +168,15 @@ export default function NarratorResults({
             ))}
           </div>
         ) : trimmed ? (
-          queryIsArabic ? (
-            <div className="py-16 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-2">
-                <Search className="h-5 w-5 text-foreground-faint" />
-              </div>
-              <h3 className="text-base font-medium text-foreground">No narrators found</h3>
-              <p className="mt-1 text-sm text-foreground-muted">
-                Try a shorter Arabic name or a known alias.
-              </p>
+          <div className="py-16 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-2">
+              <Search className="h-5 w-5 text-foreground-faint" />
             </div>
-          ) : (
-            <div className="py-16 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-2">
-                <Languages className="h-5 w-5 text-foreground-faint" />
-              </div>
-              <h3 className="text-base font-medium text-foreground">Arabic search only</h3>
-              <p className="mx-auto mt-1 max-w-xs text-sm text-foreground-muted">
-                Currently, only Arabic searches are available. Enter the narrator’s name in Arabic.
-              </p>
-            </div>
-          )
+            <h3 className="text-base font-medium text-foreground">No narrators found</h3>
+            <p className="mt-1 text-sm text-foreground-muted">
+              Try a shorter {queryIsArabic ? 'Arabic name' : 'English spelling'} or a known alias.
+            </p>
+          </div>
         ) : (
           <div className="py-14 text-center">
             <Search className="mx-auto mb-3 h-7 w-7 text-foreground-faint" />

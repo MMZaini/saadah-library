@@ -97,7 +97,7 @@ export default function NarratorEntryPage() {
       ) : (
         <NarratorDetail
           narrator={narrator}
-          query={query}
+          highlightQuery={query}
           loading={status === 'loading'}
           standalone
         />

@@ -21,6 +21,7 @@ const isLocalStorageAvailable = () => {
 export interface NarratorBookmarkData {
   id: string
   primaryName: string
+  transliteratedName?: string
   volumeNumber: number
   startPage: number
   endPage: number
@@ -112,6 +113,7 @@ export function NarratorBookmarksProvider({ children }: { children: React.ReactN
       const newBookmark: NarratorBookmarkData = {
         id: narrator.id,
         primaryName: narrator.primaryName,
+        transliteratedName: narrator.transliteratedName,
         volumeNumber: narrator.volumeNumber,
         startPage: narrator.startPage,
         endPage: narrator.endPage,

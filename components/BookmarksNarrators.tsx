@@ -24,6 +24,7 @@ export default function BookmarksNarrators({
         return (
           cleanNarratorName(bookmark.primaryName).toLowerCase().includes(query) ||
           bookmark.primaryName.toLowerCase().includes(query) ||
+          bookmark.transliteratedName?.toLowerCase().includes(query) ||
           bookmark.preview?.toLowerCase().includes(query) ||
           bookmark.notes?.toLowerCase().includes(query) ||
           String(bookmark.entryNumber ?? bookmark.sourceEntryNumber ?? '').includes(query)

@@ -41,7 +41,7 @@ export default function NarratorsPage() {
         <div>
           <h1 className="text-xl font-bold text-foreground sm:text-2xl">Narrators</h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            Search al-Khoei’s Muʿjam Rijāl al-Ḥadīth by narrator name.
+            Search al-Khoei’s Muʿjam Rijāl al-Ḥadīth by Arabic name or English transliteration.
           </p>
         </div>
         {metadata && (
@@ -73,7 +73,7 @@ export default function NarratorsPage() {
             <ChevronLeft className="h-4 w-4" />
             Results
           </button>
-          <NarratorDetail narrator={selected} query={query} loading={isLoadingDetail} />
+          <NarratorDetail narrator={selected} loading={isLoadingDetail} />
         </div>
       </div>
     </section>

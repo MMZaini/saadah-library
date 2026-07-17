@@ -8,6 +8,8 @@ The production app reads the committed JSON dataset from `data/rijal/khoei` thro
 
 - `update-khoei.mjs`: fetches the 24 ABLibrary volumes, parses narrator entries, writes the optimized local dataset, validates it, and updates `data/rijal/khoei/current.json`.
 - `validate.mjs`: validates the committed runtime dataset without making network calls.
+- `transliteration.mjs`: canonical token-level narrator transliteration rules and deterministic fallback.
+- `generate-transliterations.mjs`: rebuilds transliteration artifacts for the active local release.
 - `ablibrary-client.mjs`, `protobuf.mjs`, `khoei-parser.mjs`, `shared.mjs`: source adapter, parser, and shared utilities used by the maintainer scripts.
 - `tests/`: focused tests for parser behavior, API behavior, repository search/detail reads, and dataset layout.
 
@@ -24,6 +26,8 @@ data/rijal/khoei/
       metadata.json
       index.json
       search.json
+      transliteration-tokens.json
+      transliterations.json
       narrators/volume-01.json ... volume-24.json
 ```
 
@@ -41,6 +45,12 @@ Validate the committed dataset:
 
 ```bash
 yarn data:rijal:validate
+```
+
+Rebuild English names after reviewing or extending the canonical token spellings:
+
+```bash
+yarn data:rijal:transliterations
 ```
 
 Run all tests, including these tests:
@@ -67,5 +77,8 @@ Do not commit `raw/` output. Regenerate again without `--keep-raw` before commit
 
 - `/api/narrators/search` and `/api/narrators/[id]` read from `data/rijal/khoei`.
 - `next.config.ts` includes the dataset in API route file tracing so deployments receive the JSON files.
-- Search is by narrator name and alias, not full body text.
+- Search is by Arabic name/alias and English transliteration, not full body text. Latin diacritics
+  are optional and common vowel variants are folded for matching.
+- English names are reconstructed from one transliteration per unique Arabic token, keeping
+  spellings consistent across every narrator and future dataset rebuild.
 - The Arabic entry text is stored as source text; the app does not generate summaries or translations.

@@ -61,6 +61,11 @@ export default function NarratorBookmarkCard({ bookmark, className }: NarratorBo
           >
             {cleanNarratorName(bookmark.primaryName)}
           </h3>
+          {bookmark.transliteratedName && (
+            <p className="text-sm italic text-foreground-muted" dir="ltr">
+              {bookmark.transliteratedName}
+            </p>
+          )}
         </div>
 
         <Button
