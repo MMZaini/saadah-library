@@ -101,6 +101,146 @@ function compactNameMatchKind(
   return null
 }
 
+const IDENTITY_RELATION_TOKENS = new Set(['بن', 'ابو', 'ام'])
+
+function identitySearchTokens(value: string): string[] {
+  return normalizeArabicNarratorName(value)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => {
+      if (token === 'ابن') return 'بن'
+      if (token === 'ابي' || token === 'ابا') return 'ابو'
+      return token
+    })
+}
+
+function longestOrderedTokenRun(query: readonly string[], candidate: readonly string[]): number {
+  let longest = 0
+  for (let queryStart = 0; queryStart < query.length; queryStart++) {
+    for (let candidateStart = 0; candidateStart < candidate.length; candidateStart++) {
+      let length = 0
+      while (
+        queryStart + length < query.length &&
+        candidateStart + length < candidate.length &&
+        query[queryStart + length] === candidate[candidateStart + length]
+      ) {
+        length++
+      }
+      longest = Math.max(longest, length)
+    }
+  }
+  return longest
+}
+
+function findTokenSequence(haystack: readonly string[], needle: readonly string[]): number {
+  if (needle.length === 0 || needle.length > haystack.length) return -1
+  for (let start = 0; start <= haystack.length - needle.length; start++) {
+    if (needle.every((token, offset) => haystack[start + offset] === token)) return start
+  }
+  return -1
+}
+
+function splitLineage(tokens: readonly string[]): string[] | null {
+  if (!tokens.includes('بن')) return null
+  const segments: string[][] = [[]]
+  for (const token of tokens) {
+    if (token === 'بن') {
+      if (segments.at(-1)?.length === 0) return null
+      segments.push([])
+    } else {
+      // Kunyahs and unrelated relation words are facts, not lineage segments.
+      if (token === 'ابو' || token === 'ام') return null
+      segments.at(-1)?.push(token)
+    }
+  }
+  if (segments.at(-1)?.length === 0) return null
+  return segments.map((segment) => compactArabicNarratorName(segment.join(' ')))
+}
+
+function countLineageSkips(query: readonly string[], candidate: readonly string[]): number | null {
+  if (
+    query.length < 2 ||
+    candidate.length < query.length ||
+    query[0] !== candidate[0] ||
+    query.at(-1) !== candidate.at(-1)
+  ) {
+    return null
+  }
+
+  let queryIndex = 1
+  for (let candidateIndex = 1; candidateIndex < candidate.length - 1; candidateIndex++) {
+    if (queryIndex < query.length - 1 && query[queryIndex] === candidate[candidateIndex]) {
+      queryIndex++
+    }
+  }
+  if (queryIndex !== query.length - 1) return null
+  const skips = candidate.length - query.length
+  // A short two-segment lineage is safe when it is reproduced exactly and a
+  // trusted subject fact makes the query specific. Once an ancestor is
+  // omitted, retain the stricter minimum of three visible lineage segments.
+  if (skips > 0 && query.length < 3) return null
+  return skips
+}
+
+function matchComposedIdentity(
+  entry: NarratorSearchEntry,
+  queryTokens: readonly string[],
+  aliases: readonly string[],
+): { score: number; matchedDetails: string[] } | null {
+  const facts = entry.identityFacts ?? []
+  if (facts.length === 0) return null
+  const factTokens =
+    entry.identityFactTokens ?? facts.map((fact) => identitySearchTokens(fact.normalizedText))
+
+  // Consume complete, non-overlapping fact phrases from the query. Longest
+  // phrases win, preventing a one-word nisba from partially consuming a kunya
+  // or descriptor that happens to contain it.
+  const occupied = new Set<number>()
+  const matches: Array<{ factIndex: number; start: number; length: number }> = []
+  const orderedFactIndexes = factTokens
+    .map((tokens, index) => ({ index, length: tokens.length }))
+    .filter(({ length }) => length > 0)
+    .sort((a, b) => b.length - a.length || a.index - b.index)
+
+  for (const { index: factIndex } of orderedFactIndexes) {
+    const tokens = factTokens[factIndex]
+    let searchFrom = 0
+    while (searchFrom <= queryTokens.length - tokens.length) {
+      const relative = findTokenSequence(queryTokens.slice(searchFrom), tokens)
+      if (relative === -1) break
+      const start = searchFrom + relative
+      const positions = tokens.map((_, offset) => start + offset)
+      if (positions.every((position) => !occupied.has(position))) {
+        positions.forEach((position) => occupied.add(position))
+        matches.push({ factIndex, start, length: tokens.length })
+        break
+      }
+      searchFrom = start + 1
+    }
+  }
+  if (matches.length === 0) return null
+
+  const remainingTokens = queryTokens.filter((_, index) => !occupied.has(index))
+  const queryLineage = splitLineage(remainingTokens)
+  if (!queryLineage) return null
+
+  let bestSkips: number | null = null
+  for (const alias of aliases) {
+    const candidateLineage = splitLineage(identitySearchTokens(alias))
+    if (!candidateLineage) continue
+    const skips = countLineageSkips(queryLineage, candidateLineage)
+    if (skips == null || skips > 2) continue
+    if (bestSkips == null || skips < bestSkips) bestSkips = skips
+  }
+  if (bestSkips == null) return null
+
+  matches.sort((a, b) => a.start - b.start)
+  const matchedDetails = matches.map(({ factIndex }) => facts[factIndex].text)
+  // A composed match is deliberately below a verbatim identity profile but
+  // above generic word matching. Skipped ancestors receive a small penalty.
+  return { score: 2.7 + bestSkips * 0.1, matchedDetails }
+}
+
 // id → lightweight index entry, joined once per dataset version and reused. Both
 // the search join and the single-narrator summary lookup share this map, so a
 // summary never builds a fresh 15.6K-entry Map and never touches search.json.
@@ -172,6 +312,14 @@ async function getSearchStructure(): Promise<SearchStructure> {
       )
       const normalizedName = normalizeArabicNarratorName(entry.normalizedName)
       const normalizedAliases = entry.normalizedAliases.map(normalizeArabicNarratorName)
+      const identityProfiles = (entry.identityProfiles ?? []).map((profile) => ({
+        ...profile,
+        normalizedText: normalizeArabicNarratorName(profile.normalizedText || profile.text),
+      }))
+      const identityFacts = (entry.identityFacts ?? []).map((fact) => ({
+        ...fact,
+        normalizedText: normalizeArabicNarratorName(fact.normalizedText || fact.text),
+      }))
       return {
         ...entry,
         // Canonicalize artifacts again at the read boundary so loaded names and
@@ -179,6 +327,12 @@ async function getSearchStructure(): Promise<SearchStructure> {
         normalizedName,
         normalizedAliases,
         searchText: normalizeArabicNarratorName(entry.searchText),
+        identityProfiles,
+        identityFacts,
+        identityProfileTokens: identityProfiles.map((profile) =>
+          identitySearchTokens(profile.normalizedText),
+        ),
+        identityFactTokens: identityFacts.map((fact) => identitySearchTokens(fact.normalizedText)),
         compactArabicNames: [normalizedName, ...normalizedAliases].map(compactArabicNarratorName),
         compactArabicNameBoundaries: [normalizedName, ...normalizedAliases].map(
           compactNameTokenBoundaries,
@@ -268,6 +422,8 @@ export function rankNarratorSearchEntry(
   score: number
   matchType: NarratorSearchResult['matchType']
   matchedAlias?: string
+  matchedIdentity?: string
+  matchedDetails?: string[]
 } | null {
   if (!containsArabic(query)) {
     const normalizedQuery = precomputedNormalizedQuery ?? normalizeEnglishForSearch(query)
@@ -332,6 +488,13 @@ export function rankNarratorSearchEntry(
     }
   }
 
+  const identityProfiles = entry.identityProfiles ?? []
+  for (const profile of identityProfiles) {
+    if (profile.normalizedText === normalizedQuery) {
+      return { score: 0.25, matchType: 'exact', matchedIdentity: profile.text }
+    }
+  }
+
   // Arabic compounds are inconsistently split in names and in common usage
   // (e.g. ماهويه/ما هويه, عبدالله/عبد الله). Compare a secondary letters-only
   // key for sufficiently specific queries; the minimum prevents short fragments
@@ -358,6 +521,11 @@ export function rankNarratorSearchEntry(
       return { score: 1, matchType: 'startsWith', matchedAlias: alias }
     }
   }
+  for (const profile of identityProfiles) {
+    if (profile.normalizedText.startsWith(normalizedQuery)) {
+      return { score: 1.25, matchType: 'startsWith', matchedIdentity: profile.text }
+    }
+  }
   if (allowCompactMatch) {
     const startsIndex = compactMatchKinds.findIndex((kind) => kind === 'startsWith')
     if (startsIndex !== -1) {
@@ -370,10 +538,65 @@ export function rankNarratorSearchEntry(
       return { score: 2, matchType: 'contains', matchedAlias: alias }
     }
   }
+  for (const profile of identityProfiles) {
+    if (profile.normalizedText.includes(normalizedQuery)) {
+      return { score: 2.25, matchType: 'contains', matchedIdentity: profile.text }
+    }
+  }
   if (allowCompactMatch) {
     const containsIndex = compactMatchKinds.findIndex((kind) => kind === 'contains')
     if (containsIndex !== -1) {
       return { score: 2, matchType: 'contains', matchedAlias: aliases[containsIndex] }
+    }
+  }
+
+  // Full narrator identities are commonly written in a different order: a
+  // user may put the kunya first even when the source puts it after the given
+  // name. Require every query token to occur in one trusted identity profile,
+  // and only enable this for specific queries with at least three substantive
+  // tokens. Profiles never share tokens with each other or with biography prose.
+  const queryIdentityTokens = identitySearchTokens(normalizedQuery)
+  const informativeQueryTokens = new Set(
+    queryIdentityTokens.filter((token) => !IDENTITY_RELATION_TOKENS.has(token)),
+  )
+  if (informativeQueryTokens.size >= 3) {
+    const profileTokens =
+      entry.identityProfileTokens ??
+      identityProfiles.map((profile) => identitySearchTokens(profile.normalizedText))
+    let bestIdentityMatch:
+      | { score: number; matchType: NarratorSearchResult['matchType']; matchedIdentity: string }
+      | undefined
+
+    for (let index = 0; index < identityProfiles.length; index++) {
+      const tokens = profileTokens[index]
+      const tokenSet = new Set(tokens)
+      if (!queryIdentityTokens.every((token) => tokenSet.has(token))) continue
+
+      const informativeProfileTokens = new Set(
+        tokens.filter((token) => !IDENTITY_RELATION_TOKENS.has(token)),
+      )
+      const extraTokens = Math.max(0, informativeProfileTokens.size - informativeQueryTokens.size)
+      const orderedRun = longestOrderedTokenRun(queryIdentityTokens, tokens)
+      const sourcePenalty = identityProfiles[index].source === 'tusi' ? 0.01 : 0
+      const score = 2.5 + Math.max(0, 4 - orderedRun) * 0.05 + extraTokens * 0.005 + sourcePenalty
+      if (!bestIdentityMatch || score < bestIdentityMatch.score) {
+        bestIdentityMatch = {
+          score,
+          matchType: 'words',
+          matchedIdentity: identityProfiles[index].text,
+        }
+      }
+    }
+
+    if (bestIdentityMatch) return bestIdentityMatch
+  }
+
+  const composedIdentityMatch = matchComposedIdentity(entry, queryIdentityTokens, aliases)
+  if (composedIdentityMatch) {
+    return {
+      score: composedIdentityMatch.score,
+      matchType: 'words',
+      matchedDetails: composedIdentityMatch.matchedDetails,
     }
   }
 
@@ -426,6 +649,8 @@ export async function searchNarrators({
       ...indexEntry,
       matchType: rank.matchType,
       matchedAlias: rank.matchedAlias,
+      matchedIdentity: rank.matchedIdentity,
+      matchedDetails: rank.matchedDetails,
       _score: rank.score,
     })
   }
@@ -458,6 +683,8 @@ export async function searchNarrators({
     sourceBookId: hit.sourceBookId,
     matchType: hit.matchType,
     matchedAlias: hit.matchedAlias,
+    matchedIdentity: hit.matchedIdentity,
+    matchedDetails: hit.matchedDetails,
   }))
 
   return {

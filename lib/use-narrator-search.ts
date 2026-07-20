@@ -32,7 +32,7 @@ const SEARCH_CACHE_LIMIT = 80
 // version in both cache keys prevents a Fast Refresh from reusing results
 // produced by older client code, while including it in the request URL busts
 // browser/CDN responses produced by an older server ranking implementation.
-const NARRATOR_SEARCH_RANKING_VERSION = '2'
+const NARRATOR_SEARCH_RANKING_VERSION = '5'
 const detailCache = new Map<string, NarratorEntry>()
 const searchCache = new Map<
   string,

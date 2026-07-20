@@ -40,7 +40,7 @@ describe('GET /api/narrators/search', () => {
 
   it('returns exact English phrase matches before longer names', async () => {
     const response = await narratorSearchGet(
-      searchRequest({ q: 'muhammad bin muslim', limit: '50', ranking: '2' }),
+      searchRequest({ q: 'muhammad bin muslim', limit: '50', ranking: '5' }),
     )
     expect(response.status).toBe(200)
 
@@ -49,6 +49,52 @@ describe('GET /api/narrators/search', () => {
       body.results.slice(0, 2).map((result: { entryNumber: number }) => result.entryNumber),
     ).toEqual([11804, 11805])
     expect(body.results[2].matchType).not.toBe('exact')
+  })
+
+  it('returns a precise structured-identity match for a reordered Arabic name', async () => {
+    const response = await narratorSearchGet(
+      searchRequest({ q: 'أبو الحسين محمد بن بحر الشيباني', limit: '10', ranking: '5' }),
+    )
+    expect(response.status).toBe(200)
+
+    const body = await response.json()
+    expect(body.results[0]).toMatchObject({
+      id: 'khoei-v16-10324',
+      primaryName: 'محمد بن بحر الرهني',
+      matchType: 'words',
+    })
+    expect(body.results[0].matchedIdentity).toContain('أبو الحسين الشيباني')
+    expect(body.total).toBeLessThanOrEqual(5)
+  })
+
+  it('returns a precise composed subject-fact match for an abbreviated lineage', async () => {
+    const response = await narratorSearchGet(
+      searchRequest({ q: 'أبو بكر محمد بن علي بن حاتم النوفلي', limit: '10', ranking: '5' }),
+    )
+    expect(response.status).toBe(200)
+
+    const body = await response.json()
+    expect(body.results[0]).toMatchObject({
+      id: 'khoei-v18-11366',
+      primaryName: 'محمد بن علي بن محمد بن حاتم',
+      matchedDetails: ['أبي بكر', 'النوفلي'],
+    })
+    expect(body.total).toBeLessThanOrEqual(5)
+  })
+
+  it('combines an exact two-segment lineage with its opening nisba', async () => {
+    const response = await narratorSearchGet(
+      searchRequest({ q: 'جبرئيل بن أحمد الفاريابي', limit: '10', ranking: '5' }),
+    )
+    expect(response.status).toBe(200)
+
+    const body = await response.json()
+    expect(body.results[0]).toMatchObject({
+      id: 'khoei-v4-2054',
+      primaryName: 'جبرئيل بن أحمد',
+      matchedDetails: ['الفاريابي'],
+    })
+    expect(body.total).toBeLessThanOrEqual(5)
   })
 })
 

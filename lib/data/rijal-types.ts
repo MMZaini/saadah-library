@@ -112,11 +112,35 @@ export interface NarratorIndexEntry {
   sourceBookId: string
 }
 
+export type NarratorIdentitySource = 'crossReference' | 'najashi' | 'tusi'
+
+export interface NarratorIdentityProfile {
+  text: string
+  normalizedText: string
+  source: NarratorIdentitySource
+}
+
+export type NarratorIdentityFactKind = 'kunya' | 'nisba' | 'knownAs' | 'laqab' | 'descriptor'
+export type NarratorIdentityFactSource = 'openingFragment' | 'subjectStatement'
+
+export interface NarratorIdentityFact {
+  text: string
+  normalizedText: string
+  kind: NarratorIdentityFactKind
+  source: NarratorIdentityFactSource
+}
+
 export interface NarratorSearchEntry {
   id: string
   normalizedName: string
   normalizedAliases: string[]
   searchText: string
+  identityProfiles?: NarratorIdentityProfile[]
+  identityFacts?: NarratorIdentityFact[]
+  // Derived in memory for order-independent identity-profile matching.
+  identityProfileTokens?: string[][]
+  // Derived in memory for subject-fact composition; not duplicated in search.json.
+  identityFactTokens?: string[][]
   // Derived in memory; not duplicated in search.json.
   compactArabicNames?: string[]
   compactArabicNameBoundaries?: number[][]
@@ -142,6 +166,8 @@ export type NarratorTransliterationIndex = Record<string, NarratorTransliteratio
 export interface NarratorSearchResult extends NarratorIndexEntry {
   matchType: 'exact' | 'startsWith' | 'contains' | 'words'
   matchedAlias?: string
+  matchedIdentity?: string
+  matchedDetails?: string[]
 }
 
 export interface NarratorSearchResponse {

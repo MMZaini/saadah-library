@@ -18,6 +18,7 @@
     "data:validate": "node scripts/data/validate.mjs",
     "data:check-runtime": "node scripts/data/check-runtime.mjs",
     "data:rijal:update": "node tools/rijal/update-khoei.mjs",
+    "data:rijal:reindex": "node tools/rijal/reindex-search.mjs",
     "data:rijal:transliterations": "node tools/rijal/generate-transliterations.mjs --write",
     "data:rijal:validate": "node tools/rijal/validate.mjs",
     "fix:check": "node scripts/check-fix-scope.mjs",

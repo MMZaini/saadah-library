@@ -7,6 +7,7 @@ The production app reads the committed JSON dataset from `data/rijal/khoei` thro
 ## What Is Here
 
 - `update-khoei.mjs`: fetches the 24 ABLibrary volumes, parses narrator entries, writes the optimized local dataset, validates it, and updates `data/rijal/khoei/current.json`.
+- `reindex-search.mjs`: deterministically rebuilds search identities from the active committed narrator shards without a network fetch.
 - `validate.mjs`: validates the committed runtime dataset without making network calls.
 - `transliteration.mjs`: canonical token-level narrator transliteration rules and deterministic fallback.
 - `generate-transliterations.mjs`: rebuilds transliteration artifacts for the active local release.
@@ -53,6 +54,12 @@ Rebuild English names after reviewing or extending the canonical token spellings
 yarn data:rijal:transliterations
 ```
 
+Rebuild narrator search identities from the committed Arabic entries:
+
+```bash
+yarn data:rijal:reindex
+```
+
 Run all tests, including these tests:
 
 ```bash
@@ -77,8 +84,13 @@ Do not commit `raw/` output. Regenerate again without `--keep-raw` before commit
 
 - `/api/narrators/search` and `/api/narrators/[id]` read from `data/rijal/khoei`.
 - `next.config.ts` includes the dataset in API route file tracing so deployments receive the JSON files.
-- Search is by Arabic name/alias and English transliteration, not full body text. Latin diacritics
-  are optional and common vowel variants are folded for matching.
+- Search is by Arabic name/alias, structured identity declarations, subject-directed identity facts
+  (such as an opening nisba or explicit `كناه بـ` statement), and English transliteration. A query
+  may combine those facts with an exact lineage of two or more segments. It may also omit up to two
+  complete internal ancestors when at least three lineage segments remain and the first and last
+  segments still agree. The full body and transmission-chain names are intentionally not indexed
+  because they frequently identify people other than the entry's subject. Latin diacritics are
+  optional and common vowel variants are folded for matching.
 - English names are reconstructed from one transliteration per unique Arabic token, keeping
   spellings consistent across every narrator and future dataset rebuild.
 - The Arabic entry text is stored as source text; the app does not generate summaries or translations.

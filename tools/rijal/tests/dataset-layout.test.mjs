@@ -44,11 +44,24 @@ describe('Khoei rijal runtime dataset layout', () => {
     expect(metadata.source.volumes).toHaveLength(24)
     expect(index.length).toBe(metadata.counts.narrators)
     expect(search.length).toBe(index.length)
+    expect(search.every((entry) => Array.isArray(entry.identityProfiles))).toBe(true)
+    expect(search.every((entry) => Array.isArray(entry.identityFacts))).toBe(true)
+    expect(
+      search
+        .find((entry) => entry.id === 'khoei-v16-10324')
+        ?.identityProfiles.some((profile) => profile.normalizedText.includes('الشيباني')),
+    ).toBe(true)
+    expect(
+      search
+        .find((entry) => entry.id === 'khoei-v18-11366')
+        ?.identityFacts.some((fact) => fact.normalizedText === 'النوفلي'),
+    ).toBe(true)
     expect(Object.keys(transliterations)).toHaveLength(index.length)
     expect(Object.keys(tokens).length).toBeGreaterThan(0)
     expect(Object.values(transliterations).every((entry) => entry.primary)).toBe(true)
     expect(manifest.counts.narrators).toBe(index.length)
     expect(manifest.counts.narratorShards).toBe(24)
+    expect(manifest.schemaVersion).toBeGreaterThanOrEqual(3)
   })
 
   it('keeps narrator shards aligned with index ids and page refs', async () => {

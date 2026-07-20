@@ -157,6 +157,238 @@ export function extractHeadingAliases(heading) {
   return Array.from(variants)
 }
 
+const IDENTITY_SCAN_LENGTH = 1400
+const MAX_IDENTITY_LENGTH = 180
+const IDENTITY_SOURCE_PATTERN =
+  /(?:قال|وقال)\s+(النجاشي|الشيخ(?:\s*\([^)]*\))?)\s*:\s*["“]\s*([^"”\n]{3,240}?)\s*:/gu
+const EXPLICIT_ALIAS_PATTERN = /(?:^|\n)\s*=\s*([^\n.]{2,180})\s*\./gu
+const IDENTITY_NARRATIVE_START =
+  /(?:\s*[،؛.]\s*|\s+)(?:له(?:ما|ا)?\s+(?:كتاب|كتب|أصل|مسائل)|قال|وقال|أخبر(?:نا|ني)?|اخبر(?:نا|ني)?|روى|روي|كان|ذكر|ذكره|ثقة|ضعيف|مولى|مولي|صاحب|سمعت|حدث(?:نا|ني)?|أخو|اخو|وهو|واسم)(?=\s|$).*$/u
+const IDENTITY_LEADING_PROSE = /^(?:قال|وقال|أخبر|اخبر|روى|روي|كان|ذكر|له|هذا|وهو)(?=\s|$)/u
+const IDENTITY_RELATION_TOKENS = new Set(['بن', 'ابن', 'بنت', 'ابو', 'ابي', 'ابا', 'ام'])
+const IDENTITY_FACT_SCAN_LENGTH = 2400
+const MAX_IDENTITY_FACT_LENGTH = 72
+const IDENTITY_FACT_PROSE_START =
+  /^(?:قال|وقال|روي|روى|ذكر|وذكر|عده|وعده|وقع|ووقع|له|وله|من|ومن|هذا|وهذا|تقدم|وتقدم|ياتي|وياتي|طريق|وطريق|هو|وهو)(?=\s|$)/u
+const IDENTITY_FACT_NARRATIVE_START =
+  /(?:\s*[،؛.]\s*|\s+)(?:وقيل|قيل|قال|وقال|روي|روى|ذكر|وذكر|له|وله)(?=\s|$).*$/u
+const IDENTITY_FACT_PROSE_TOKENS = new Set([
+  'ثقه',
+  'ضعيف',
+  'صحيح',
+  'جليل',
+  'فاضل',
+  'صالح',
+  'مجهول',
+  'كتاب',
+  'كتب',
+  'روايه',
+  'حديث',
+  'اصحاب',
+  'شيخ',
+  'وقيل',
+  'قيل',
+])
+const SUBJECT_NISBA_REJECTIONS = new Set(['العدل', 'الثقه', 'الضعيف', 'الصحيح', 'الشعر'])
+const IDENTITY_VALUE_REJECTIONS = new Set([
+  'او',
+  'انه',
+  'فيه',
+  'علم',
+  'عندنا',
+  'ابوه',
+  'ابو',
+  'ابي',
+  'ابا',
+  'ابن',
+  'ذا',
+  'مولي',
+])
+
+function identityTokens(text) {
+  return normalizeArabic(text)
+    .split(/\s+/u)
+    .filter((token) => token && !IDENTITY_RELATION_TOKENS.has(token))
+}
+
+function cleanIdentityCandidate(value) {
+  const cleaned = cleanupHeadingName(
+    String(value || '')
+      .replace(IDENTITY_NARRATIVE_START, '')
+      .replace(/^[=\s]+/u, '')
+      .replace(/\s+/gu, ' '),
+  )
+  const normalized = normalizeArabic(cleaned)
+  if (
+    !cleaned ||
+    cleaned.length > MAX_IDENTITY_LENGTH ||
+    normalized.split(/\s+/u).length > 18 ||
+    IDENTITY_LEADING_PROSE.test(normalized)
+  ) {
+    return null
+  }
+  return { text: cleaned, normalizedText: normalized }
+}
+
+function hasIdentityOverlap(primaryName, candidate) {
+  const primaryTokens = new Set(identityTokens(primaryName))
+  return identityTokens(candidate).some((token) => primaryTokens.has(token))
+}
+
+/**
+ * Extract only high-confidence name declarations from the opening of a rijal
+ * entry. The full biography is deliberately not indexed: it commonly names
+ * teachers, students, and transmitters who are not the subject of the entry.
+ */
+export function extractNarratorIdentityProfiles(entry) {
+  const primaryNormalized = normalizeArabic(entry.primaryName)
+  const headingAliases = new Set(
+    [entry.primaryName, ...(entry.aliases ?? [])].map(normalizeArabic).filter(Boolean),
+  )
+  const profiles = new Map()
+
+  function add(value, source, { requireOverlap = true } = {}) {
+    const candidate = cleanIdentityCandidate(value)
+    if (!candidate || headingAliases.has(candidate.normalizedText)) return
+    if (requireOverlap && !hasIdentityOverlap(entry.primaryName, candidate.text)) return
+    if (candidate.normalizedText === primaryNormalized || profiles.has(candidate.normalizedText)) {
+      return
+    }
+    profiles.set(candidate.normalizedText, { ...candidate, source })
+  }
+
+  const opening = String(entry.plainText || '').slice(0, IDENTITY_SCAN_LENGTH)
+  for (const match of opening.matchAll(EXPLICIT_ALIAS_PATTERN)) {
+    // The source's leading "=" lines are explicit cross-references. They may
+    // use a wholly different name, so they do not need token overlap.
+    add(match[1], 'crossReference', { requireOverlap: false })
+  }
+
+  for (const match of opening.matchAll(IDENTITY_SOURCE_PATTERN)) {
+    add(match[2], match[1].startsWith('النجاشي') ? 'najashi' : 'tusi')
+  }
+
+  return Array.from(profiles.values())
+}
+
+function cleanIdentityFact(value) {
+  const cleaned = cleanupHeadingName(
+    String(value || '')
+      .replace(IDENTITY_FACT_NARRATIVE_START, '')
+      .replace(/^[،؛:().\s]+|[،؛:().\s]+$/gu, '')
+      .replace(/\s+/gu, ' '),
+  )
+  const normalizedText = normalizeArabic(cleaned)
+  const tokens = normalizedText.split(/\s+/u).filter(Boolean)
+  if (
+    !cleaned ||
+    cleaned.length > MAX_IDENTITY_FACT_LENGTH ||
+    tokens.length > 7 ||
+    normalizedText === 'الشيخ' ||
+    IDENTITY_FACT_PROSE_START.test(normalizedText) ||
+    tokens.some((token) => IDENTITY_FACT_PROSE_TOKENS.has(token))
+  ) {
+    return null
+  }
+  return { text: cleaned, normalizedText }
+}
+
+function inferOpeningFactKind(normalizedText) {
+  if (/^(?:ابو|ابي|ابا)(?:\s|$)/u.test(normalizedText)) return 'kunya'
+  if (/^ابن(?:\s|$)/u.test(normalizedText)) return 'descriptor'
+  return 'nisba'
+}
+
+/**
+ * Extract small, subject-scoped identity facts. Unlike identity profiles these
+ * need not repeat the canonical name, but they must occur in an opening label
+ * or in grammar that explicitly points back to the entry's subject. This keeps
+ * teachers, students, and transmission-chain names out of the search index.
+ */
+export function extractNarratorIdentityFacts(entry) {
+  const facts = new Map()
+
+  function add(value, kind, source) {
+    const fact = cleanIdentityFact(value)
+    if (!fact) return
+    if (
+      IDENTITY_VALUE_REJECTIONS.has(fact.normalizedText) ||
+      (kind === 'nisba' &&
+        source === 'subjectStatement' &&
+        (!fact.normalizedText.startsWith('ال') ||
+          SUBJECT_NISBA_REJECTIONS.has(fact.normalizedText)))
+    ) {
+      return
+    }
+    const key = `${kind}:${fact.normalizedText}`
+    if (!facts.has(key)) facts.set(key, { ...fact, kind, source })
+  }
+
+  const bodyBlocks = (entry.textBlocks ?? []).filter((block) => block.kind !== 'heading')
+  const openingBlock = String(bodyBlocks[0]?.text || '').slice(0, 300)
+  const openingLabel = openingBlock.match(/^([^:\n]{2,72})\s*:/u)?.[1]
+  if (openingLabel) {
+    const label = cleanIdentityFact(openingLabel)
+    if (label) {
+      if (/^(?:يكني|يكنى)\s+/u.test(label.normalizedText)) {
+        add(openingLabel.replace(/^(?:يكنى|يكني)\s+/u, ''), 'kunya', 'openingFragment')
+      } else if (/^المعروف\s+ب/u.test(label.normalizedText)) {
+        add(openingLabel.replace(/^المعروف\s+ب/u, ''), 'knownAs', 'openingFragment')
+      } else if (/^(?:ال|ابن|أبو|أبي|أبا)/u.test(openingLabel.trim())) {
+        add(openingLabel, inferOpeningFactKind(label.normalizedText), 'openingFragment')
+
+        // A compact opening label can contain several independent details,
+        // e.g. "السنبسي الكوفي أبو أرقم". Preserve the source phrase above,
+        // while also indexing its clearly delimited nisbas and kunya.
+        for (const token of label.text.split(/\s+/u)) {
+          const normalizedToken = normalizeArabic(token)
+          if (/^ال[\p{Script=Arabic}]{2,}$/u.test(normalizedToken) && normalizedToken !== 'الشيخ') {
+            add(token, 'nisba', 'openingFragment')
+          }
+        }
+        const kunya = label.text.match(
+          /(?:^|\s)((?:أبو|أبي|أبا)\s+(?:عبد\s+)?[\p{Script=Arabic}]{2,30})/u,
+        )
+        if (kunya) add(kunya[1], 'kunya', 'openingFragment')
+      }
+    }
+  }
+
+  const opening = String(entry.plainText || '').slice(0, IDENTITY_FACT_SCAN_LENGTH)
+
+  // "وصفه بالنوفلي" and "كناه بأبي بكر" explicitly describe the current
+  // entry. They are substantially safer than indexing arbitrary nearby nouns.
+  for (const match of opening.matchAll(
+    /(?:^|[،؛.\s])(?:و?قد\s+)?وصفه\s+ب([\p{Script=Arabic}]{2,40})/gu,
+  )) {
+    add(match[1], 'nisba', 'subjectStatement')
+  }
+  for (const match of opening.matchAll(
+    /(?:^|[،؛.\s])و?كناه\s+ب?((?:أبو|أبي|أبا)\s+(?:عبد\s+)?[\p{Script=Arabic}]{2,30})/gu,
+  )) {
+    add(match[1], 'kunya', 'subjectStatement')
+  }
+  for (const match of opening.matchAll(
+    /(?:^|[،؛.\s])(?:و?يلقب|و?لقبه)\s+ب((?:(?:أبو|أبي|أبا|ابن)\s+)?[\p{Script=Arabic}]{2,40})/gu,
+  )) {
+    add(match[1], 'laqab', 'subjectStatement')
+  }
+
+  // "المعروف بـ" can refer to somebody else. Accept it only when the nearby
+  // left context repeats a fact already established for this subject.
+  for (const match of opening.matchAll(
+    /المعروف\s+ب((?:(?:أبو|أبي|أبا|ابن)\s+)?[\p{Script=Arabic}]{2,40})/gu,
+  )) {
+    const context = normalizeArabic(opening.slice(Math.max(0, match.index - 80), match.index))
+    const isAnchored = Array.from(facts.values()).some(
+      (fact) => fact.normalizedText.length >= 3 && context.endsWith(fact.normalizedText),
+    )
+    if (isAnchored) add(match[1], 'knownAs', 'subjectStatement')
+  }
+
+  return Array.from(facts.values())
+}
+
 export function classifyPage(blocks) {
   if (blocks.some((block) => block.kind === 'ref')) return 'content'
   const pageText = normalizeArabic(
@@ -434,16 +666,7 @@ export function buildRuntimeArtifacts(entries, { version, source }) {
     sourceBookId: entry.source.sourceBookId,
   }))
 
-  const search = sorted.map((entry) => ({
-    id: entry.id,
-    normalizedName: entry.normalizedName,
-    normalizedAliases: entry.aliases.map(normalizeArabic),
-    searchText: normalizeArabic([entry.primaryName, ...entry.aliases].join(' ')),
-    entryNumber: entry.entryNumber,
-    sourceEntryNumber: entry.sourceEntryNumber,
-    volumeNumber: entry.volumeNumber,
-    startPage: entry.startPage,
-  }))
+  const search = sorted.map(buildNarratorSearchEntry)
 
   const metadata = {
     schemaVersion: 1,
@@ -473,4 +696,19 @@ export function buildRuntimeArtifacts(entries, { version, source }) {
   const transliterationTokens = buildTokenTransliterationList(index)
 
   return { metadata, index, search, transliterations, transliterationTokens, narrators: sorted }
+}
+
+export function buildNarratorSearchEntry(entry) {
+  return {
+    id: entry.id,
+    normalizedName: entry.normalizedName,
+    normalizedAliases: entry.aliases.map(normalizeArabic),
+    searchText: normalizeArabic([entry.primaryName, ...entry.aliases].join(' ')),
+    identityProfiles: extractNarratorIdentityProfiles(entry),
+    identityFacts: extractNarratorIdentityFacts(entry),
+    entryNumber: entry.entryNumber,
+    sourceEntryNumber: entry.sourceEntryNumber,
+    volumeNumber: entry.volumeNumber,
+    startPage: entry.startPage,
+  }
 }

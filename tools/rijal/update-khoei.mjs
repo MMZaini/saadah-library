@@ -241,7 +241,7 @@ async function main() {
   const runtimeChecksums = await fileChecksums(path.join(releaseDir, 'runtime'))
 
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 3,
     version,
     generatedAt: new Date().toISOString(),
     source: {

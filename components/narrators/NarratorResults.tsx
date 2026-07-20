@@ -33,14 +33,19 @@ export default function NarratorResults({
   const trimmed = query.trim()
   const queryIsArabic = containsArabic(trimmed)
 
-  const highlightedName = (name: string) => {
+  const highlightedName = (name: string, subtle = false) => {
     if (!trimmed) return name
     const segments = getHighlightSegments(name, trimmed, { ignoreArabicSpaces: true })
     return segments.map((segment, index) =>
       segment.highlight ? (
         <mark
           key={index}
-          className="rounded-sm bg-yellow-300/80 px-0.5 text-inherit dark:bg-yellow-500/50"
+          className={cn(
+            'rounded-sm px-0.5 text-inherit',
+            subtle
+              ? 'bg-accent/10 decoration-accent/60 underline underline-offset-2'
+              : 'bg-yellow-300/80 dark:bg-yellow-500/50',
+          )}
         >
           {segment.text}
         </mark>
@@ -155,6 +160,45 @@ export default function NarratorResults({
                       : `Vol. ${result.volumeNumber}`}
                   </Badge>
                 </div>
+                {result.matchedIdentity && (
+                  <div className="mt-2 border-t border-border pt-2">
+                    <p
+                      className="text-left text-[11px] font-medium uppercase tracking-wide text-foreground-faint"
+                      dir="ltr"
+                    >
+                      Matched identity
+                    </p>
+                    <p
+                      className="mt-0.5 line-clamp-2 text-right font-arabic text-sm leading-7 text-foreground-muted"
+                      dir="rtl"
+                      lang="ar"
+                    >
+                      {highlightedName(cleanNarratorName(result.matchedIdentity), true)}
+                    </p>
+                  </div>
+                )}
+                {!result.matchedIdentity && result.matchedDetails?.length ? (
+                  <div className="mt-2 border-t border-border pt-2">
+                    <p
+                      className="text-left text-[11px] font-medium uppercase tracking-wide text-foreground-faint"
+                      dir="ltr"
+                    >
+                      Matched details
+                    </p>
+                    <p
+                      className="mt-0.5 line-clamp-2 text-right font-arabic text-sm leading-7 text-foreground-muted"
+                      dir="rtl"
+                      lang="ar"
+                    >
+                      {result.matchedDetails.map((detail, index) => (
+                        <span key={`${detail}-${index}`}>
+                          {index > 0 ? ' · ' : null}
+                          {highlightedName(cleanNarratorName(detail), true)}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                ) : null}
                 <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-foreground-faint">
                   <span>Vol. {result.volumeNumber}</span>
                   <span>·</span>

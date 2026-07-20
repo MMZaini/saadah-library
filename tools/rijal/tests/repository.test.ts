@@ -78,6 +78,107 @@ describe('narrator search ranking', () => {
     }
     expect(rankNarratorSearchEntry(crossBoundary, 'نادر')).toBeNull()
   })
+
+  it('matches reordered full identities within one profile without mixing profiles', () => {
+    const identityEntry = {
+      ...entry,
+      normalizedName: 'محمد بن بحر الرهني',
+      normalizedAliases: [],
+      searchText: 'محمد بن بحر الرهني',
+      identityProfiles: [
+        {
+          text: 'محمد بن بحر الرهني ( الدهني ) ، أبو الحسين الشيباني',
+          normalizedText: 'محمد بن بحر الرهني الدهني ابو الحسين الشيباني',
+          source: 'najashi' as const,
+        },
+      ],
+    }
+
+    expect(rankNarratorSearchEntry(identityEntry, 'أبو الحسين محمد بن بحر الشيباني')).toMatchObject(
+      {
+        matchType: 'words',
+        matchedIdentity: 'محمد بن بحر الرهني ( الدهني ) ، أبو الحسين الشيباني',
+      },
+    )
+
+    const separatedProfiles = {
+      ...identityEntry,
+      identityProfiles: [
+        {
+          text: 'محمد بن بحر الرهني',
+          normalizedText: 'محمد بن بحر الرهني',
+          source: 'najashi' as const,
+        },
+        {
+          text: 'أبو الحسين الشيباني',
+          normalizedText: 'ابو الحسين الشيباني',
+          source: 'tusi' as const,
+        },
+      ],
+    }
+    expect(rankNarratorSearchEntry(separatedProfiles, 'أبو الحسين محمد بن بحر الشيباني')).toBeNull()
+  })
+
+  it('composes subject facts with a tightly controlled abbreviated lineage', () => {
+    const identityEntry = {
+      ...entry,
+      normalizedName: 'محمد بن علي بن محمد بن حاتم',
+      normalizedAliases: [],
+      searchText: 'محمد بن علي بن محمد بن حاتم',
+      identityFacts: [
+        {
+          text: 'النوفلي',
+          normalizedText: 'النوفلي',
+          kind: 'nisba' as const,
+          source: 'openingFragment' as const,
+        },
+        {
+          text: 'أبي بكر',
+          normalizedText: 'ابي بكر',
+          kind: 'kunya' as const,
+          source: 'subjectStatement' as const,
+        },
+      ],
+    }
+
+    expect(
+      rankNarratorSearchEntry(identityEntry, 'أبو بكر محمد بن علي بن حاتم النوفلي'),
+    ).toMatchObject({
+      matchType: 'words',
+      matchedDetails: ['أبي بكر', 'النوفلي'],
+    })
+    expect(rankNarratorSearchEntry(identityEntry, 'محمد بن حاتم النوفلي')).toBeNull()
+    expect(rankNarratorSearchEntry(identityEntry, 'أحمد بن عيسى الوشاء البغدادي')).toBeNull()
+  })
+
+  it('allows an exact two-segment lineage with a trusted fact but not an abbreviated one', () => {
+    const shortIdentity = {
+      ...entry,
+      normalizedName: 'جبرييل بن احمد',
+      normalizedAliases: [],
+      searchText: 'جبرييل بن احمد',
+      identityFacts: [
+        {
+          text: 'الفاريابي',
+          normalizedText: 'الفاريابي',
+          kind: 'nisba' as const,
+          source: 'openingFragment' as const,
+        },
+      ],
+    }
+
+    expect(rankNarratorSearchEntry(shortIdentity, 'جبرئيل بن أحمد الفاريابي')).toMatchObject({
+      matchType: 'words',
+      matchedDetails: ['الفاريابي'],
+    })
+
+    const longerIdentity = {
+      ...shortIdentity,
+      normalizedName: 'جبرييل بن محمد بن احمد',
+      searchText: 'جبرييل بن محمد بن احمد',
+    }
+    expect(rankNarratorSearchEntry(longerIdentity, 'جبرئيل بن أحمد الفاريابي')).toBeNull()
+  })
 })
 
 describe('local narrator repository', () => {
@@ -103,12 +204,91 @@ describe('local narrator repository', () => {
     )
   })
 
+  it('finds Jibrail bin Ahmad with his opening nisba', async () => {
+    const response = await searchNarrators({ query: 'جبرئيل بن أحمد الفاريابي', limit: 10 })
+
+    expect(response.results[0]).toMatchObject({
+      id: 'khoei-v4-2054',
+      entryNumber: 2054,
+      primaryName: 'جبرئيل بن أحمد',
+      matchType: 'words',
+      matchedDetails: ['الفاريابي'],
+    })
+    expect(response.total).toBeLessThanOrEqual(5)
+  })
+
   it('finds a narrator when a split name compound is typed joined', async () => {
     const response = await searchNarrators({ query: 'أحمد بن حاتم بن ماهويه', limit: 10 })
     const result = response.results.find((item) => item.id === 'khoei-v2-476')
 
     expect(result).toBeDefined()
     expect(result?.matchType).toBe('exact')
+  })
+
+  it('finds Muhammad bin Bahr by his reordered kunya and nisba without noisy results', async () => {
+    const response = await searchNarrators({
+      query: 'أبو الحسين محمد بن بحر الشيباني',
+      limit: 10,
+    })
+
+    expect(response.results[0]).toMatchObject({
+      id: 'khoei-v16-10324',
+      entryNumber: 10324,
+      primaryName: 'محمد بن بحر الرهني',
+      matchType: 'words',
+    })
+    expect(response.results[0].matchedIdentity).toContain('أبو الحسين الشيباني')
+    expect(response.total).toBeLessThanOrEqual(5)
+  })
+
+  it.each([
+    'محمد بن علي بن محمد بن حاتم النوفلي',
+    'محمد بن علي بن حاتم النوفلي',
+    'أبو بكر محمد بن علي بن حاتم النوفلي',
+    'محمد بن علي بن حاتم الكرماني',
+  ])('finds the Nofali entry from subject facts and lineage: %s', async (query) => {
+    const response = await searchNarrators({ query, limit: 10 })
+
+    expect(response.results[0]).toMatchObject({
+      id: 'khoei-v18-11366',
+      entryNumber: 11366,
+      primaryName: 'محمد بن علي بن محمد بن حاتم',
+      matchType: 'words',
+    })
+    expect(response.results[0].matchedDetails).toBeTruthy()
+    expect(response.results[0].matchedIdentity).toBeUndefined()
+    expect(response.total).toBeLessThanOrEqual(5)
+  })
+
+  it.each(['أبو العباس أحمد بن عيسى الوشاء البغدادي', 'أحمد بن طاهر القمي'])(
+    'does not treat the chain-only name %s as the subject of its host entry',
+    async (query) => {
+      const response = await searchNarrators({ query, limit: 10 })
+
+      expect(response.results.some((result) => result.id === 'khoei-v9-5058')).toBe(false)
+      expect(response.total).toBe(0)
+    },
+  )
+
+  it('does not disturb ambiguous Ahmad bin Isa results', async () => {
+    const response = await searchNarrators({ query: 'أحمد بن عيسى', limit: 20 })
+
+    expect(response.results.length).toBeGreaterThan(1)
+    expect(response.results.some((result) => result.id === 'khoei-v9-5058')).toBe(false)
+  })
+
+  it.each([
+    ['أبو علي أحمد بن إدريس بن أحمد الأشعري القمي', 'khoei-v2-428'],
+    ['أبو محمد الحسن بن موسى النوبختي', 'khoei-v6-3163'],
+    ['أبو محمد حماد بن عيسى الجهني', 'khoei-v7-3972'],
+    ['أبو سعيد خالد بن سعيد القماط', 'khoei-v8-4194'],
+    ['أبو غسان حميد بن راشد الذهلي', 'khoei-v7-4088'],
+  ])('finds the structured identity %s precisely', async (query, expectedId) => {
+    const response = await searchNarrators({ query, limit: 10 })
+
+    expect(response.results[0]?.id).toBe(expectedId)
+    expect(response.results[0]?.matchedIdentity).toBeTruthy()
+    expect(response.total).toBeLessThanOrEqual(5)
   })
 
   it('sorts Arabic results by similarity and then narrator id number', async () => {

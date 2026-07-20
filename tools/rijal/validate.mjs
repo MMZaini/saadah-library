@@ -8,6 +8,7 @@ import {
   RIJAL_RELEASES_ROOT,
   fileChecksums,
   listFiles,
+  normalizeArabic,
   pathExists,
   readJson,
 } from './shared.mjs'
@@ -143,6 +144,23 @@ export async function validateKhoeiRelease(releaseDir) {
   }
 
   const searchIds = new Set()
+  let identityProfileCount = 0
+  let identityFactCount = 0
+  const identitySources = new Set(['crossReference', 'najashi', 'tusi'])
+  const identityFactKinds = new Set(['kunya', 'nisba', 'knownAs', 'laqab', 'descriptor'])
+  const identityFactSources = new Set(['openingFragment', 'subjectStatement'])
+  const identityProseTokens = new Set([
+    'قال',
+    'اخبرنا',
+    'اخبرني',
+    'روي',
+    'ثقه',
+    'ضعيف',
+    'كان',
+    'حدثنا',
+    'حدثني',
+    'سمعت',
+  ])
   for (const item of search) {
     if (!item.id || !ids.has(item.id)) {
       addIssue(issues, 'error', 'search entry references unknown narrator id', item)
@@ -152,6 +170,92 @@ export async function validateKhoeiRelease(releaseDir) {
     if (!item.searchText || !Array.isArray(item.normalizedAliases)) {
       addIssue(issues, 'error', 'search entry is missing normalized text', item)
     }
+    if (!Array.isArray(item.identityProfiles)) {
+      addIssue(issues, 'error', 'search entry is missing identity profiles', { id: item.id })
+      continue
+    }
+    const normalizedProfiles = new Set()
+    for (const profile of item.identityProfiles) {
+      identityProfileCount++
+      if (
+        !profile?.text ||
+        !profile.normalizedText ||
+        !identitySources.has(profile.source) ||
+        profile.text.length > 180
+      ) {
+        addIssue(issues, 'error', 'search identity profile is invalid', {
+          id: item.id,
+          profile,
+        })
+        continue
+      }
+      if (normalizeArabic(profile.text) !== profile.normalizedText) {
+        addIssue(issues, 'error', 'search identity profile normalization is stale', {
+          id: item.id,
+          profile,
+        })
+      }
+      if (profile.normalizedText.split(/\s+/u).some((token) => identityProseTokens.has(token))) {
+        addIssue(issues, 'error', 'search identity profile contains biography prose', {
+          id: item.id,
+          profile,
+        })
+      }
+      if (normalizedProfiles.has(profile.normalizedText)) {
+        addIssue(issues, 'error', 'search identity profile is duplicated', {
+          id: item.id,
+          normalizedText: profile.normalizedText,
+        })
+      }
+      normalizedProfiles.add(profile.normalizedText)
+    }
+    if (!Array.isArray(item.identityFacts)) {
+      addIssue(issues, 'error', 'search entry is missing subject identity facts', { id: item.id })
+      continue
+    }
+    const normalizedFacts = new Set()
+    for (const fact of item.identityFacts) {
+      identityFactCount++
+      const factKey = `${fact?.kind}:${fact?.normalizedText}`
+      if (
+        !fact?.text ||
+        !fact.normalizedText ||
+        !identityFactKinds.has(fact.kind) ||
+        !identityFactSources.has(fact.source) ||
+        fact.text.length > 72
+      ) {
+        addIssue(issues, 'error', 'search subject identity fact is invalid', {
+          id: item.id,
+          fact,
+        })
+        continue
+      }
+      if (normalizeArabic(fact.text) !== fact.normalizedText) {
+        addIssue(issues, 'error', 'search subject identity fact normalization is stale', {
+          id: item.id,
+          fact,
+        })
+      }
+      if (fact.normalizedText.split(/\s+/u).some((token) => identityProseTokens.has(token))) {
+        addIssue(issues, 'error', 'search subject identity fact contains biography prose', {
+          id: item.id,
+          fact,
+        })
+      }
+      if (normalizedFacts.has(factKey)) {
+        addIssue(issues, 'error', 'search subject identity fact is duplicated', {
+          id: item.id,
+          factKey,
+        })
+      }
+      normalizedFacts.add(factKey)
+    }
+  }
+  if (manifest.schemaVersion >= 2 && identityProfileCount === 0) {
+    addIssue(issues, 'error', 'schema v2 search index has no structured identity profiles')
+  }
+  if (manifest.schemaVersion >= 3 && identityFactCount === 0) {
+    addIssue(issues, 'error', 'schema v3 search index has no subject identity facts')
   }
 
   const narratorIdsFromShards = new Set()
